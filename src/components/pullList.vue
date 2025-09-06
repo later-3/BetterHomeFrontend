@@ -2,20 +2,20 @@
 defineProps({
   scrollTop: {
     type: Number,
-    default: 0
+    default: 0,
   },
   onScrollToLower: {
     type: Function,
     default: () => {
-      console.log('onScrollToLower');
-    }
+      console.log("onScrollToLower");
+    },
   },
   onScroll: {
     type: Function,
     default: () => {
-      console.log('onScroll');
-    }
-  }
+      console.log("onScroll");
+    },
+  },
 });
 </script>
 
@@ -23,7 +23,7 @@ defineProps({
   <scroll-view
     :style="{
       height: '100%',
-      width: '100%'
+      width: '100%',
     }"
     :scroll-y="true"
     :lower-threshold="300"

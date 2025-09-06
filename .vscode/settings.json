@@ -8,5 +8,5 @@
   "eslint.validate": ["typescript", "vue", "html", "json"],
   "files.associations": {
     "*.json": "jsonc"
-  },
+  }
 }

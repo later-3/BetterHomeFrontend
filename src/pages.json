@@ -8,6 +8,13 @@
       }
     },
     {
+      "name": "create",
+      "path": "pages/create/create",
+      "style": {
+        "navigationBarTitleText": "创建"
+      }
+    },
+    {
       "name": "profile",
       "path": "pages/profile/profile",
       "style": {
@@ -36,18 +43,32 @@
     "backgroundColor": "#F8F8F8"
   },
   "tabBar": {
-    "color": "#1AA86C",
+    "color": "#666666",
     "selectedColor": "#1AA86C",
     "borderStyle": "white",
     "backgroundColor": "#ffffff",
+    "height": "50px",
+    "fontSize": "10px",
+    "iconWidth": "22px",
+    "spacing": "3px",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "首页"
+        "text": "首页",
+        "iconPath": "static/icons/home.png",
+        "selectedIconPath": "static/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/create/create",
+        "text": "创建",
+        "iconPath": "static/icons/add.png",
+        "selectedIconPath": "static/icons/add-active.png"
       },
       {
         "pagePath": "pages/profile/profile",
-        "text": "个人"
+        "text": "我",
+        "iconPath": "static/icons/profile.png",
+        "selectedIconPath": "static/icons/profile-active.png"
       }
     ]
   }

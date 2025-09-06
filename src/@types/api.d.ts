@@ -1,24 +1,24 @@
 declare namespace Http {
   type Response<T> = Promise<{
-    data?: T
-  }>
+    data?: T;
+  }>;
 }
 
 declare namespace GetTest {
   interface params {
-    a: number
+    a: number;
   }
   interface data {
-    name: string
-    age: number
+    name: string;
+    age: number;
   }
 }
 
 declare namespace PostTest {
   interface params {
-    a: number
+    a: number;
   }
   interface data {
-    val: string
+    val: string;
   }
 }
