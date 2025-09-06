@@ -1,0 +1,109 @@
+/* 平台特定样式文件 */
+/* 小程序平台优化 */
+/* #ifdef MP */
+.page-container {
+  padding-bottom: calc(50px + env(safe-area-inset-bottom));
+}
+.uni-tabbar {
+  border-top: 1rpx solid #e5e5e5;
+}
+.uni-tabbar-item {
+  min-height: 100rpx;
+}
+/* 小程序特有的点击反馈 */
+.uni-tabbar-item:active {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+/* #endif */
+/* H5 平台优化 */
+/* #ifdef H5 */
+.page-container {
+  padding-bottom: 60px;
+  min-height: calc(100vh - 60px);
+}
+/* H5 触摸反馈 */
+.uni-tabbar-item:hover {
+  border-radius: 8px;
+  background-color: rgba(26, 168, 108, 0.05);
+  transition: background-color 0.2s ease;
+}
+/* H5 键盘导航支持 */
+.uni-tabbar-item:focus {
+  outline: 2px solid #1aa86c;
+  outline-offset: 2px;
+}
+/* H5 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .uni-tabbar {
+    border-top-color: #333;
+    background-color: #1a1a1a;
+  }
+  .uni-tabbar-item {
+    color: #ccc;
+  }
+  .uni-tabbar-item.uni-tabbar-item-active {
+    color: #1aa86c;
+  }
+}
+/* #endif */
+/* App 平台优化 */
+/* #ifdef APP-PLUS */
+.page-container {
+  padding-bottom: calc(50px + env(safe-area-inset-bottom));
+}
+/* App 原生触摸反馈 */
+.uni-tabbar-item {
+  -webkit-tap-highlight-color: transparent;
+}
+.uni-tabbar-item:active {
+  background-color: rgba(26, 168, 108, 0.1);
+  transform: scale(0.98);
+  transition: all 0.1s ease;
+}
+/* App 状态栏适配 */
+.uni-tabbar {
+  border-top: 1rpx solid rgba(0, 0, 0, 0.1);
+}
+/* #endif */
+/* 不同屏幕密度适配 */
+@media (min-resolution: 2dppx) {
+  .uni-tabbar {
+    border-top-width: 0.5px;
+  }
+}
+@media (min-resolution: 3dppx) {
+  .uni-tabbar {
+    border-top-width: 0.33px;
+  }
+}
+/* 横屏适配 */
+@media screen and (orientation: landscape) {
+  /* #ifdef H5 */
+  .uni-tabbar {
+    height: 45px;
+  }
+  .uni-tabbar-item .uni-tabbar-item-icon {
+    width: 18px;
+    height: 18px;
+  }
+  .uni-tabbar-item .uni-tabbar-item-text {
+    font-size: 9px;
+  }
+  /* #endif */
+}
+/* 大屏设备适配 */
+@media screen and (min-width: 1200px) {
+  /* #ifdef H5 */
+  .uni-tabbar {
+    max-width: 500px;
+    height: 55px;
+  }
+  .uni-tabbar-item .uni-tabbar-item-icon {
+    width: 26px;
+    height: 26px;
+  }
+  .uni-tabbar-item .uni-tabbar-item-text {
+    font-size: 12px;
+  }
+  /* #endif */
+}

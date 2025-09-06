@@ -1,10 +1,10 @@
-import type { Preset, Rule } from 'unocss';
-import { defineConfig, presetAttributify, presetUno } from 'unocss';
+import type { Preset, Rule } from "unocss";
+import { defineConfig, presetAttributify, presetUno } from "unocss";
 
-import presetRemToRpx from './preset-rem-to-rpx';
+import presetRemToRpx from "./preset-rem-to-rpx";
 
 const sizeMapping: Record<string, string> = {
-  fs: 'font-size'
+  fs: "font-size",
 };
 
 function getSizeRules(Mapping: Record<string, string>): Rule<{}>[] {
@@ -19,11 +19,11 @@ export default defineConfig({
     presetAttributify(),
     presetUno(),
     presetRemToRpx({
-      baseFontSize: 4
-    }) as Preset
+      baseFontSize: 4,
+    }) as Preset,
   ],
   theme: {
-    preflightRoot: ['page,::before,::after']
+    preflightRoot: ["page,::before,::after"],
   },
-  rules: getSizeRules(sizeMapping)
+  rules: getSizeRules(sizeMapping),
 });
