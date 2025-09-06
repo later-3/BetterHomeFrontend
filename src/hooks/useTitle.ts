@@ -1,6 +1,6 @@
 export const useTitle = () => {
-  let oldValue = "Hello";
-  let newValue = "Word";
+  let oldValue = 'Hello';
+  let newValue = 'Word';
   const title = ref(oldValue);
   function changeTitle() {
     oldValue = title.value;
@@ -9,6 +9,6 @@ export const useTitle = () => {
   }
   return {
     title,
-    changeTitle,
+    changeTitle
   };
 };

@@ -1,4 +1,4 @@
-import { isArray, isDate, isObject, isSymbol } from "./is";
+import { isArray, isDate, isObject, isSymbol } from './is';
 
 function looseCompareArrays(a: any[], b: any[]) {
   if (a.length !== b.length) return false;

@@ -33,8 +33,8 @@ class PerformanceDebugger {
     // 在开发环境下自动启用
     // 兼容多环境：Node（进程变量）、Vite（import.meta.env）与通用 globalThis；避免直接引用 process 导致类型错误
     const isDev =
-      (globalThis as any)?.process?.env?.NODE_ENV === "development" ||
-      (globalThis as any)?.import?.meta?.env?.MODE === "development" ||
+      (globalThis as any)?.process?.env?.NODE_ENV === 'development' ||
+      (globalThis as any)?.import?.meta?.env?.MODE === 'development' ||
       (globalThis as any)?.import?.meta?.env?.DEV === true;
 
     this.isEnabled = !!isDev;
@@ -52,7 +52,7 @@ class PerformanceDebugger {
    */
   enable(): void {
     this.isEnabled = true;
-    console.log("🔍 导航性能调试已启用");
+    console.log('🔍 导航性能调试已启用');
   }
 
   /**
@@ -60,7 +60,7 @@ class PerformanceDebugger {
    */
   disable(): void {
     this.isEnabled = false;
-    console.log("🔍 导航性能调试已禁用");
+    console.log('🔍 导航性能调试已禁用');
   }
 
   /**
@@ -72,7 +72,7 @@ class PerformanceDebugger {
     const metric: PerformanceMetric = {
       name,
       startTime: performance.now(),
-      metadata,
+      metadata
     };
 
     this.metrics.set(name, metric);
@@ -106,7 +106,7 @@ class PerformanceDebugger {
    * 开始记录导航性能
    */
   startNavigation(tabId: string): string {
-    if (!this.isEnabled) return "";
+    if (!this.isEnabled) return '';
 
     const navigationId = `nav_${Date.now()}_${Math.random()
       .toString(36)
@@ -117,7 +117,7 @@ class PerformanceDebugger {
       tabId,
       startTime: performance.now(),
       success: false,
-      metrics: [],
+      metrics: []
     };
 
     this.navigationData.push(navigationData);
@@ -174,7 +174,7 @@ class PerformanceDebugger {
       name: metricName,
       startTime: 0, // 相对时间
       duration,
-      metadata,
+      metadata
     };
 
     navigationData.metrics.push(metric);
@@ -233,7 +233,7 @@ class PerformanceDebugger {
       failedNavigations: failedNavigations.length,
       averageDuration,
       slowestNavigation,
-      fastestNavigation,
+      fastestNavigation
     };
   }
 
@@ -242,14 +242,14 @@ class PerformanceDebugger {
    */
   printPerformanceReport(): void {
     if (!this.isEnabled) {
-      console.log("🔍 性能调试未启用");
+      console.log('🔍 性能调试未启用');
       return;
     }
 
     const stats = this.getPerformanceStats();
 
-    console.log("\n📊 导航性能报告");
-    console.log("=".repeat(40));
+    console.log('\n📊 导航性能报告');
+    console.log('='.repeat(40));
     console.log(`总导航次数: ${stats.totalNavigations}`);
     console.log(`成功导航: ${stats.successfulNavigations}`);
     console.log(`失败导航: ${stats.failedNavigations}`);
@@ -274,7 +274,7 @@ class PerformanceDebugger {
     // 性能建议
     this.printPerformanceRecommendations(stats);
 
-    console.log("=".repeat(40));
+    console.log('='.repeat(40));
   }
 
   /**
@@ -335,21 +335,21 @@ class PerformanceDebugger {
   clearData(): void {
     this.metrics.clear();
     this.navigationData.length = 0;
-    console.log("🧹 性能数据已清理");
+    console.log('🧹 性能数据已清理');
   }
 
   private logMetric(metric: PerformanceMetric): void {
     const duration = metric.duration!.toFixed(2);
     const metadata = metric.metadata
       ? ` (${JSON.stringify(metric.metadata)})`
-      : "";
+      : '';
     console.log(`⏱️ ${metric.name}: ${duration}ms${metadata}`);
   }
 
   private logNavigationPerformance(data: NavigationPerformanceData): void {
-    const status = data.success ? "✅" : "❌";
+    const status = data.success ? '✅' : '❌';
     const duration = data.duration!.toFixed(2);
-    const error = data.error ? ` - ${data.error}` : "";
+    const error = data.error ? ` - ${data.error}` : '';
 
     console.log(`${status} 导航到 ${data.tabId}: ${duration}ms${error}`);
 
@@ -367,20 +367,20 @@ class PerformanceDebugger {
   }
 
   private printPerformanceRecommendations(stats: any): void {
-    console.log("\n💡 性能建议:");
+    console.log('\n💡 性能建议:');
 
     if (stats.averageDuration > 50) {
-      console.log("  • 考虑优化导航逻辑以减少响应时间");
+      console.log('  • 考虑优化导航逻辑以减少响应时间');
     }
 
     if (stats.failedNavigations > 0) {
-      console.log("  • 检查导航错误处理机制");
+      console.log('  • 检查导航错误处理机制');
     }
 
     if (stats.totalNavigations < 10) {
-      console.log("  • 数据样本较少，建议进行更多测试");
+      console.log('  • 数据样本较少，建议进行更多测试');
     } else {
-      console.log("  • 性能数据充足，可进行深入分析");
+      console.log('  • 性能数据充足，可进行深入分析');
     }
   }
 }

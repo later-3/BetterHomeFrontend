@@ -1,5 +1,5 @@
-import { useNavigationStore } from "@/store/navigation";
-import { errorHandler } from "@/utils/errorHandler";
+import useNavigationStore from '@/store/navigation';
+import { errorHandler } from '@/utils/errorHandler';
 
 /**
  * 导航相关的组合式函数
@@ -65,12 +65,12 @@ export function useNavigation() {
    */
   const handleTabItemTap = async (item: any) => {
     try {
-      console.log("标签页切换:", item);
+      console.log('标签页切换:', item);
       if (item.index !== undefined) {
         await navigationStore.navigateToTab(item.index);
       }
     } catch (error) {
-      console.error("标签页切换失败:", error);
+      console.error('标签页切换失败:', error);
       // 错误已经在store中处理，这里只需要记录日志
     }
   };
@@ -82,7 +82,7 @@ export function useNavigation() {
    */
   const safeNavigateToTab = async (
     tabId: string,
-    fallbackTabId = "home"
+    fallbackTabId = 'home'
   ): Promise<boolean> => {
     try {
       await navigateToTab(tabId);
@@ -98,7 +98,7 @@ export function useNavigation() {
         }
         return false;
       } catch (fallbackError) {
-        console.error("回退导航也失败了:", fallbackError);
+        console.error('回退导航也失败了:', fallbackError);
         return false;
       }
     }
@@ -118,7 +118,7 @@ export function useNavigation() {
     setTabBadge,
     clearTabBadge,
     handleTabItemTap,
-    safeNavigateToTab,
+    safeNavigateToTab
   };
 }
 
@@ -139,7 +139,7 @@ export function usePageNavigation(pageName: string) {
     } catch (error) {
       console.error(`页面 ${pageName} 导航初始化失败:`, error);
       errorHandler.handlePageError(error as Error, pageName, {
-        fallbackMessage: "页面导航初始化失败",
+        fallbackMessage: '页面导航初始化失败'
       });
     }
   });
@@ -150,13 +150,13 @@ export function usePageNavigation(pageName: string) {
       console.log(`标签页切换到: ${item.text}, 索引: ${item.index}`);
       await handleTabItemTap(item);
     } catch (error) {
-      console.error("标签页切换事件处理失败:", error);
+      console.error('标签页切换事件处理失败:', error);
     }
   });
 
   return {
     navigationStore,
     currentTab: computed(() => navigationStore.currentTab),
-    currentTabItem: computed(() => navigationStore.currentTabItem),
+    currentTabItem: computed(() => navigationStore.currentTabItem)
   };
 }

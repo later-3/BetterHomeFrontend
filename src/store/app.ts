@@ -1,8 +1,8 @@
 export default defineStore({
-  id: "app",
+  id: 'app',
   state: () => {
     return {
-      systemInfo: {},
+      systemInfo: {}
     } as {
       systemInfo: UniApp.GetSystemInfoResult;
     };
@@ -13,6 +13,6 @@ export default defineStore({
       const systemInfo = uni.getSystemInfoSync();
       Object.assign(this.systemInfo, systemInfo);
       return systemInfo;
-    },
-  },
+    }
+  }
 });

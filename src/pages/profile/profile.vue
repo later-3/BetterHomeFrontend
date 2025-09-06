@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { useInit } from "@/hooks/useInit";
-import { usePageNavigation } from "@/hooks/useNavigation";
-import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { useInit } from '@/hooks/useInit';
+import { usePageNavigation } from '@/hooks/useNavigation';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
 
-const userStore = useStore("user");
-const appStore = useStore("app");
-const { navigationStore } = usePageNavigation("profile");
+const userStore = useStore('user');
+const appStore = useStore('app');
+const { navigationStore } = usePageNavigation('profile');
 
 // 错误处理
 const {
@@ -15,10 +15,10 @@ const {
   handlePageError: _handlePageError,
   safeAsync,
   safeSync,
-  resetError,
+  resetError
 } = useErrorHandler({
-  pageName: "profile",
-  enableErrorBoundary: true,
+  pageName: 'profile',
+  enableErrorBoundary: true
 });
 
 // 用户信息
@@ -32,69 +32,69 @@ const systemInfo = computed(() => appStore.getSystemInfo());
 // 设置选项
 const settingsOptions = ref([
   {
-    id: "account",
-    title: "账户设置",
-    description: "修改个人信息",
-    icon: "👤",
-    action: "account",
+    id: 'account',
+    title: '账户设置',
+    description: '修改个人信息',
+    icon: '👤',
+    action: 'account'
   },
   {
-    id: "notification",
-    title: "通知设置",
-    description: "管理通知偏好",
-    icon: "🔔",
-    action: "notification",
+    id: 'notification',
+    title: '通知设置',
+    description: '管理通知偏好',
+    icon: '🔔',
+    action: 'notification'
   },
   {
-    id: "privacy",
-    title: "隐私设置",
-    description: "隐私和安全",
-    icon: "🔒",
-    action: "privacy",
+    id: 'privacy',
+    title: '隐私设置',
+    description: '隐私和安全',
+    icon: '🔒',
+    action: 'privacy'
   },
   {
-    id: "about",
-    title: "关于应用",
-    description: "版本信息和帮助",
-    icon: "ℹ️",
-    action: "about",
-  },
+    id: 'about',
+    title: '关于应用',
+    description: '版本信息和帮助',
+    icon: 'ℹ️',
+    action: 'about'
+  }
 ]);
 
 // 功能入口
 const functionEntries = ref([
   {
-    id: "favorites",
-    title: "我的收藏",
-    icon: "⭐",
-    count: 12,
+    id: 'favorites',
+    title: '我的收藏',
+    icon: '⭐',
+    count: 12
   },
   {
-    id: "history",
-    title: "浏览历史",
-    icon: "📖",
-    count: 25,
+    id: 'history',
+    title: '浏览历史',
+    icon: '📖',
+    count: 25
   },
   {
-    id: "downloads",
-    title: "我的下载",
-    icon: "📥",
-    count: 8,
-  },
+    id: 'downloads',
+    title: '我的下载',
+    icon: '📥',
+    count: 8
+  }
 ]);
 
 // 处理设置选项点击
 function handleSettingClick(option: any) {
   safeSync(
     () => {
-      console.log("设置选项点击:", option);
+      console.log('设置选项点击:', option);
       uni.showToast({
         title: `${option.title}功能开发中`,
-        icon: "none",
+        icon: 'none'
       });
     },
     {
-      fallbackMessage: `打开${option.title}失败，请重试`,
+      fallbackMessage: `打开${option.title}失败，请重试`
     }
   );
 }
@@ -103,14 +103,14 @@ function handleSettingClick(option: any) {
 function handleFunctionClick(func: any) {
   safeSync(
     () => {
-      console.log("功能入口点击:", func);
+      console.log('功能入口点击:', func);
       uni.showToast({
         title: `${func.title}功能开发中`,
-        icon: "none",
+        icon: 'none'
       });
     },
     {
-      fallbackMessage: `打开${func.title}失败，请重试`,
+      fallbackMessage: `打开${func.title}失败，请重试`
     }
   );
 }
@@ -120,21 +120,21 @@ function handleLogout() {
   safeSync(
     () => {
       uni.showModal({
-        title: "确认退出",
-        content: "确定要退出登录吗？",
+        title: '确认退出',
+        content: '确定要退出登录吗？',
         success: (res) => {
           if (res.confirm) {
             // 这里可以调用退出登录的逻辑
             uni.showToast({
-              title: "退出登录功能开发中",
-              icon: "none",
+              title: '退出登录功能开发中',
+              icon: 'none'
             });
           }
-        },
+        }
       });
     },
     {
-      fallbackMessage: "退出登录操作失败，请重试",
+      fallbackMessage: '退出登录操作失败，请重试'
     }
   );
 }
@@ -147,15 +147,15 @@ onMounted(async () => {
         pageName,
         pagePath,
         pageQuery,
-        "pageName,pagePath, pageQuery"
+        'pageName,pagePath, pageQuery'
       );
       console.log(
-        "个人中心页面加载完成，当前导航状态:",
+        '个人中心页面加载完成，当前导航状态:',
         navigationStore.currentTab
       );
     },
     {
-      fallbackMessage: "个人中心页面加载失败，请刷新重试",
+      fallbackMessage: '个人中心页面加载失败，请刷新重试'
     }
   );
 });
@@ -185,10 +185,10 @@ onMounted(async () => {
         </view>
         <view class="user-info">
           <view class="user-name">
-            {{ isLoggedIn ? `用户 ${userId}` : "未登录用户" }}
+            {{ isLoggedIn ? `用户 ${userId}` : '未登录用户' }}
           </view>
           <view class="user-status">
-            {{ isLoggedIn ? "已登录" : "点击登录" }}
+            {{ isLoggedIn ? '已登录' : '点击登录' }}
           </view>
         </view>
         <view class="user-actions">

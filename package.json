@@ -89,6 +89,7 @@
     "eslint-plugin-prettier": "4.2.1",
     "happy-dom": "^18.0.1",
     "husky": "8.0.3",
+    "inquirer": "^12.9.4",
     "jsdom": "^26.1.0",
     "postcss-html": "1.5.0",
     "postcss-scss": "4.0.6",

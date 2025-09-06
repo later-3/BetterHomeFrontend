@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useTitle } from "@/hooks/useTitle";
-import { forward } from "@/utils/router";
-import { useNavigation, usePageNavigation } from "@/hooks/useNavigation";
-import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { useTitle } from '@/hooks/useTitle';
+import { forward } from '@/utils/router';
+import { useNavigation, usePageNavigation } from '@/hooks/useNavigation';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
 
 const { title } = useTitle();
 const { navigateToTab } = useNavigation();
-const { navigationStore: _navigationStore } = usePageNavigation("index");
+const { navigationStore: _navigationStore } = usePageNavigation('index');
 
 // 错误处理
 const {
@@ -16,41 +16,41 @@ const {
   handlePageError: _handlePageError,
   handleNavigationError,
   safeAsync,
-  resetError,
+  resetError
 } = useErrorHandler({
-  pageName: "index",
-  enableErrorBoundary: true,
+  pageName: 'index',
+  enableErrorBoundary: true
 });
 
 // 主要功能入口数据
 const mainFeatures = ref([
   {
-    id: "create",
-    title: "快速创建",
-    description: "创建新的内容",
-    icon: "/static/icons/add.png",
-    path: "/pages/create/create",
+    id: 'create',
+    title: '快速创建',
+    description: '创建新的内容',
+    icon: '/static/icons/add.png',
+    path: '/pages/create/create'
   },
   {
-    id: "profile",
-    title: "个人中心",
-    description: "查看个人信息",
-    icon: "/static/icons/profile.png",
-    path: "/pages/profile/profile",
+    id: 'profile',
+    title: '个人中心',
+    description: '查看个人信息',
+    icon: '/static/icons/profile.png',
+    path: '/pages/profile/profile'
   },
   {
-    id: "test",
-    title: "功能测试",
-    description: "测试应用功能",
-    icon: "/static/logo.png",
-    path: "/pages/test/test",
-  },
+    id: 'test',
+    title: '功能测试',
+    description: '测试应用功能',
+    icon: '/static/logo.png',
+    path: '/pages/test/test'
+  }
 ]);
 
 // 导航到功能页面
 async function navigateToFeature(feature: any) {
   try {
-    if (feature.id === "create" || feature.id === "profile") {
+    if (feature.id === 'create' || feature.id === 'profile') {
       // 使用导航composable进行tabBar页面导航
       await navigateToTab(feature.id);
     } else {
@@ -62,7 +62,7 @@ async function navigateToFeature(feature: any) {
       error as Error,
       feature.path || `/pages/${feature.id}/${feature.id}`,
       {
-        fallbackMessage: `无法打开${feature.title}，请重试`,
+        fallbackMessage: `无法打开${feature.title}，请重试`
       }
     );
   }
@@ -71,9 +71,9 @@ async function navigateToFeature(feature: any) {
 // 欢迎信息
 const welcomeMessage = computed(() => {
   const hour = new Date().getHours();
-  if (hour < 12) return "早上好";
-  if (hour < 18) return "下午好";
-  return "晚上好";
+  if (hour < 12) return '早上好';
+  if (hour < 18) return '下午好';
+  return '晚上好';
 });
 
 // 页面初始化
@@ -81,10 +81,10 @@ onMounted(async () => {
   await safeAsync(
     async () => {
       // 页面加载逻辑
-      console.log("首页加载完成");
+      console.log('首页加载完成');
     },
     {
-      fallbackMessage: "首页加载失败，请刷新重试",
+      fallbackMessage: '首页加载失败，请刷新重试'
     }
   );
 });

@@ -35,7 +35,7 @@ const createPerformanceMock = () => {
     }, Math.random() * 20 + 5); // Simulate 5-25ms navigation time
   });
 
-  global.uni = mockUni as any;
+  (global as any).uni = mockUni;
   return { mockUni, performanceData };
 };
 
@@ -155,8 +155,8 @@ describe("Navigation Performance Tests", () => {
         await navigation.navigateToTabByIndex(i % 3);
 
         // Force garbage collection simulation
-        if (i % 10 === 0 && global.gc) {
-          global.gc();
+        if (i % 10 === 0 && (global as any).gc) {
+          (global as any).gc();
         }
       }
 
@@ -172,14 +172,14 @@ describe("Navigation Performance Tests", () => {
 
       // Track listener count (simulated)
       let listenerCount = 0;
-      const originalAddEventListener = global.addEventListener;
-      const originalRemoveEventListener = global.removeEventListener;
+      const originalAddEventListener = (global as any).addEventListener;
+      const originalRemoveEventListener = (global as any).removeEventListener;
 
-      global.addEventListener = vi.fn(() => {
+      (global as any).addEventListener = vi.fn(() => {
         listenerCount++;
       });
 
-      global.removeEventListener = vi.fn(() => {
+      (global as any).removeEventListener = vi.fn(() => {
         listenerCount--;
       });
 
@@ -192,8 +192,8 @@ describe("Navigation Performance Tests", () => {
       expect(listenerCount).toBeLessThanOrEqual(3); // One per tab at most
 
       // Restore original functions
-      global.addEventListener = originalAddEventListener;
-      global.removeEventListener = originalRemoveEventListener;
+      (global as any).addEventListener = originalAddEventListener;
+      (global as any).removeEventListener = originalRemoveEventListener;
     });
 
     it("should optimize store state size", () => {
@@ -253,10 +253,10 @@ describe("Navigation Performance Tests", () => {
       let frameCount = 0;
 
       // Mock requestAnimationFrame
-      const originalRAF = global.requestAnimationFrame;
-      global.requestAnimationFrame = vi.fn((callback) => {
+      const originalRAF = (global as any).requestAnimationFrame;
+      (global as any).requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
         frameCount++;
-        return setTimeout(callback, 16); // 60fps
+        return setTimeout(callback, 16) as any; // 60fps
       });
 
       // Perform navigation with animation
@@ -267,7 +267,7 @@ describe("Navigation Performance Tests", () => {
       expect(frameCount).toBeLessThan(10);
 
       // Restore original function
-      global.requestAnimationFrame = originalRAF;
+      (global as any).requestAnimationFrame = originalRAF;
     });
 
     it("should optimize for different device performance levels", async () => {
@@ -364,9 +364,9 @@ describe("Navigation Performance Tests", () => {
         }),
       };
 
-      global.uni.getStorageSync = mockStorage.getItem;
-      global.uni.setStorageSync = mockStorage.setItem;
-      global.uni.removeStorageSync = mockStorage.removeItem;
+      (global as any).uni.getStorageSync = mockStorage.getItem;
+      (global as any).uni.setStorageSync = mockStorage.setItem;
+      (global as any).uni.removeStorageSync = mockStorage.removeItem;
 
       // Perform navigation operations
       await navigation.navigateToTab("create");
