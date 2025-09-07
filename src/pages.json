@@ -1,24 +1,48 @@
 {
   "pages": [
     {
-      "name": "index",
-      "path": "pages/index/index",
-      "style": {
-        "navigationBarTitleText": "首页"
+      "name": "neighbor",
+      "path": "pages/neighbor/neighbor",
+      "style": { 
+        "navigationBarTitleText": "邻里",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "name": "notice",
+      "path": "pages/notice/notice", 
+      "style": { 
+        "navigationBarTitleText": "公告",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
       }
     },
     {
       "name": "create",
       "path": "pages/create/create",
-      "style": {
-        "navigationBarTitleText": "创建"
+      "style": { 
+        "navigationBarTitleText": "创建",
+        "navigationBarBackgroundColor": "#ffffff", 
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "name": "task",
+      "path": "pages/task/task",
+      "style": { 
+        "navigationBarTitleText": "事项",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
       }
     },
     {
       "name": "profile",
       "path": "pages/profile/profile",
-      "style": {
-        "navigationBarTitleText": "个人"
+      "style": { 
+        "navigationBarTitleText": "我",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
       }
     }
   ],
@@ -53,20 +77,27 @@
     "spacing": "3px",
     "list": [
       {
-        "pagePath": "pages/index/index",
-        "text": "首页",
-        "iconPath": "static/icons/home.png",
-        "selectedIconPath": "static/icons/home-active.png"
+        "pagePath": "pages/neighbor/neighbor",
+        "iconPath": "static/icons/neighbor.png",
+        "selectedIconPath": "static/icons/neighbor-active.png"
+      },
+      {
+        "pagePath": "pages/notice/notice", 
+        "iconPath": "static/icons/notice.png",
+        "selectedIconPath": "static/icons/notice-active.png"
       },
       {
         "pagePath": "pages/create/create",
-        "text": "创建",
         "iconPath": "static/icons/add.png",
         "selectedIconPath": "static/icons/add-active.png"
       },
       {
+        "pagePath": "pages/task/task",
+        "iconPath": "static/icons/task.png", 
+        "selectedIconPath": "static/icons/task-active.png"
+      },
+      {
         "pagePath": "pages/profile/profile",
-        "text": "我",
         "iconPath": "static/icons/profile.png",
         "selectedIconPath": "static/icons/profile-active.png"
       }
