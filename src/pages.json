@@ -78,28 +78,28 @@
     "list": [
       {
         "pagePath": "pages/neighbor/neighbor",
-        "iconPath": "static/icons/neighbor.png",
-        "selectedIconPath": "static/icons/neighbor-active.png"
+        "iconPath": "static/icons/ic--round-house.svg",
+        "selectedIconPath": "static/icons/ic--round-house.svg"
       },
       {
-        "pagePath": "pages/notice/notice", 
-        "iconPath": "static/icons/notice.png",
-        "selectedIconPath": "static/icons/notice-active.png"
+        "pagePath": "pages/notice/notice",
+        "iconPath": "static/icons/ic--round-house.svg",
+        "selectedIconPath": "static/icons/ic--round-house.svg"
       },
       {
         "pagePath": "pages/create/create",
-        "iconPath": "static/icons/add.png",
-        "selectedIconPath": "static/icons/add-active.png"
+        "iconPath": "static/icons/ic--round-house.svg",
+        "selectedIconPath": "static/icons/ic--round-house.svg"
       },
       {
         "pagePath": "pages/task/task",
-        "iconPath": "static/icons/task.png", 
-        "selectedIconPath": "static/icons/task-active.png"
+        "iconPath": "static/icons/ic--round-house.svg",
+        "selectedIconPath": "static/icons/ic--round-house.svg"
       },
       {
         "pagePath": "pages/profile/profile",
-        "iconPath": "static/icons/profile.png",
-        "selectedIconPath": "static/icons/profile-active.png"
+        "iconPath": "static/icons/ic--round-house.svg",
+        "selectedIconPath": "static/icons/ic--round-house.svg"
       }
     ]
   }

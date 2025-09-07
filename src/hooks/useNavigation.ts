@@ -1,3 +1,5 @@
+import { computed } from 'vue';
+import { onLoad, onTabItemTap } from '@dcloudio/uni-app';
 import useNavigationStore from '@/store/navigation';
 import { errorHandler } from '@/utils/errorHandler';
 

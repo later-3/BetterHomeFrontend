@@ -22,12 +22,20 @@ const useNavigationStore = defineStore(
     // 定义导航标签页数据
     const tabs = ref<TabItem[]>([
       {
-        id: 'home',
-        name: 'index',
-        path: '/pages/index/index',
-        text: '首页',
-        icon: 'static/icons/home.png',
-        activeIcon: 'static/icons/home-active.png'
+        id: 'neighbor',
+        name: 'neighbor',
+        path: '/pages/neighbor/neighbor',
+        text: '邻里',
+        icon: 'static/icons/neighbor.png',
+        activeIcon: 'static/icons/neighbor-active.png'
+      },
+      {
+        id: 'notice',
+        name: 'notice',
+        path: '/pages/notice/notice',
+        text: '公告',
+        icon: 'static/icons/notice.png',
+        activeIcon: 'static/icons/notice-active.png'
       },
       {
         id: 'create',
@@ -36,6 +44,14 @@ const useNavigationStore = defineStore(
         text: '创建',
         icon: 'static/icons/add.png',
         activeIcon: 'static/icons/add-active.png'
+      },
+      {
+        id: 'task',
+        name: 'task',
+        path: '/pages/task/task',
+        text: '事项',
+        icon: 'static/icons/task.png',
+        activeIcon: 'static/icons/task-active.png'
       },
       {
         id: 'profile',

@@ -1,6 +1,6 @@
 # BetterHome 完整开发指导文档
 
-> 基于 `ttk-cli/uni-vue3-vite-ts-pinia` 底座的跨平台应用开发指南  
+> 基于 `ttk-cli/uni-vue3-vite-ts-pinia` 底座的跨平台应用开发指南
 > 版本: v2.0 | 更新时间: 2025年9月
 
 ---
@@ -283,7 +283,7 @@ ttk-cli-uni-vue3-vite-ts-pinia/
 - **特点**: 支持全局类型，无需import即可使用
 - **约束**: 只定义类型，不包含实现逻辑
 
-#### 📁 `src/api/` - API接口模块  
+#### 📁 `src/api/` - API接口模块
 - **职责**: 后端接口封装和管理
 - **依赖**: utils/request.ts
 - **约束**: 不处理业务逻辑，只负责数据请求
@@ -328,7 +328,7 @@ declare namespace UserAPI {
     id: string
     includeProfile?: boolean
   }
-  
+
   interface UpdateUserParams {
     id: string
     name?: string
@@ -381,7 +381,7 @@ declare global {
 // 1.1 Vue相关
 import { ref, computed, onMounted } from 'vue'
 
-// 1.2 Store相关  
+// 1.2 Store相关
 import { useUserStore } from '@/store/user'
 
 // 1.3 API相关
@@ -417,7 +417,7 @@ const errors = ref<Record<string, string>>({})
 
 // 5. 计算属性
 const isFormValid = computed(() => {
-  return formData.value.name.trim() !== '' && 
+  return formData.value.name.trim() !== '' &&
          formData.value.email.trim() !== ''
 })
 
@@ -434,7 +434,7 @@ onMounted(async () => {
 // 7.1 数据加载
 const loadUserData = async (): Promise<void> => {
   if (!props.userId) return
-  
+
   try {
     await userStore.fetchUserInfo(props.userId)
     updateFormData()
@@ -457,23 +457,23 @@ const updateFormData = (): void => {
 
 const validateForm = (): boolean => {
   errors.value = {}
-  
+
   if (!formData.value.name.trim()) {
     errors.value.name = '姓名不能为空'
   }
-  
+
   if (!formData.value.email.trim()) {
     errors.value.email = '邮箱不能为空'
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.value.email)) {
     errors.value.email = '邮箱格式不正确'
   }
-  
+
   return Object.keys(errors.value).length === 0
 }
 
 const handleSubmit = async (): Promise<void> => {
   if (!validateForm()) return
-  
+
   try {
     await userStore.updateUserInfo({
       id: props.userId,
@@ -503,29 +503,29 @@ const handleAvatarClick = (): void => {
     <view v-if="showHeader" class="page-header">
       <text class="page-title">编辑资料</text>
     </view>
-    
+
     <!-- 加载状态 -->
     <view v-if="isLoading" class="loading-container">
       <text>加载中...</text>
     </view>
-    
+
     <!-- 主要内容 -->
     <view v-else class="page-content">
       <!-- 头像区域 -->
       <view class="avatar-section" @click="handleAvatarClick">
-        <image 
-          :src="userInfo?.avatar || '/static/default-avatar.png'" 
+        <image
+          :src="userInfo?.avatar || '/static/default-avatar.png'"
           class="avatar-image"
         />
         <text class="avatar-tip">点击更换头像</text>
       </view>
-      
+
       <!-- 表单区域 -->
       <form class="user-form">
         <!-- 姓名输入 -->
         <view class="form-item">
           <text class="form-label">姓名</text>
-          <input 
+          <input
             v-model="formData.name"
             type="text"
             placeholder="请输入姓名"
@@ -536,11 +536,11 @@ const handleAvatarClick = (): void => {
             {{ errors.name }}
           </text>
         </view>
-        
+
         <!-- 邮箱输入 -->
         <view class="form-item">
           <text class="form-label">邮箱</text>
-          <input 
+          <input
             v-model="formData.email"
             type="email"
             placeholder="请输入邮箱"
@@ -551,11 +551,11 @@ const handleAvatarClick = (): void => {
             {{ errors.email }}
           </text>
         </view>
-        
+
         <!-- 手机号输入 -->
         <view class="form-item">
           <text class="form-label">手机号</text>
-          <input 
+          <input
             v-model="formData.phone"
             type="text"
             placeholder="请输入手机号"
@@ -564,17 +564,17 @@ const handleAvatarClick = (): void => {
         </view>
       </form>
     </view>
-    
+
     <!-- 底部按钮 -->
     <view class="page-footer">
-      <button 
-        class="btn btn--secondary" 
+      <button
+        class="btn btn--secondary"
         @click="handleCancel"
       >
         取消
       </button>
-      <button 
-        class="btn btn--primary" 
+      <button
+        class="btn btn--primary"
         :disabled="!isFormValid || isLoading"
         @click="handleSubmit"
       >
@@ -594,7 +594,7 @@ const handleAvatarClick = (): void => {
 
 .page-header {
   @apply p-4 bg-white border-b border-gray-100;
-  
+
   .page-title {
     @apply text-lg font-medium text-gray-900;
   }
@@ -602,7 +602,7 @@ const handleAvatarClick = (): void => {
 
 .loading-container {
   @apply flex-1 flex items-center justify-center;
-  
+
   text {
     @apply text-gray-500;
   }
@@ -614,11 +614,11 @@ const handleAvatarClick = (): void => {
 
 .avatar-section {
   @apply flex flex-col items-center mb-6 p-4;
-  
+
   .avatar-image {
     @apply w-20 h-20 rounded-full border-2 border-gray-200;
   }
-  
+
   .avatar-tip {
     @apply mt-2 text-sm text-gray-500;
   }
@@ -630,20 +630,20 @@ const handleAvatarClick = (): void => {
 
 .form-item {
   @apply space-y-2;
-  
+
   .form-label {
     @apply block text-sm font-medium text-gray-700;
   }
-  
+
   .form-input {
     @apply w-full px-3 py-2 border border-gray-300 rounded-md;
     @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
-    
+
     &--error {
       @apply border-red-500;
     }
   }
-  
+
   .form-error {
     @apply text-sm text-red-500;
   }
@@ -652,26 +652,26 @@ const handleAvatarClick = (): void => {
 .page-footer {
   @apply p-4 bg-white border-t border-gray-100;
   @apply flex space-x-3;
-  
+
   .btn {
     @apply flex-1 py-3 px-4 rounded-md text-center;
     @apply transition-colors duration-200;
-    
+
     &--primary {
       @apply bg-blue-500 text-white;
-      
+
       &:not(:disabled):hover {
         @apply bg-blue-600;
       }
-      
+
       &:disabled {
         @apply bg-gray-300 cursor-not-allowed;
       }
     }
-    
+
     &--secondary {
       @apply bg-gray-100 text-gray-700;
-      
+
       &:hover {
         @apply bg-gray-200;
       }
@@ -684,7 +684,7 @@ const handleAvatarClick = (): void => {
   .page-content {
     @apply px-3;
   }
-  
+
   .avatar-section {
     @apply px-3;
   }
@@ -752,13 +752,13 @@ const handleView = (): void => {
   <view :class="cardClasses" @click="handleView">
     <!-- 头像区域 -->
     <view class="user-card__avatar">
-      <image 
+      <image
         :src="user.avatar || '/static/default-avatar.png'"
         :style="{ width: avatarSize + 'px', height: avatarSize + 'px' }"
         class="avatar-image"
       />
     </view>
-    
+
     <!-- 信息区域 -->
     <view class="user-card__info">
       <view class="user-card__name">
@@ -771,7 +771,7 @@ const handleView = (): void => {
         <text>{{ user.phone }}</text>
       </view>
     </view>
-    
+
     <!-- 操作区域 -->
     <view v-if="showActions" class="user-card__actions" @click.stop>
       <button class="action-btn action-btn--edit" @click="handleEdit">
@@ -781,7 +781,7 @@ const handleView = (): void => {
         删除
       </button>
     </view>
-    
+
     <!-- 插槽支持 -->
     <view v-if="$slots.default" class="user-card__extra">
       <slot />
@@ -794,47 +794,47 @@ const handleView = (): void => {
   @apply bg-white rounded-lg border border-gray-200 p-4;
   @apply flex items-center space-x-3 cursor-pointer;
   @apply transition-shadow duration-200;
-  
+
   &:hover {
     @apply shadow-md;
   }
-  
+
   &--small {
     @apply p-3;
   }
-  
+
   &--large {
     @apply p-6;
   }
-  
+
   &__avatar {
     @apply flex-shrink-0;
-    
+
     .avatar-image {
       @apply rounded-full object-cover;
     }
   }
-  
+
   &__info {
     @apply flex-1 min-w-0;
   }
-  
+
   &__name {
     @apply font-medium text-gray-900 truncate;
   }
-  
+
   &__email {
     @apply text-sm text-gray-500 truncate;
   }
-  
+
   &__phone {
     @apply text-sm text-gray-500;
   }
-  
+
   &__actions {
     @apply flex space-x-2;
   }
-  
+
   &__extra {
     @apply ml-auto;
   }
@@ -843,18 +843,18 @@ const handleView = (): void => {
 .action-btn {
   @apply px-3 py-1 text-sm rounded;
   @apply transition-colors duration-200;
-  
+
   &--edit {
     @apply bg-blue-100 text-blue-700;
-    
+
     &:hover {
       @apply bg-blue-200;
     }
   }
-  
+
   &--delete {
     @apply bg-red-100 text-red-700;
-    
+
     &:hover {
       @apply bg-red-200;
     }
@@ -874,19 +874,19 @@ declare namespace UserAPI {
     id: string
     includeProfile?: boolean
   }
-  
+
   interface GetUserListParams extends API.PageParams {
     keyword?: string
     status?: 'active' | 'inactive'
   }
-  
+
   interface CreateUserParams {
     name: string
     email: string
     phone?: string
     avatar?: string
   }
-  
+
   interface UpdateUserParams {
     id: string
     name?: string
@@ -894,7 +894,7 @@ declare namespace UserAPI {
     phone?: string
     avatar?: string
   }
-  
+
   // 响应数据类型
   interface UserInfo {
     id: string
@@ -906,7 +906,7 @@ declare namespace UserAPI {
     createTime: number
     updateTime: number
   }
-  
+
   interface UserProfile extends UserInfo {
     permissions: string[]
     preferences: Record<string, any>
@@ -923,13 +923,13 @@ declare namespace API {
     success: boolean
     timestamp: number
   }
-  
+
   // 分页参数
   interface PageParams {
     pageNum: number
     pageSize: number
   }
-  
+
   // 分页响应
   interface PageResponse<T> {
     list: T[]
@@ -938,7 +938,7 @@ declare namespace API {
     pageSize: number
     totalPages: number
   }
-  
+
   // 上传响应
   interface UploadResponse {
     url: string
@@ -955,35 +955,35 @@ import request from '@/utils/request'
 
 const userAPI = {
   // 获取用户信息
-  getUserInfo: (params: UserAPI.GetUserParams) => 
+  getUserInfo: (params: UserAPI.GetUserParams) =>
     request.get<UserAPI.UserInfo>('/user/info', params),
-  
+
   // 获取用户详细信息
-  getUserProfile: (params: UserAPI.GetUserParams) => 
+  getUserProfile: (params: UserAPI.GetUserParams) =>
     request.get<UserAPI.UserProfile>('/user/profile', params),
-  
+
   // 获取用户列表
-  getUserList: (params: UserAPI.GetUserListParams) => 
+  getUserList: (params: UserAPI.GetUserListParams) =>
     request.get<API.PageResponse<UserAPI.UserInfo>>('/user/list', params),
-  
+
   // 创建用户
-  createUser: (params: UserAPI.CreateUserParams) => 
+  createUser: (params: UserAPI.CreateUserParams) =>
     request.post<UserAPI.UserInfo>('/user/create', params),
-  
+
   // 更新用户信息
-  updateUser: (params: UserAPI.UpdateUserParams) => 
+  updateUser: (params: UserAPI.UpdateUserParams) =>
     request.post<UserAPI.UserInfo>('/user/update', params),
-  
+
   // 删除用户
-  deleteUser: (params: { id: string }) => 
+  deleteUser: (params: { id: string }) =>
     request.post<{ success: boolean }>('/user/delete', params),
-  
+
   // 批量操作
-  batchDeleteUsers: (params: { ids: string[] }) => 
+  batchDeleteUsers: (params: { ids: string[] }) =>
     request.post<{ success: boolean; failedIds: string[] }>('/user/batch-delete', params),
-  
+
   // 上传头像
-  uploadAvatar: (filePath: string) => 
+  uploadAvatar: (filePath: string) =>
     request.upload<API.UploadResponse>('/user/upload-avatar', filePath)
 }
 
@@ -1011,7 +1011,7 @@ interface UserState {
 
 export const useUserStore = defineStore({
   id: 'user',
-  
+
   state: (): UserState => ({
     userInfo: null,
     userProfile: null,
@@ -1021,46 +1021,46 @@ export const useUserStore = defineStore({
     loading: false,
     error: null
   }),
-  
+
   getters: {
     // 基础信息获取
     userName: (state) => state.userInfo?.name || '未登录用户',
     userAvatar: (state) => state.userInfo?.avatar || '/static/default-avatar.png',
     userEmail: (state) => state.userInfo?.email || '',
-    
+
     // 状态判断
     isAuthenticated: (state) => !!state.token && state.isLoggedIn,
     hasUserInfo: (state) => !!state.userInfo,
     hasProfile: (state) => !!state.userProfile,
-    
+
     // 权限相关
     userPermissions: (state) => state.userProfile?.permissions || [],
     hasPermission: (state) => (permission: string) => {
       return state.userProfile?.permissions?.includes(permission) || false
     },
-    
+
     // 状态组合
     isLoadingUser: (state) => state.loading,
     userError: (state) => state.error
   },
-  
+
   actions: {
     // 用户认证
     async login(credentials: { email: string; password: string }) {
       this.loading = true
       this.error = null
-      
+
       try {
         const result = await authAPI.login(credentials)
-        
+
         this.token = result.data.token
         this.refreshToken = result.data.refreshToken
         this.userInfo = result.data.userInfo
         this.isLoggedIn = true
-        
+
         // 登录成功后获取详细信息
         await this.fetchUserProfile()
-        
+
         showToast('登录成功')
         return result.data
       } catch (error: any) {
@@ -1071,7 +1071,7 @@ export const useUserStore = defineStore({
         this.loading = false
       }
     },
-    
+
     async logout() {
       try {
         if (this.token) {
@@ -1087,21 +1087,21 @@ export const useUserStore = defineStore({
         this.userProfile = null
         this.isLoggedIn = false
         this.error = null
-        
+
         showToast('已退出登录')
       }
     },
-    
+
     // 用户信息管理
     async fetchUserInfo(userId?: string) {
       if (!userId && !this.userInfo?.id) return
-      
+
       this.loading = true
       this.error = null
-      
+
       try {
-        const result = await userAPI.getUserInfo({ 
-          id: userId || this.userInfo!.id 
+        const result = await userAPI.getUserInfo({
+          id: userId || this.userInfo!.id
         })
         this.userInfo = result.data
         return result.data
@@ -1112,13 +1112,13 @@ export const useUserStore = defineStore({
         this.loading = false
       }
     },
-    
+
     async fetchUserProfile(userId?: string) {
       if (!userId && !this.userInfo?.id) return
-      
+
       try {
-        const result = await userAPI.getUserProfile({ 
-          id: userId || this.userInfo!.id 
+        const result = await userAPI.getUserProfile({
+          id: userId || this.userInfo!.id
         })
         this.userProfile = result.data
         return result.data
@@ -1127,19 +1127,19 @@ export const useUserStore = defineStore({
         throw error
       }
     },
-    
+
     async updateUserInfo(params: UserAPI.UpdateUserParams) {
       this.loading = true
       this.error = null
-      
+
       try {
         const result = await userAPI.updateUser(params)
-        
+
         // 更新本地状态
         if (this.userInfo && this.userInfo.id === params.id) {
           this.userInfo = { ...this.userInfo, ...result.data }
         }
-        
+
         showToast('更新成功')
         return result.data
       } catch (error: any) {
@@ -1150,18 +1150,18 @@ export const useUserStore = defineStore({
         this.loading = false
       }
     },
-    
+
     // 状态重置
     clearError() {
       this.error = null
     },
-    
+
     clearUserData() {
       this.userInfo = null
       this.userProfile = null
       this.error = null
     },
-    
+
     // Token管理
     setToken(token: string, refreshToken?: string) {
       this.token = token
@@ -1169,14 +1169,14 @@ export const useUserStore = defineStore({
         this.refreshToken = refreshToken
       }
     },
-    
+
     clearToken() {
       this.token = ''
       this.refreshToken = ''
       this.isLoggedIn = false
     }
   },
-  
+
   // 持久化配置
   persist: {
     enabled: true,
@@ -1297,7 +1297,7 @@ onMounted(async () => {
 // 方法定义
 const loadData = async () => {
   if (!props.userId) return
-  
+
   try {
     await fetchUserInfo(props.userId)
   } catch (error) {
@@ -1325,16 +1325,16 @@ const handleEdit = () => {
     <view v-if="isLoading" class="loading">
       <text>加载中...</text>
     </view>
-    
+
     <!-- 用户信息 -->
     <view v-else-if="userInfo" class="user-info">
-      <UserCard 
-        :user="userInfo" 
+      <UserCard
+        :user="userInfo"
         :show-actions="true"
         @edit="handleEdit"
       />
     </view>
-    
+
     <!-- 空状态 -->
     <view v-else class="empty">
       <text>用户不存在</text>
@@ -1351,7 +1351,7 @@ const handleEdit = () => {
 
 .loading, .empty {
   @apply flex items-center justify-center h-64;
-  
+
   text {
     @apply text-gray-500;
   }
@@ -1456,16 +1456,16 @@ const handleContact = (event: Event) => {
   <view :class="cardClasses" @click="handleClick">
     <!-- 图片区域 -->
     <view class="property-card__image">
-      <image 
+      <image
         :src="property.coverImage || '/static/placeholder-property.png'"
         class="image"
         mode="aspectFill"
       />
-      
+
       <!-- 图片标签 -->
       <view v-if="property.tags?.length" class="image-tags">
-        <text 
-          v-for="tag in property.tags.slice(0, 2)" 
+        <text
+          v-for="tag in property.tags.slice(0, 2)"
           :key="tag"
           class="image-tag"
         >
@@ -1473,7 +1473,7 @@ const handleContact = (event: Event) => {
         </text>
       </view>
     </view>
-    
+
     <!-- 信息区域 -->
     <view class="property-card__content">
       <!-- 标题和价格 -->
@@ -1481,39 +1481,39 @@ const handleContact = (event: Event) => {
         <text class="property-title">{{ property.title }}</text>
         <text class="property-price">{{ priceText }}</text>
       </view>
-      
+
       <!-- 基本信息 -->
       <view class="property-card__info">
         <text class="property-area">{{ property.area }}㎡</text>
         <text class="property-type">{{ property.type }}</text>
         <text class="property-location">{{ property.location }}</text>
       </view>
-      
+
       <!-- 描述 -->
       <view v-if="property.description" class="property-card__desc">
         <text>{{ property.description }}</text>
       </view>
-      
+
       <!-- 操作按钮 -->
       <view v-if="showActions" class="property-card__actions">
-        <button 
+        <button
           class="action-btn action-btn--favorite"
           :class="{ 'action-btn--favorited': favorited }"
           @click="handleFavorite"
         >
           <text>{{ favorited ? '已收藏' : '收藏' }}</text>
         </button>
-        
+
         <button class="action-btn action-btn--share" @click="handleShare">
           <text>分享</text>
         </button>
-        
+
         <button class="action-btn action-btn--contact" @click="handleContact">
           <text>联系</text>
         </button>
       </view>
     </view>
-    
+
     <!-- 插槽支持 -->
     <view v-if="$slots.default" class="property-card__extra">
       <slot />
@@ -1526,74 +1526,74 @@ const handleContact = (event: Event) => {
   @apply bg-white rounded-lg overflow-hidden;
   @apply border border-gray-200 shadow-sm;
   @apply transition-all duration-200;
-  
+
   &--clickable {
     @apply cursor-pointer;
-    
+
     &:hover {
       @apply shadow-md transform -translate-y-1;
     }
   }
-  
+
   &--small {
     .property-card__content {
       @apply p-3;
     }
   }
-  
+
   &--large {
     .property-card__content {
       @apply p-6;
     }
   }
-  
+
   &__image {
     @apply relative;
     aspect-ratio: 16/9;
-    
+
     .image {
       @apply w-full h-full object-cover;
     }
-    
+
     .image-tags {
       @apply absolute top-2 left-2 flex space-x-1;
     }
-    
+
     .image-tag {
       @apply px-2 py-1 bg-blue-500 text-white text-xs rounded;
     }
   }
-  
+
   &__content {
     @apply p-4 space-y-3;
   }
-  
+
   &__header {
     @apply flex justify-between items-start;
-    
+
     .property-title {
       @apply flex-1 font-medium text-gray-900 mr-2;
     }
-    
+
     .property-price {
       @apply text-lg font-bold text-red-500;
     }
   }
-  
+
   &__info {
     @apply flex space-x-3 text-sm text-gray-500;
   }
-  
+
   &__desc {
     text {
       @apply text-sm text-gray-600 line-clamp-2;
     }
   }
-  
+
   &__actions {
     @apply flex space-x-2 pt-2 border-t border-gray-100;
   }
-  
+
   &__extra {
     @apply p-4 pt-0;
   }
@@ -1603,20 +1603,20 @@ const handleContact = (event: Event) => {
   @apply flex-1 py-2 px-3 text-sm text-center rounded;
   @apply border border-gray-300 text-gray-700;
   @apply transition-colors duration-200;
-  
+
   &:hover {
     @apply bg-gray-50;
   }
-  
+
   &--favorite {
     &.action-btn--favorited {
       @apply bg-red-50 border-red-300 text-red-700;
     }
   }
-  
+
   &--contact {
     @apply bg-blue-500 border-blue-500 text-white;
-    
+
     &:hover {
       @apply bg-blue-600;
     }
@@ -1680,7 +1680,7 @@ declare namespace PropertyAPI {
     createTime: number
     updateTime: number
   }
-  
+
   // 搜索参数
   interface SearchParams extends API.PageParams {
     keyword?: string
@@ -1694,7 +1694,7 @@ declare namespace PropertyAPI {
     sortBy?: 'price' | 'area' | 'createTime'
     sortOrder?: 'asc' | 'desc'
   }
-  
+
   // 创建/更新参数
   interface CreatePropertyParams {
     title: string
@@ -1710,16 +1710,16 @@ declare namespace PropertyAPI {
     amenities?: string[]
     contact: PropertyInfo['contact']
   }
-  
+
   interface UpdatePropertyParams extends Partial<CreatePropertyParams> {
     id: string
   }
-  
+
   // 收藏相关
   interface FavoriteParams {
     propertyId: string
   }
-  
+
   interface FavoriteInfo {
     id: string
     propertyId: string
@@ -1733,45 +1733,45 @@ import request from '@/utils/request'
 
 const propertyAPI = {
   // 获取房产列表
-  getPropertyList: (params: PropertyAPI.SearchParams) => 
+  getPropertyList: (params: PropertyAPI.SearchParams) =>
     request.get<API.PageResponse<PropertyAPI.PropertyInfo>>('/property/list', params),
-  
+
   // 获取房产详情
-  getPropertyDetail: (params: { id: string }) => 
+  getPropertyDetail: (params: { id: string }) =>
     request.get<PropertyAPI.PropertyInfo>('/property/detail', params),
-  
+
   // 创建房产
-  createProperty: (params: PropertyAPI.CreatePropertyParams) => 
+  createProperty: (params: PropertyAPI.CreatePropertyParams) =>
     request.post<PropertyAPI.PropertyInfo>('/property/create', params),
-  
+
   // 更新房产
-  updateProperty: (params: PropertyAPI.UpdatePropertyParams) => 
+  updateProperty: (params: PropertyAPI.UpdatePropertyParams) =>
     request.post<PropertyAPI.PropertyInfo>('/property/update', params),
-  
+
   // 删除房产
-  deleteProperty: (params: { id: string }) => 
+  deleteProperty: (params: { id: string }) =>
     request.post<{ success: boolean }>('/property/delete', params),
-  
+
   // 搜索建议
-  getSearchSuggestions: (params: { keyword: string }) => 
+  getSearchSuggestions: (params: { keyword: string }) =>
     request.get<{ keywords: string[]; locations: string[] }>('/property/search-suggestions', params),
-  
+
   // 收藏相关
-  addToFavorites: (params: PropertyAPI.FavoriteParams) => 
+  addToFavorites: (params: PropertyAPI.FavoriteParams) =>
     request.post<PropertyAPI.FavoriteInfo>('/property/favorite/add', params),
-  
-  removeFromFavorites: (params: PropertyAPI.FavoriteParams) => 
+
+  removeFromFavorites: (params: PropertyAPI.FavoriteParams) =>
     request.post<{ success: boolean }>('/property/favorite/remove', params),
-  
-  getFavoriteList: (params: API.PageParams) => 
+
+  getFavoriteList: (params: API.PageParams) =>
     request.get<API.PageResponse<PropertyAPI.PropertyInfo>>('/property/favorite/list', params),
-  
+
   // 图片上传
-  uploadPropertyImages: (filePaths: string[]) => 
+  uploadPropertyImages: (filePaths: string[]) =>
     request.uploadMultiple<API.UploadResponse[]>('/property/upload-images', filePaths),
-  
+
   // 统计数据
-  getPropertyStats: () => 
+  getPropertyStats: () =>
     request.get<{
       total: number
       available: number
@@ -1827,22 +1827,22 @@ interface PropertyState {
   propertyListTotal: number
   propertyListPageNum: number
   propertyListHasMore: boolean
-  
+
   // 房产详情相关
   propertyDetail: PropertyAPI.PropertyInfo | null
   propertyDetailLoading: boolean
   propertyDetailError: string | null
-  
+
   // 搜索相关
   searchKeyword: string
   searchFilters: Partial<PropertyAPI.SearchParams>
   searchSuggestions: { keywords: string[]; locations: string[] }
-  
+
   // 收藏相关
   favoriteList: PropertyAPI.PropertyInfo[]
   favoriteIds: Set<string>
   favoriteListLoading: boolean
-  
+
   // 用户操作状态
   creating: boolean
   updating: boolean
@@ -1851,7 +1851,7 @@ interface PropertyState {
 
 export const usePropertyStore = defineStore({
   id: 'property',
-  
+
   state: (): PropertyState => ({
     // 房产列表
     propertyList: [],
@@ -1860,28 +1860,28 @@ export const usePropertyStore = defineStore({
     propertyListTotal: 0,
     propertyListPageNum: 1,
     propertyListHasMore: true,
-    
+
     // 房产详情
     propertyDetail: null,
     propertyDetailLoading: false,
     propertyDetailError: null,
-    
+
     // 搜索
     searchKeyword: '',
     searchFilters: {},
     searchSuggestions: { keywords: [], locations: [] },
-    
+
     // 收藏
     favoriteList: [],
     favoriteIds: new Set(),
     favoriteListLoading: false,
-    
+
     // 操作状态
     creating: false,
     updating: false,
     deleting: false
   }),
-  
+
   getters: {
     // 列表状态
     hasPropertyList: (state) => state.propertyList.length > 0,
@@ -1892,7 +1892,7 @@ export const usePropertyStore = defineStore({
       hasData: state.propertyList.length > 0,
       hasMore: state.propertyListHasMore
     }),
-    
+
     // 详情状态
     hasPropertyDetail: (state) => !!state.propertyDetail,
     propertyDetailStatus: (state) => ({
@@ -1900,7 +1900,7 @@ export const usePropertyStore = defineStore({
       error: state.propertyDetailError,
       hasData: !!state.propertyDetail
     }),
-    
+
     // 搜索状态
     hasSearchKeyword: (state) => state.searchKeyword.trim() !== '',
     hasSearchFilters: (state) => Object.keys(state.searchFilters).length > 0,
@@ -1908,11 +1908,11 @@ export const usePropertyStore = defineStore({
       keyword: state.searchKeyword,
       ...state.searchFilters
     }),
-    
+
     // 收藏状态
     favoriteCount: (state) => state.favoriteIds.size,
     isFavorite: (state) => (propertyId: string) => state.favoriteIds.has(propertyId),
-    
+
     // 操作状态
     isAnyOperating: (state) => state.creating || state.updating || state.deleting,
     operationStatus: (state) => ({
@@ -1921,7 +1921,7 @@ export const usePropertyStore = defineStore({
       deleting: state.deleting
     })
   },
-  
+
   actions: {
     // 房产列表管理
     async fetchPropertyList(params: PropertyAPI.SearchParams = {}, append = false) {
@@ -1929,26 +1929,26 @@ export const usePropertyStore = defineStore({
         this.propertyListLoading = true
         this.propertyListError = null
       }
-      
+
       try {
         const searchParams = {
           pageNum: append ? this.propertyListPageNum + 1 : 1,
           pageSize: 20,
           ...params
         }
-        
+
         const result = await propertyAPI.getPropertyList(searchParams)
-        
+
         if (append) {
           this.propertyList.push(...result.data.list)
         } else {
           this.propertyList = result.data.list
         }
-        
+
         this.propertyListTotal = result.data.total
         this.propertyListPageNum = result.data.pageNum
         this.propertyListHasMore = result.data.pageNum < result.data.totalPages
-        
+
         return result.data
       } catch (error: any) {
         this.propertyListError = error.message || '加载房产列表失败'
@@ -1960,22 +1960,22 @@ export const usePropertyStore = defineStore({
         this.propertyListLoading = false
       }
     },
-    
+
     async loadMorePropertyList() {
       if (!this.propertyListHasMore || this.propertyListLoading) return
-      
+
       return this.fetchPropertyList(this.activeSearchParams, true)
     },
-    
+
     async refreshPropertyList() {
       return this.fetchPropertyList(this.activeSearchParams, false)
     },
-    
+
     // 房产详情管理
     async fetchPropertyDetail(propertyId: string) {
       this.propertyDetailLoading = true
       this.propertyDetailError = null
-      
+
       try {
         const result = await propertyAPI.getPropertyDetail({ id: propertyId })
         this.propertyDetail = result.data
@@ -1988,32 +1988,32 @@ export const usePropertyStore = defineStore({
         this.propertyDetailLoading = false
       }
     },
-    
+
     clearPropertyDetail() {
       this.propertyDetail = null
       this.propertyDetailError = null
     },
-    
+
     // 搜索管理
     updateSearchKeyword(keyword: string) {
       this.searchKeyword = keyword
     },
-    
+
     updateSearchFilters(filters: Partial<PropertyAPI.SearchParams>) {
       this.searchFilters = { ...this.searchFilters, ...filters }
     },
-    
+
     clearSearchFilters() {
       this.searchKeyword = ''
       this.searchFilters = {}
     },
-    
+
     async fetchSearchSuggestions(keyword: string) {
       if (!keyword.trim()) {
         this.searchSuggestions = { keywords: [], locations: [] }
         return
       }
-      
+
       try {
         const result = await propertyAPI.getSearchSuggestions({ keyword })
         this.searchSuggestions = result.data
@@ -2022,11 +2022,11 @@ export const usePropertyStore = defineStore({
         console.warn('Fetch search suggestions failed:', error)
       }
     },
-    
+
     // 收藏管理
     async fetchFavoriteList() {
       this.favoriteListLoading = true
-      
+
       try {
         const result = await propertyAPI.getFavoriteList({ pageNum: 1, pageSize: 100 })
         this.favoriteList = result.data.list
@@ -2039,10 +2039,10 @@ export const usePropertyStore = defineStore({
         this.favoriteListLoading = false
       }
     },
-    
+
     async toggleFavorite(propertyId: string) {
       const isFavorited = this.favoriteIds.has(propertyId)
-      
+
       try {
         if (isFavorited) {
           await propertyAPI.removeFromFavorites({ propertyId })
@@ -2054,25 +2054,25 @@ export const usePropertyStore = defineStore({
           this.favoriteIds.add(propertyId)
           showToast('已添加收藏')
         }
-        
+
         return !isFavorited
       } catch (error: any) {
         showToast(isFavorited ? '取消收藏失败' : '添加收藏失败')
         throw error
       }
     },
-    
+
     // 房产操作
     async createProperty(params: PropertyAPI.CreatePropertyParams) {
       this.creating = true
-      
+
       try {
         const result = await propertyAPI.createProperty(params)
-        
+
         // 更新本地列表
         this.propertyList.unshift(result.data)
         this.propertyListTotal += 1
-        
+
         showToast('创建成功')
         return result.data
       } catch (error: any) {
@@ -2082,23 +2082,23 @@ export const usePropertyStore = defineStore({
         this.creating = false
       }
     },
-    
+
     async updateProperty(params: PropertyAPI.UpdatePropertyParams) {
       this.updating = true
-      
+
       try {
         const result = await propertyAPI.updateProperty(params)
-        
+
         // 更新本地数据
         const index = this.propertyList.findIndex(item => item.id === params.id)
         if (index > -1) {
           this.propertyList[index] = result.data
         }
-        
+
         if (this.propertyDetail?.id === params.id) {
           this.propertyDetail = result.data
         }
-        
+
         showToast('更新成功')
         return result.data
       } catch (error: any) {
@@ -2108,23 +2108,23 @@ export const usePropertyStore = defineStore({
         this.updating = false
       }
     },
-    
+
     async deleteProperty(propertyId: string) {
       this.deleting = true
-      
+
       try {
         await propertyAPI.deleteProperty({ id: propertyId })
-        
+
         // 更新本地数据
         this.propertyList = this.propertyList.filter(item => item.id !== propertyId)
         this.favoriteList = this.favoriteList.filter(item => item.id !== propertyId)
         this.favoriteIds.delete(propertyId)
         this.propertyListTotal -= 1
-        
+
         if (this.propertyDetail?.id === propertyId) {
           this.propertyDetail = null
         }
-        
+
         showToast('删除成功')
       } catch (error: any) {
         showToast('删除失败')
@@ -2133,13 +2133,13 @@ export const usePropertyStore = defineStore({
         this.deleting = false
       }
     },
-    
+
     // 状态重置
     clearError() {
       this.propertyListError = null
       this.propertyDetailError = null
     },
-    
+
     resetState() {
       this.propertyList = []
       this.propertyDetail = null
@@ -2150,7 +2150,7 @@ export const usePropertyStore = defineStore({
       this.clearError()
     }
   },
-  
+
   // 持久化配置
   persist: {
     enabled: true,
@@ -2190,13 +2190,13 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // Store状态
-const { 
-  propertyList, 
+const {
+  propertyList,
   propertyListStatus,
   searchKeyword,
   fetchPropertyList,
   loadMorePropertyList,
-  refreshPropertyList 
+  refreshPropertyList
 } = useStore('property')
 
 // 页面状态
@@ -2219,11 +2219,11 @@ const loadData = async () => {
 
 const handleSearch = async () => {
   if (searchValue.value === searchKeyword) return
-  
+
   try {
-    await fetchPropertyList({ 
+    await fetchPropertyList({
       keyword: searchValue.value,
-      category: props.category 
+      category: props.category
     })
   } catch (error) {
     console.error('Search failed:', error)
@@ -2241,7 +2241,7 @@ const handleRefresh = async () => {
 
 const handleLoadMore = async () => {
   if (!propertyListStatus.hasMore || propertyListStatus.loading) return
-  
+
   try {
     await loadMorePropertyList()
   } catch (error) {
@@ -2259,7 +2259,7 @@ const handleItemClick = (item: PropertyAPI.PropertyInfo) => {
     <!-- 搜索栏 -->
     <view class="search-bar">
       <view class="search-input-wrapper">
-        <input 
+        <input
           v-model="searchValue"
           type="text"
           placeholder="搜索房产"
@@ -2269,9 +2269,9 @@ const handleItemClick = (item: PropertyAPI.PropertyInfo) => {
         <button class="search-btn" @click="handleSearch">搜索</button>
       </view>
     </view>
-    
+
     <!-- 列表内容 -->
-    <scroll-view 
+    <scroll-view
       class="scroll-container"
       scroll-y
       :refresher-enabled="true"
@@ -2283,7 +2283,7 @@ const handleItemClick = (item: PropertyAPI.PropertyInfo) => {
       <view v-if="propertyListStatus.loading && !propertyList.length" class="loading">
         <text>加载中...</text>
       </view>
-      
+
       <!-- 列表项 -->
       <view v-else-if="propertyList.length" class="list-content">
         <PropertyCard
@@ -2293,19 +2293,19 @@ const handleItemClick = (item: PropertyAPI.PropertyInfo) => {
           class="list-item"
           @click="handleItemClick(item)"
         />
-        
+
         <!-- 加载更多 -->
         <view v-if="propertyListStatus.hasMore" class="load-more">
           <text v-if="propertyListStatus.loading">加载中...</text>
           <text v-else>上拉加载更多</text>
         </view>
-        
+
         <!-- 没有更多 -->
         <view v-else class="no-more">
           <text>没有更多数据了</text>
         </view>
       </view>
-      
+
       <!-- 空状态 -->
       <view v-else class="empty">
         <text>暂无数据</text>
@@ -2325,15 +2325,15 @@ const handleItemClick = (item: PropertyAPI.PropertyInfo) => {
 
 .search-bar {
   @apply p-4 bg-white border-b border-gray-100;
-  
+
   .search-input-wrapper {
     @apply flex space-x-2;
   }
-  
+
   .search-input {
     @apply flex-1 px-3 py-2 border border-gray-300 rounded;
   }
-  
+
   .search-btn {
     @apply px-4 py-2 bg-blue-500 text-white rounded;
   }
@@ -2357,7 +2357,7 @@ const handleItemClick = (item: PropertyAPI.PropertyInfo) => {
 
 .empty {
   @apply space-y-4;
-  
+
   button {
     @apply px-4 py-2 bg-blue-500 text-white rounded;
   }
@@ -2463,49 +2463,49 @@ const validateField = (field: string, value: any) => {
       errors.value[field] = rule.message
       return
     }
-    
+
     if (rule.max && value.toString().length > rule.max) {
       errors.value[field] = rule.message
       return
     }
-    
+
     if (rule.min && Number(value) < rule.min) {
       errors.value[field] = rule.message
       return
     }
-    
+
     if (rule.pattern && !rule.pattern.test(value.toString())) {
       errors.value[field] = rule.message
       return
     }
   }
-  
+
   delete errors.value[field]
 }
 
 const validateForm = () => {
   errors.value = {}
-  
+
   // 验证所有必需字段
   validateField('title', formData.value.title)
   validateField('price', formData.value.price)
   validateField('area', formData.value.area)
   validateField('contact.name', formData.value.contact.name)
   validateField('contact.phone', formData.value.contact.phone)
-  
+
   return Object.keys(errors.value).length === 0
 }
 
 const handleSubmit = async () => {
   if (!validateForm()) return
-  
+
   try {
     if (isEditing.value) {
       await updateProperty({ id: props.id, ...formData.value })
     } else {
       await createProperty(formData.value)
     }
-    
+
     // 跳转到列表页或详情页
     forward('property-list')
   } catch (error) {
@@ -2526,14 +2526,14 @@ const handleCancel = () => {
         {{ isEditing ? '编辑房产' : '创建房产' }}
       </text>
     </view>
-    
+
     <!-- 表单内容 -->
     <scroll-view class="form-container" scroll-y>
       <form class="form">
         <!-- 基本信息 -->
         <view class="form-section">
           <text class="section-title">基本信息</text>
-          
+
           <view class="form-item">
             <text class="form-label">标题 *</text>
             <input
@@ -2546,7 +2546,7 @@ const handleCancel = () => {
             />
             <text v-if="errors.title" class="form-error">{{ errors.title }}</text>
           </view>
-          
+
           <view class="form-item">
             <text class="form-label">描述</text>
             <textarea
@@ -2555,7 +2555,7 @@ const handleCancel = () => {
               class="form-textarea"
             />
           </view>
-          
+
           <view class="form-row">
             <view class="form-item flex-1">
               <text class="form-label">价格 *</text>
@@ -2569,7 +2569,7 @@ const handleCancel = () => {
               />
               <text v-if="errors.price" class="form-error">{{ errors.price }}</text>
             </view>
-            
+
             <view class="form-item flex-1">
               <text class="form-label">面积 *</text>
               <input
@@ -2583,7 +2583,7 @@ const handleCancel = () => {
               <text v-if="errors.area" class="form-error">{{ errors.area }}</text>
             </view>
           </view>
-          
+
           <view class="form-item">
             <text class="form-label">类型</text>
             <picker
@@ -2598,11 +2598,11 @@ const handleCancel = () => {
             </picker>
           </view>
         </view>
-        
+
         <!-- 位置信息 -->
         <view class="form-section">
           <text class="section-title">位置信息</text>
-          
+
           <view class="form-item">
             <text class="form-label">位置</text>
             <input
@@ -2612,7 +2612,7 @@ const handleCancel = () => {
               class="form-input"
             />
           </view>
-          
+
           <view class="form-item">
             <text class="form-label">详细地址</text>
             <input
@@ -2623,11 +2623,11 @@ const handleCancel = () => {
             />
           </view>
         </view>
-        
+
         <!-- 联系信息 -->
         <view class="form-section">
           <text class="section-title">联系信息</text>
-          
+
           <view class="form-item">
             <text class="form-label">联系人 *</text>
             <input
@@ -2642,7 +2642,7 @@ const handleCancel = () => {
               {{ errors['contact.name'] }}
             </text>
           </view>
-          
+
           <view class="form-item">
             <text class="form-label">联系电话 *</text>
             <input
@@ -2657,7 +2657,7 @@ const handleCancel = () => {
               {{ errors['contact.phone'] }}
             </text>
           </view>
-          
+
           <view class="form-item">
             <text class="form-label">邮箱</text>
             <input
@@ -2670,13 +2670,13 @@ const handleCancel = () => {
         </view>
       </form>
     </scroll-view>
-    
+
     <!-- 底部按钮 -->
     <view class="form-footer">
       <button class="btn btn--secondary" @click="handleCancel">
         取消
       </button>
-      <button 
+      <button
         class="btn btn--primary"
         :disabled="!isFormValid || creating || updating"
         @click="handleSubmit"
@@ -2697,7 +2697,7 @@ const handleCancel = () => {
 
 .page-header {
   @apply p-4 bg-white border-b border-gray-100;
-  
+
   .page-title {
     @apply text-lg font-medium text-gray-900;
   }
@@ -2713,7 +2713,7 @@ const handleCancel = () => {
 
 .form-section {
   @apply space-y-4;
-  
+
   .section-title {
     @apply text-base font-medium text-gray-900 border-b border-gray-200 pb-2;
   }
@@ -2725,33 +2725,33 @@ const handleCancel = () => {
 
 .form-item {
   @apply space-y-2;
-  
+
   &.flex-1 {
     @apply flex-1;
   }
-  
+
   .form-label {
     @apply block text-sm font-medium text-gray-700;
   }
-  
+
   .form-input {
     @apply w-full px-3 py-2 border border-gray-300 rounded-md;
     @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
-    
+
     &--error {
       @apply border-red-500;
     }
   }
-  
+
   .form-textarea {
     @apply w-full px-3 py-2 border border-gray-300 rounded-md h-20;
     @apply focus:outline-none focus:ring-2 focus:ring-blue-500;
   }
-  
+
   .form-error {
     @apply text-sm text-red-500;
   }
-  
+
   .picker-view {
     @apply w-full px-3 py-2 border border-gray-300 rounded-md;
     @apply bg-white text-gray-900;
@@ -2761,28 +2761,28 @@ const handleCancel = () => {
 .form-footer {
   @apply p-4 bg-white border-t border-gray-100;
   @apply flex space-x-3;
-  
+
   .btn {
     @apply flex-1 py-3 px-4 rounded-md text-center;
     @apply transition-colors duration-200;
-    
+
     &--primary {
       @apply bg-blue-500 text-white;
-      
+
       &:not(:disabled) {
         &:hover {
           @apply bg-blue-600;
         }
       }
-      
+
       &:disabled {
         @apply bg-gray-300 cursor-not-allowed;
       }
     }
-    
+
     &--secondary {
       @apply bg-gray-100 text-gray-700;
-      
+
       &:hover {
         @apply bg-gray-200;
       }
@@ -2861,12 +2861,12 @@ const handleFavorite = (event: Event) => {
     <view class="list-item__content">
       <!-- 图标/头像 -->
       <view v-if="item.avatar || item.icon" class="list-item__icon">
-        <image 
+        <image
           :src="item.avatar || item.icon"
           class="icon-image"
         />
       </view>
-      
+
       <!-- 文本信息 -->
       <view class="list-item__info">
         <view class="list-item__title">
@@ -2879,7 +2879,7 @@ const handleFavorite = (event: Event) => {
           <text>{{ item.meta }}</text>
         </view>
       </view>
-      
+
       <!-- 右侧内容 -->
       <view class="list-item__right">
         <slot name="right">
@@ -2889,10 +2889,10 @@ const handleFavorite = (event: Event) => {
         </slot>
       </view>
     </view>
-    
+
     <!-- 操作按钮区 -->
     <view v-if="showActions" class="list-item__actions" @click.stop>
-      <button 
+      <button
         v-if="item.canFavorite"
         class="action-btn action-btn--favorite"
         :class="{ 'action-btn--favorited': favorited }"
@@ -2900,27 +2900,27 @@ const handleFavorite = (event: Event) => {
       >
         <text>{{ favorited ? '已收藏' : '收藏' }}</text>
       </button>
-      
-      <button 
+
+      <button
         v-if="item.canEdit"
-        class="action-btn action-btn--edit" 
+        class="action-btn action-btn--edit"
         @click="handleEdit"
       >
         <text>编辑</text>
       </button>
-      
-      <button 
+
+      <button
         v-if="item.canDelete"
-        class="action-btn action-btn--delete" 
+        class="action-btn action-btn--delete"
         @click="handleDelete"
       >
         <text>删除</text>
       </button>
-      
+
       <!-- 自定义操作插槽 -->
       <slot name="actions" :item="item" />
     </view>
-    
+
     <!-- 底部扩展区 -->
     <view v-if="$slots.footer" class="list-item__footer">
       <slot name="footer" :item="item" />
@@ -2932,75 +2932,75 @@ const handleFavorite = (event: Event) => {
 .list-item {
   @apply bg-white border border-gray-200 rounded-lg;
   @apply transition-all duration-200 cursor-pointer;
-  
+
   &:hover {
     @apply shadow-md;
   }
-  
+
   &--small {
     @apply p-3;
   }
-  
+
   &--medium {
     @apply p-4;
   }
-  
+
   &--large {
     @apply p-6;
   }
-  
+
   &--horizontal {
     .list-item__content {
       @apply flex items-center space-x-3;
     }
   }
-  
+
   &--vertical {
     .list-item__content {
       @apply space-y-3;
     }
   }
-  
+
   &__content {
     @apply flex-1;
   }
-  
+
   &__icon {
     @apply flex-shrink-0;
-    
+
     .icon-image {
       @apply w-10 h-10 rounded-full object-cover;
     }
   }
-  
+
   &__info {
     @apply flex-1 min-w-0 space-y-1;
   }
-  
+
   &__title {
     @apply font-medium text-gray-900 truncate;
   }
-  
+
   &__desc {
     @apply text-sm text-gray-600 line-clamp-2;
   }
-  
+
   &__meta {
     @apply text-xs text-gray-500;
   }
-  
+
   &__right {
     @apply flex-shrink-0 text-right;
   }
-  
+
   &__value {
     @apply text-sm font-medium text-gray-900;
   }
-  
+
   &__actions {
     @apply flex space-x-2 mt-3 pt-3 border-t border-gray-100;
   }
-  
+
   &__footer {
     @apply mt-3 pt-3 border-t border-gray-100;
   }
@@ -3009,30 +3009,30 @@ const handleFavorite = (event: Event) => {
 .action-btn {
   @apply px-3 py-1 text-sm rounded border;
   @apply transition-colors duration-200;
-  
+
   &--favorite {
     @apply border-gray-300 text-gray-700;
-    
+
     &:hover {
       @apply bg-gray-50;
     }
-    
+
     &.action-btn--favorited {
       @apply bg-red-50 border-red-300 text-red-700;
     }
   }
-  
+
   &--edit {
     @apply border-blue-300 text-blue-700 bg-blue-50;
-    
+
     &:hover {
       @apply bg-blue-100;
     }
   }
-  
+
   &--delete {
     @apply border-red-300 text-red-700 bg-red-50;
-    
+
     &:hover {
       @apply bg-red-100;
     }
@@ -3119,17 +3119,17 @@ const handleContentClick = (event: Event) => {
           <text>×</text>
         </button>
       </view>
-      
+
       <!-- 内容 -->
       <view class="modal-body">
         <slot />
       </view>
-      
+
       <!-- 底部 -->
       <view v-if="$slots.footer" class="modal-footer">
         <slot name="footer" :confirm="handleConfirm" :cancel="handleCancel" />
       </view>
-      
+
       <!-- 默认底部按钮 -->
       <view v-else class="modal-footer">
         <button class="btn btn--secondary" @click="handleCancel">
@@ -3152,21 +3152,21 @@ const handleContentClick = (event: Event) => {
 .modal-content {
   @apply bg-white rounded-lg shadow-xl;
   @apply flex flex-col max-h-full;
-  
+
   animation: modalSlideIn 0.3s ease-out;
 }
 
 .modal-header {
   @apply flex items-center justify-between p-4 border-b border-gray-200;
-  
+
   .modal-title {
     @apply text-lg font-medium text-gray-900;
   }
-  
+
   .modal-close {
     @apply w-6 h-6 flex items-center justify-center;
     @apply text-gray-400 hover:text-gray-600;
-    
+
     text {
       @apply text-xl;
     }
@@ -3179,22 +3179,22 @@ const handleContentClick = (event: Event) => {
 
 .modal-footer {
   @apply flex space-x-3 p-4 border-t border-gray-200;
-  
+
   .btn {
     @apply flex-1 py-2 px-4 rounded text-center;
     @apply transition-colors duration-200;
-    
+
     &--primary {
       @apply bg-blue-500 text-white;
-      
+
       &:hover {
         @apply bg-blue-600;
       }
     }
-    
+
     &--secondary {
       @apply bg-gray-100 text-gray-700;
-      
+
       &:hover {
         @apply bg-gray-200;
       }
@@ -3236,28 +3236,28 @@ export interface ValidationResult {
 
 export class FormValidator {
   private rules: Record<string, ValidationRule[]> = {}
-  
+
   // 添加验证规则
   addRule(field: string, rules: ValidationRule[]): void {
     this.rules[field] = rules
   }
-  
+
   // 验证单个字段
   validateField(field: string, value: any): string | null {
     const fieldRules = this.rules[field]
     if (!fieldRules) return null
-    
+
     for (const rule of fieldRules) {
       // 必填验证
       if (rule.required && this.isEmpty(value)) {
         return rule.message
       }
-      
+
       // 如果值为空且非必填，跳过其他验证
       if (this.isEmpty(value) && !rule.required) {
         continue
       }
-      
+
       // 最小值/长度验证
       if (rule.min !== undefined) {
         if (typeof value === 'number' && value < rule.min) {
@@ -3267,7 +3267,7 @@ export class FormValidator {
           return rule.message
         }
       }
-      
+
       // 最大值/长度验证
       if (rule.max !== undefined) {
         if (typeof value === 'number' && value > rule.max) {
@@ -3277,25 +3277,25 @@ export class FormValidator {
           return rule.message
         }
       }
-      
+
       // 正则验证
       if (rule.pattern && !rule.pattern.test(String(value))) {
         return rule.message
       }
-      
+
       // 自定义验证
       if (rule.validator && !rule.validator(value)) {
         return rule.message
       }
     }
-    
+
     return null
   }
-  
+
   // 验证整个表单
   validate(data: Record<string, any>): ValidationResult {
     const errors: Record<string, string> = {}
-    
+
     // 验证所有定义了规则的字段
     Object.keys(this.rules).forEach(field => {
       const error = this.validateField(field, this.getNestedValue(data, field))
@@ -3303,21 +3303,21 @@ export class FormValidator {
         errors[field] = error
       }
     })
-    
+
     return {
       valid: Object.keys(errors).length === 0,
       errors
     }
   }
-  
+
   // 判断值是否为空
   private isEmpty(value: any): boolean {
-    return value === null || 
-           value === undefined || 
-           value === '' || 
+    return value === null ||
+           value === undefined ||
+           value === '' ||
            (Array.isArray(value) && value.length === 0)
   }
-  
+
   // 获取嵌套对象的值
   private getNestedValue(obj: any, path: string): any {
     return path.split('.').reduce((current, key) => current?.[key], obj)
@@ -3330,37 +3330,37 @@ export const commonRules = {
     required: true,
     message
   }),
-  
+
   minLength: (min: number, message?: string): ValidationRule => ({
     min,
     message: message || `最少需要${min}个字符`
   }),
-  
+
   maxLength: (max: number, message?: string): ValidationRule => ({
     max,
     message: message || `最多允许${max}个字符`
   }),
-  
+
   email: (message = '请输入有效的邮箱地址'): ValidationRule => ({
     pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     message
   }),
-  
+
   phone: (message = '请输入有效的手机号'): ValidationRule => ({
     pattern: /^1[3-9]\d{9}$/,
     message
   }),
-  
+
   number: (message = '请输入有效的数字'): ValidationRule => ({
     validator: (value) => !isNaN(Number(value)) && isFinite(Number(value)),
     message
   }),
-  
+
   positiveNumber: (message = '请输入正数'): ValidationRule => ({
     validator: (value) => Number(value) > 0,
     message
   }),
-  
+
   url: (message = '请输入有效的URL'): ValidationRule => ({
     pattern: /^https?:\/\/.+/,
     message
@@ -3370,23 +3370,23 @@ export const commonRules = {
 // 使用示例
 export const createUserValidator = () => {
   const validator = new FormValidator()
-  
+
   validator.addRule('name', [
     commonRules.required('姓名不能为空'),
     commonRules.minLength(2, '姓名至少需要2个字符'),
     commonRules.maxLength(20, '姓名不能超过20个字符')
   ])
-  
+
   validator.addRule('email', [
     commonRules.required('邮箱不能为空'),
     commonRules.email()
   ])
-  
+
   validator.addRule('phone', [
     commonRules.required('手机号不能为空'),
     commonRules.phone()
   ])
-  
+
   return validator
 }
 ```
@@ -3402,26 +3402,26 @@ export const formatDate = {
   standard: (date: Date | string | number, format = 'YYYY-MM-DD'): string => {
     return dayjs(date).format(format)
   },
-  
+
   // 带时间的格式
   datetime: (date: Date | string | number): string => {
     return dayjs(date).format('YYYY-MM-DD HH:mm:ss')
   },
-  
+
   // 相对时间
   relative: (date: Date | string | number): string => {
     const now = dayjs()
     const target = dayjs(date)
     const diff = now.diff(target, 'minute')
-    
+
     if (diff < 1) return '刚刚'
     if (diff < 60) return `${diff}分钟前`
     if (diff < 1440) return `${Math.floor(diff / 60)}小时前`
     if (diff < 43200) return `${Math.floor(diff / 1440)}天前`
-    
+
     return target.format('YYYY-MM-DD')
   },
-  
+
   // 时间范围
   range: (start: Date | string | number, end: Date | string | number): string => {
     const startStr = dayjs(start).format('YYYY-MM-DD')
@@ -3437,27 +3437,27 @@ export const formatNumber = {
     const formatted = amount.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
     return `${currency}${formatted}`
   },
-  
+
   // 万为单位
   wan: (num: number, decimals = 1): string => {
     if (num < 10000) return num.toString()
     return `${(num / 10000).toFixed(decimals)}万`
   },
-  
+
   // 百分比
   percentage: (num: number, decimals = 2): string => {
     return `${(num * 100).toFixed(decimals)}%`
   },
-  
+
   // 文件大小
   fileSize: (bytes: number): string => {
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
     if (bytes === 0) return '0 B'
-    
+
     const i = Math.floor(Math.log(bytes) / Math.log(1024))
     return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`
   },
-  
+
   // 千分位分隔
   thousands: (num: number): string => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -3470,33 +3470,33 @@ export const formatText = {
   maskPhone: (phone: string): string => {
     return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
   },
-  
+
   // 身份证脱敏
   maskIdCard: (idCard: string): string => {
     return idCard.replace(/(\d{6})\d{8}(\d{4})/, '$1********$2')
   },
-  
+
   // 邮箱脱敏
   maskEmail: (email: string): string => {
     return email.replace(/(.{2}).+(@.+)/, '$1***$2')
   },
-  
+
   // 截断文本
   truncate: (text: string, maxLength: number, suffix = '...'): string => {
     if (text.length <= maxLength) return text
     return text.slice(0, maxLength - suffix.length) + suffix
   },
-  
+
   // 首字母大写
   capitalize: (text: string): string => {
     return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()
   },
-  
+
   // 驼峰转横线
   kebabCase: (text: string): string => {
     return text.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
   },
-  
+
   // 横线转驼峰
   camelCase: (text: string): string => {
     return text.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())
@@ -3509,7 +3509,7 @@ export const formatAddress = {
   full: (province: string, city: string, district: string, detail: string): string => {
     return [province, city, district, detail].filter(Boolean).join('')
   },
-  
+
   // 简化地址
   simplified: (province: string, city: string, district: string): string => {
     // 如果省份和城市相同（如北京市、上海市），只显示一个
@@ -3531,7 +3531,7 @@ export const formatStatus = {
     }
     return statusMap[status as keyof typeof statusMap] || { text: '未知', color: 'gray' }
   },
-  
+
   // 订单状态
   orderStatus: (status: string): { text: string; color: string } => {
     const statusMap = {
@@ -3549,17 +3549,17 @@ export const formatStatus = {
 export const transformData = {
   // 数组转树形结构
   arrayToTree: <T extends { id: string; parentId?: string }>(
-    array: T[], 
+    array: T[],
     rootId: string | null = null
   ): (T & { children?: T[] })[] => {
     const result: (T & { children?: T[] })[] = []
     const map = new Map<string, T & { children: T[] }>()
-    
+
     // 创建映射
     array.forEach(item => {
       map.set(item.id, { ...item, children: [] })
     })
-    
+
     // 构建树形结构
     array.forEach(item => {
       const node = map.get(item.id)!
@@ -3569,14 +3569,14 @@ export const transformData = {
         map.get(item.parentId)!.children.push(node)
       }
     })
-    
+
     return result
   },
-  
+
   // 树形结构转数组
   treeToArray: <T extends { children?: T[] }>(tree: T[]): T[] => {
     const result: T[] = []
-    
+
     const traverse = (nodes: T[]) => {
       nodes.forEach(node => {
         const { children, ...rest } = node
@@ -3586,7 +3586,7 @@ export const transformData = {
         }
       })
     }
-    
+
     traverse(tree)
     return result
   }
@@ -3624,13 +3624,13 @@ npm run pre-commit     # husky自动执行
 ```markdown
 ## 框架保护检查 🛡️
 - [ ] 未修改底座核心配置文件
-- [ ] 未覆盖底座工具函数  
+- [ ] 未覆盖底座工具函数
 - [ ] 未修改自动生成文件
 - [ ] 遵循底座开发约定
 
 ## 代码质量检查
 - [ ] TypeScript类型检查通过
-- [ ] ESLint规则检查通过  
+- [ ] ESLint规则检查通过
 - [ ] 函数长度 < 50行
 - [ ] 组件Props有默认值
 - [ ] 无console.log残留
@@ -3692,21 +3692,21 @@ describe('UserCard', () => {
     email: 'zhangsan@example.com',
     avatar: '/avatar.jpg'
   }
-  
+
   it('renders user information correctly', () => {
     const wrapper = mount(UserCard, {
       props: { user: mockUser }
     })
-    
+
     expect(wrapper.find('.user-card__name').text()).toBe('张三')
     expect(wrapper.find('.user-card__email').text()).toBe('zhangsan@example.com')
   })
-  
+
   it('emits edit event when edit button clicked', async () => {
     const wrapper = mount(UserCard, {
       props: { user: mockUser, showActions: true }
     })
-    
+
     await wrapper.find('.action-btn--edit').trigger('click')
     expect(wrapper.emitted().edit).toBeTruthy()
     expect(wrapper.emitted().edit[0]).toEqual([mockUser])
@@ -3725,7 +3725,7 @@ describe('formatNumber', () => {
     expect(formatNumber.currency(1234.56)).toBe('¥1,234.56')
     expect(formatNumber.currency(1000, ')).toBe('$1,000.00')
   })
-  
+
   it('formats wan correctly', () => {
     expect(formatNumber.wan(5000)).toBe('5000')
     expect(formatNumber.wan(15000)).toBe('1.5万')
@@ -3737,7 +3737,7 @@ describe('formatText', () => {
   it('masks phone number correctly', () => {
     expect(formatText.maskPhone('13812345678')).toBe('138****5678')
   })
-  
+
   it('truncates text correctly', () => {
     expect(formatText.truncate('这是一个很长的文本', 6)).toBe('这是一...')
     expect(formatText.truncate('短文本', 10)).toBe('短文本')
@@ -3764,12 +3764,12 @@ describe('userAPI', () => {
     const mockResponse = {
       data: { id: '1', name: '张三' }
     }
-    
+
     const request = await import('@/utils/request')
     vi.mocked(request.default.get).mockResolvedValue(mockResponse)
-    
+
     const result = await userAPI.getUserInfo({ id: '1' })
-    
+
     expect(request.default.get).toHaveBeenCalledWith('/user/info', { id: '1' })
     expect(result).toEqual(mockResponse)
   })
@@ -3838,7 +3838,7 @@ const virtualListConfig = {
 ```vue
 <template>
   <!-- 使用uni-app的lazy-load -->
-  <image 
+  <image
     :src="imageUrl"
     :lazy-load="true"
     class="lazy-image"
@@ -3867,7 +3867,7 @@ const handleImageError = () => {
 ```bash
 # 开发环境
 npm run dev:h5              # H5开发版本
-npm run dev:mp-weixin       # 微信小程序开发版本  
+npm run dev:mp-weixin       # 微信小程序开发版本
 npm run dev:mp-alipay       # 支付宝小程序开发版本
 
 # 生产构建
@@ -3929,7 +3929,7 @@ const envConfig: EnvConfig = {
 const validateEnv = (): void => {
   const required = ['apiBaseUrl', 'uploadUrl']
   const missing = required.filter(key => !envConfig[key as keyof EnvConfig])
-  
+
   if (missing.length > 0) {
     throw new Error(`Missing environment variables: ${missing.join(', ')}`)
   }
@@ -3958,25 +3958,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '16'
         cache: 'npm'
-    
+
     - name: Install dependencies
       run: npm ci
-    
+
     - name: Run linter
       run: npm run lint
-    
+
     - name: Run type check
       run: npm run type-check
-    
+
     - name: Run tests
       run: npm run test:coverage
-    
+
     - name: Upload coverage
       uses: codecov/codecov-action@v3
 
@@ -3984,25 +3984,25 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '16'
         cache: 'npm'
-    
+
     - name: Install dependencies
       run: npm ci
-    
+
     - name: Build H5
       run: npm run build:h5
       env:
         VITE_API_BASE_URL: ${{ secrets.PROD_API_URL }}
         VITE_UPLOAD_URL: ${{ secrets.PROD_UPLOAD_URL }}
-    
+
     - name: Deploy to CDN
       run: |
         # 部署到CDN的脚本
@@ -4012,22 +4012,22 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '16'
         cache: 'npm'
-    
+
     - name: Install dependencies
       run: npm ci
-    
+
     - name: Build MiniProgram
       run: npm run build:mp-weixin
-    
+
     - name: Upload to WeChat
       run: |
         # 上传到微信小程序的脚本
@@ -4042,28 +4042,28 @@ jobs:
 server {
     listen 80;
     server_name betterhome.com;
-    
+
     root /var/www/betterhome-h5;
     index index.html;
-    
+
     # SPA路由支持
     location / {
         try_files $uri $uri/ /index.html;
     }
-    
+
     # 静态资源缓存
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
-    
+
     # API代理
     location /api/ {
         proxy_pass https://api.betterhome.com/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
-    
+
     # Gzip压缩
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
@@ -4082,7 +4082,7 @@ server {
         "value": ".eslintrc.js"
       },
       {
-        "type": "folder", 
+        "type": "folder",
         "value": "tests"
       }
     ]
@@ -4159,7 +4159,7 @@ git branch -d feature/user-profile
 
 # 示例
 feat(user): 添加用户资料编辑功能
-fix(api): 修复用户列表分页问题  
+fix(api): 修复用户列表分页问题
 docs(readme): 更新安装说明
 style(components): 统一按钮组件样式
 refactor(store): 重构用户状态管理
@@ -4486,7 +4486,7 @@ npm run build:h5     # 重新构建
 4. 使用骨架屏提升体验
 
 # 懒加载示例
-const UserProfile = defineAsyncComponent(() => 
+const UserProfile = defineAsyncComponent(() =>
   import('@/pages/user-profile/user-profile.vue')
 )
 ```
@@ -4504,7 +4504,7 @@ const UserProfile = defineAsyncComponent(() =>
 4. 避免复杂计算在渲染中进行
 
 # 虚拟滚动优化
-<scroll-view 
+<scroll-view
   :scroll-y="true"
   @scrolltolower="loadMore"
   enhanced

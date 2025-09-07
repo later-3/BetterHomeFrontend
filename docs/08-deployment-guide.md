@@ -24,7 +24,7 @@ graph TB
     B --> E[H5应用]
     B --> F[App应用]
     B --> G[快应用]
-    
+
     H[CI/CD] --> B
     I[环境配置] --> B
     J[质量检查] --> B
@@ -70,21 +70,21 @@ VITE_ENABLE_VCONSOLE=false
     "dev:mp-alipay": "uni -p mp-alipay --mode development",
     "dev:h5": "uni -p h5 --mode development",
     "dev:app": "uni -p app --mode development",
-    
+
     // 构建命令
     "build:mp-weixin": "uni build -p mp-weixin --mode production",
     "build:mp-alipay": "uni build -p mp-alipay --mode production",
     "build:h5": "uni build -p h5 --mode production",
     "build:app": "uni build -p app --mode production",
     "build:quickapp": "uni build -p quickapp-webview --mode production",
-    
+
     // 测试环境构建
     "build:staging:mp-weixin": "uni build -p mp-weixin --mode staging",
     "build:staging:h5": "uni build -p h5 --mode staging",
-    
+
     // 全平台构建
     "build:all": "npm run build:mp-weixin && npm run build:mp-alipay && npm run build:h5 && npm run build:app",
-    
+
     // 预览和分析
     "preview:h5": "vite preview",
     "analyze": "vite-bundle-analyzer dist"
@@ -102,21 +102,21 @@ import { resolve } from 'path'
 
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production'
-  
+
   return {
     plugins: [uni()],
-    
+
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src')
       }
     },
-    
+
     build: {
       // 生产环境优化
       minify: isProduction ? 'terser' : false,
       sourcemap: !isProduction,
-      
+
       // 分包配置
       rollupOptions: {
         output: {
@@ -126,15 +126,15 @@ export default defineConfig(({ mode }) => {
           }
         }
       },
-      
+
       // 构建目标
       target: 'es2015',
-      
+
       // 资源处理
       assetsDir: 'static',
       assetsInlineLimit: 4096
     },
-    
+
     // 开发服务器配置
     server: {
       port: 3000,
@@ -147,7 +147,7 @@ export default defineConfig(({ mode }) => {
         }
       }
     },
-    
+
     // 环境变量
     define: {
       __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
@@ -317,7 +317,7 @@ async function upload() {
     const projectConfig = JSON.parse(
       fs.readFileSync('project.config.json', 'utf8')
     )
-    
+
     // 创建项目实例
     const project = new ci.Project({
       appid: projectConfig.appid,
@@ -326,13 +326,13 @@ async function upload() {
       privateKeyPath: path.resolve('private.key'), // 私钥文件路径
       ignores: ['node_modules/**/*']
     })
-    
+
     // 获取版本号
     const packageJson = JSON.parse(
       fs.readFileSync('package.json', 'utf8')
     )
     const version = packageJson.version
-    
+
     // 上传代码
     console.log('🚀 开始上传微信小程序...')
     const uploadResult = await ci.upload({
@@ -351,9 +351,9 @@ async function upload() {
         console.log(`上传进度: ${progress}%`)
       }
     })
-    
+
     console.log('✅ 上传成功！', uploadResult)
-    
+
   } catch (error) {
     console.error('❌ 上传失败:', error)
     process.exit(1)
@@ -410,7 +410,7 @@ echo "✅ H5 部署完成！"
 server {
     listen 80;
     server_name your-domain.com;
-    
+
     # 重定向到 HTTPS
     return 301 https://$server_name$request_uri;
 }
@@ -418,37 +418,37 @@ server {
 server {
     listen 443 ssl http2;
     server_name your-domain.com;
-    
+
     # SSL 配置
     ssl_certificate /path/to/certificate.crt;
     ssl_certificate_key /path/to/private.key;
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384;
-    
+
     # 根目录
     root /var/www/html;
     index index.html;
-    
+
     # Gzip 压缩
     gzip on;
     gzip_vary on;
     gzip_min_length 1024;
     gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
-    
+
     # 缓存配置
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
         add_header Vary Accept-Encoding;
     }
-    
+
     # HTML 文件不缓存
     location ~* \.html$ {
         expires -1;
         add_header Cache-Control "no-cache, no-store, must-revalidate";
         add_header Pragma "no-cache";
     }
-    
+
     # API 代理
     location /api/ {
         proxy_pass https://api.example.com/;
@@ -457,12 +457,12 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
-    
+
     # SPA 路由支持
     location / {
         try_files $uri $uri/ /index.html;
     }
-    
+
     # 安全头
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
@@ -522,7 +522,7 @@ services:
     environment:
       - NODE_ENV=production
     restart: unless-stopped
-    
+
   # 可选：添加反向代理
   nginx-proxy:
     image: nginx:alpine
@@ -588,7 +588,7 @@ if [ -f "../../android-release-key.keystore" ]; then
     -keystore ../../android-release-key.keystore \
     app/build/outputs/apk/release/app-release.apk \
     alias_name
-  
+
   # 对齐 APK
   zipalign -v 4 app/build/outputs/apk/release/app-release.apk \
     app/build/outputs/apk/release/app-release-aligned.apk
@@ -668,26 +668,26 @@ const config = {
 async function uploadToAppStore() {
   try {
     console.log('🚀 开始上传到 App Store...')
-    
+
     // 验证 IPA 文件
     const ipaPath = 'platforms/ios/build/YourApp.ipa'
     if (!fs.existsSync(ipaPath)) {
       throw new Error('未找到 IPA 文件')
     }
-    
+
     // 使用 xcrun altool 上传
     const command = `xcrun altool --upload-app \
       --type ios \
       --file "${ipaPath}" \
       --apiKey "${config.apiKeyId}" \
       --apiIssuer "${config.apiKeyIssuer}"`
-    
+
     console.log('📤 正在上传...')
     execSync(command, { stdio: 'inherit' })
-    
+
     console.log('✅ 上传成功！')
     console.log('📋 请在 App Store Connect 中查看处理状态')
-    
+
   } catch (error) {
     console.error('❌ 上传失败:', error.message)
     process.exit(1)
@@ -724,24 +724,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: 设置 Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: 安装依赖
         run: npm ci
-      
+
       - name: 代码检查
         run: |
           npm run lint
           npm run type-check
-      
+
       - name: 运行测试
         run: npm run test:coverage
-      
+
       - name: 上传覆盖率报告
         uses: codecov/codecov-action@v3
         with:
@@ -754,22 +754,22 @@ jobs:
     strategy:
       matrix:
         platform: [mp-weixin, mp-alipay, h5]
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: 设置 Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: 安装依赖
         run: npm ci
-      
+
       - name: 构建 ${{ matrix.platform }}
         run: npm run build:${{ matrix.platform }}
-      
+
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
@@ -783,16 +783,16 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop'
     environment: staging
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: 下载 H5 构建产物
         uses: actions/download-artifact@v4
         with:
           name: build-h5
           path: dist/build/h5
-      
+
       - name: 部署到测试服务器
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -802,7 +802,7 @@ jobs:
           script: |
             cd /var/www/staging
             rm -rf *
-            
+
       - name: 上传文件
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -819,16 +819,16 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     environment: production
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: 下载构建产物
         uses: actions/download-artifact@v4
         with:
           pattern: build-*
           merge-multiple: true
-      
+
       - name: 部署 H5 到生产环境
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -838,7 +838,7 @@ jobs:
           source: "build-h5/*"
           target: "/var/www/html"
           strip_components: 1
-      
+
       - name: 重启服务
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -854,7 +854,7 @@ jobs:
     needs: [deploy-staging, deploy-production]
     runs-on: ubuntu-latest
     if: always()
-    
+
     steps:
       - name: 发送通知
         uses: 8398a7/action-slack@v3
@@ -1010,13 +1010,13 @@ interface ErrorInfo {
 class Monitor {
   private apiUrl: string
   private appVersion: string
-  
+
   constructor(apiUrl: string, appVersion: string) {
     this.apiUrl = apiUrl
     this.appVersion = appVersion
     this.init()
   }
-  
+
   private init() {
     // 全局错误监听
     window.addEventListener('error', (event) => {
@@ -1030,7 +1030,7 @@ class Monitor {
         userAgent: navigator.userAgent
       })
     })
-    
+
     // Promise 错误监听
     window.addEventListener('unhandledrejection', (event) => {
       this.reportError({
@@ -1041,7 +1041,7 @@ class Monitor {
         userAgent: navigator.userAgent
       })
     })
-    
+
     // Vue 错误监听（如果使用 Vue）
     if (window.Vue) {
       window.Vue.config.errorHandler = (err, vm, info) => {
@@ -1055,7 +1055,7 @@ class Monitor {
       }
     }
   }
-  
+
   // 上报错误
   private async reportError(errorInfo: ErrorInfo) {
     try {
@@ -1074,13 +1074,13 @@ class Monitor {
       console.error('Failed to report error:', error)
     }
   }
-  
+
   // 性能监控
   public reportPerformance() {
     if ('performance' in window) {
       const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
       const paint = performance.getEntriesByType('paint')
-      
+
       const performanceData = {
         // 页面加载时间
         loadTime: navigation.loadEventEnd - navigation.loadEventStart,
@@ -1101,11 +1101,11 @@ class Monitor {
         // 平台信息
         platform: this.getPlatform()
       }
-      
+
       this.reportData('/performance', performanceData)
     }
   }
-  
+
   // 用户行为监控
   public reportUserAction(action: string, data?: any) {
     this.reportData('/user-actions', {
@@ -1117,7 +1117,7 @@ class Monitor {
       platform: this.getPlatform()
     })
   }
-  
+
   private async reportData(endpoint: string, data: any) {
     try {
       await fetch(`${this.apiUrl}${endpoint}`, {
@@ -1131,24 +1131,24 @@ class Monitor {
       console.error('Failed to report data:', error)
     }
   }
-  
+
   private getPlatform(): string {
     // #ifdef MP-WEIXIN
     return 'mp-weixin'
     // #endif
-    
+
     // #ifdef MP-ALIPAY
     return 'mp-alipay'
     // #endif
-    
+
     // #ifdef H5
     return 'h5'
     // #endif
-    
+
     // #ifdef APP-PLUS
     return 'app'
     // #endif
-    
+
     return 'unknown'
   }
 }
@@ -1186,25 +1186,25 @@ class Logger {
   private maxLogs = 100
   private apiUrl: string
   private currentLevel: LogLevel
-  
+
   constructor(apiUrl: string, level: LogLevel = LogLevel.INFO) {
     this.apiUrl = apiUrl
     this.currentLevel = level
-    
+
     // 定期上报日志
     setInterval(() => {
       this.flush()
     }, 30000) // 30秒上报一次
-    
+
     // 页面卸载时上报
     window.addEventListener('beforeunload', () => {
       this.flush()
     })
   }
-  
+
   private log(level: LogLevel, message: string, data?: any) {
     if (level < this.currentLevel) return
-    
+
     const entry: LogEntry = {
       level,
       message,
@@ -1213,35 +1213,35 @@ class Logger {
       url: window.location.href,
       userAgent: navigator.userAgent
     }
-    
+
     this.logs.push(entry)
-    
+
     // 控制日志数量
     if (this.logs.length > this.maxLogs) {
       this.logs.shift()
     }
-    
+
     // 输出到控制台
     const consoleMethod = this.getConsoleMethod(level)
     consoleMethod(`[${new Date().toISOString()}] ${message}`, data)
   }
-  
+
   public debug(message: string, data?: any) {
     this.log(LogLevel.DEBUG, message, data)
   }
-  
+
   public info(message: string, data?: any) {
     this.log(LogLevel.INFO, message, data)
   }
-  
+
   public warn(message: string, data?: any) {
     this.log(LogLevel.WARN, message, data)
   }
-  
+
   public error(message: string, data?: any) {
     this.log(LogLevel.ERROR, message, data)
   }
-  
+
   private getConsoleMethod(level: LogLevel) {
     switch (level) {
       case LogLevel.DEBUG:
@@ -1256,14 +1256,14 @@ class Logger {
         return console.log
     }
   }
-  
+
   // 上报日志
   private async flush() {
     if (this.logs.length === 0) return
-    
+
     const logsToSend = [...this.logs]
     this.logs = []
-    
+
     try {
       await fetch(`${this.apiUrl}/logs`, {
         method: 'POST',
@@ -1282,7 +1282,7 @@ class Logger {
       this.logs.unshift(...logsToSend)
     }
   }
-  
+
   private getPlatform(): string {
     // 平台检测逻辑（同监控模块）
     return 'h5' // 简化示例

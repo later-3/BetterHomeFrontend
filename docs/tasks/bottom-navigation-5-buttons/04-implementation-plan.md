@@ -69,7 +69,7 @@ src/
 **公告功能图标**
 ```
 推荐: mdi:bullhorn
-备选: mdi:announcement, carbon:announcement  
+备选: mdi:announcement, carbon:announcement
 文件: notice.png / notice-active.png
 ```
 
@@ -94,7 +94,7 @@ src/
 - **命名**: 遵循 `[功能名].png` 和 `[功能名]-active.png` 格式
 
 #### 2.3 图标文件放置
-```bash
+``bash
 # 目标目录结构
 src/static/icons/
 ├── neighbor.png          # 邻里图标
@@ -111,17 +111,29 @@ src/static/icons/
 
 ### Phase 3: 页面开发 (预计45分钟)
 
-#### 3.1 邻里页面创建
-创建 `src/pages/neighbor/neighbor.vue`：
+#### 3.1 使用自动化脚本创建页面
+根据项目架构规范，优先使用 npm run add 命令添加页面：
 
-```vue
+```bash
+# 更新 pages.json 中的页面配置（添加新页面，但暂不修改 tabBar）
+# 然后运行自动化脚本创建页面文件
+npm run add
+```
+
+该命令会根据 [pages.json](file:///Users/xulater/Code/Community/Codebuddy/BetterHomeFrontend/src/pages.json) 中的配置自动创建页面文件。
+
+#### 3.2 更新页面内容
+自动化脚本创建页面后，需要更新页面内容以符合项目规范：
+
+**邻里页面更新** (`src/pages/neighbor/neighbor.vue`)：
+``vue
 <template>
   <view class="page-container">
     <view class="header">
       <text class="title">邻里</text>
       <text class="subtitle">社区邻里互动</text>
     </view>
-    
+
     <view class="content">
       <view class="placeholder-card">
         <text class="placeholder-text">功能开发中...</text>
@@ -135,11 +147,12 @@ src/static/icons/
 /**
  * 邻里页面
  * 用于展示社区邻里互动相关功能
- * 
+ *
  * @author Claude Code
  * @created 2025-01-07
  */
 
+import { onMounted } from 'vue';
 import { usePageNavigation } from '@/hooks/useNavigation';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 
@@ -221,9 +234,7 @@ onMounted(() => {
 </style>
 ```
 
-#### 3.2 公告页面创建
-创建 `src/pages/notice/notice.vue`：
-
+**公告页面更新** (`src/pages/notice/notice.vue`)：
 ``vue
 <template>
   <view class="page-container">
@@ -231,7 +242,7 @@ onMounted(() => {
       <text class="title">公告</text>
       <text class="subtitle">社区公告通知</text>
     </view>
-    
+
     <view class="content">
       <view class="placeholder-card">
         <text class="placeholder-text">功能开发中...</text>
@@ -245,11 +256,12 @@ onMounted(() => {
 /**
  * 公告页面
  * 用于展示社区公告和通知相关功能
- * 
+ *
  * @author Claude Code
  * @created 2025-01-07
  */
 
+import { onMounted } from 'vue';
 import { usePageNavigation } from '@/hooks/useNavigation';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 
@@ -331,9 +343,7 @@ onMounted(() => {
 </style>
 ```
 
-#### 3.3 事项页面创建
-创建 `src/pages/task/task.vue`：
-
+**事项页面更新** (`src/pages/task/task.vue`)：
 ``vue
 <template>
   <view class="page-container">
@@ -341,7 +351,7 @@ onMounted(() => {
       <text class="title">事项</text>
       <text class="subtitle">待办事项管理</text>
     </view>
-    
+
     <view class="content">
       <view class="placeholder-card">
         <text class="placeholder-text">功能开发中...</text>
@@ -355,11 +365,12 @@ onMounted(() => {
 /**
  * 事项页面
  * 用于展示待办事项和任务管理相关功能
- * 
+ *
  * @author Claude Code
  * @created 2025-01-07
  */
 
+import { onMounted } from 'vue';
 import { usePageNavigation } from '@/hooks/useNavigation';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 
@@ -450,21 +461,18 @@ onMounted(() => {
 {
   "pages": [
     {
-      "name": "index",
       "path": "pages/index/index",
       "style": {
         "navigationBarTitleText": "首页"
       }
     },
     {
-      "name": "create",
       "path": "pages/create/create",
       "style": {
         "navigationBarTitleText": "创建"
       }
     },
     {
-      "name": "profile",
       "path": "pages/profile/profile",
       "style": {
         "navigationBarTitleText": "个人"
@@ -529,45 +537,40 @@ onMounted(() => {
 {
   "pages": [
     {
-      "name": "neighbor",
       "path": "pages/neighbor/neighbor",
-      "style": { 
+      "style": {
         "navigationBarTitleText": "邻里",
         "navigationBarBackgroundColor": "#ffffff",
         "navigationBarTextStyle": "black"
       }
     },
     {
-      "name": "notice",
-      "path": "pages/notice/notice", 
-      "style": { 
+      "path": "pages/notice/notice",
+      "style": {
         "navigationBarTitleText": "公告",
         "navigationBarBackgroundColor": "#ffffff",
         "navigationBarTextStyle": "black"
       }
     },
     {
-      "name": "create",
       "path": "pages/create/create",
-      "style": { 
+      "style": {
         "navigationBarTitleText": "创建",
-        "navigationBarBackgroundColor": "#ffffff", 
+        "navigationBarBackgroundColor": "#ffffff",
         "navigationBarTextStyle": "black"
       }
     },
     {
-      "name": "task",
       "path": "pages/task/task",
-      "style": { 
+      "style": {
         "navigationBarTitleText": "事项",
         "navigationBarBackgroundColor": "#ffffff",
         "navigationBarTextStyle": "black"
       }
     },
     {
-      "name": "profile",
       "path": "pages/profile/profile",
-      "style": { 
+      "style": {
         "navigationBarTitleText": "我",
         "navigationBarBackgroundColor": "#ffffff",
         "navigationBarTextStyle": "black"
@@ -597,7 +600,7 @@ onMounted(() => {
   "tabBar": {
     "color": "#666666",
     "selectedColor": "#1AA86C",
-    "borderStyle": "white", 
+    "borderStyle": "white",
     "backgroundColor": "#ffffff",
     "height": "50px",
     "fontSize": "10px",
@@ -610,7 +613,7 @@ onMounted(() => {
         "selectedIconPath": "static/icons/neighbor-active.png"
       },
       {
-        "pagePath": "pages/notice/notice", 
+        "pagePath": "pages/notice/notice",
         "iconPath": "static/icons/notice.png",
         "selectedIconPath": "static/icons/notice-active.png"
       },
@@ -621,7 +624,7 @@ onMounted(() => {
       },
       {
         "pagePath": "pages/task/task",
-        "iconPath": "static/icons/task.png", 
+        "iconPath": "static/icons/task.png",
         "selectedIconPath": "static/icons/task-active.png"
       },
       {
@@ -639,10 +642,11 @@ onMounted(() => {
 **pages数组变更**：
 - 移除 `pages/index/index` (原首页)
 - 新增 `pages/neighbor/neighbor` (邻里页面)
-- 新增 `pages/notice/notice` (公告页面)  
+- 新增 `pages/notice/notice` (公告页面)
 - 新增 `pages/task/task` (事项页面)
 - 保留 `pages/create/create` (创建页面)
 - 保留 `pages/profile/profile` (个人页面)
+- 保持与项目现有配置风格一致，不添加 [name](file:///Users/xulater/Code/Community/Codebuddy/BetterHomeFrontend/src/store/navigation.ts#L5-L5) 属性
 
 **tabBar配置变更**：
 - 按钮数量：从3个增加到5个
@@ -790,7 +794,7 @@ npm run dev
 ### Phase 8: 代码提交和PR (预计30分钟)
 
 #### 8.1 代码提交
-```bash
+``bash
 # 查看所有变更
 git status
 
@@ -801,7 +805,7 @@ git add .
 git commit -m "feat: 实现5按钮底部导航栏功能
 
 - 新增邻里页面 (pages/neighbor/neighbor.vue)
-- 新增公告页面 (pages/notice/notice.vue)  
+- 新增公告页面 (pages/notice/notice.vue)
 - 新增事项页面 (pages/task/task.vue)
 - 更新pages.json配置，实现5按钮tabBar布局
 - 添加对应图标资源 (来源: iconify.design)
@@ -839,7 +843,7 @@ feat: 实现5按钮底部导航栏功能
 
 ### 新增页面
 - ✅ 邻里页面 (`src/pages/neighbor/neighbor.vue`)
-- ✅ 公告页面 (`src/pages/notice/notice.vue`)  
+- ✅ 公告页面 (`src/pages/notice/notice.vue`)
 - ✅ 事项页面 (`src/pages/task/task.vue`)
 
 ### 配置更新
@@ -887,7 +891,7 @@ feat: 实现5按钮底部导航栏功能
 - [x] 图标激活状态切换正常
 - [x] 保持原有创建和个人功能不变
 
-### 质量测试  
+### 质量测试
 - [x] 浏览器控制台无错误和警告
 - [x] 图标资源加载正常
 - [x] 页面路由配置正确
@@ -909,7 +913,7 @@ feat: 实现5按钮底部导航栏功能
 
 ### 页面对应关系
 - **邻里** → `pages/neighbor/neighbor` → 社区邻里互动
-- **公告** → `pages/notice/notice` → 社区公告通知  
+- **公告** → `pages/notice/notice` → 社区公告通知
 - **➕** → `pages/create/create` → 创建功能 (保持不变)
 - **事项** → `pages/task/task` → 待办事项管理
 - **我** → `pages/profile/profile` → 个人中心 (保持不变)
@@ -927,21 +931,21 @@ feat: 实现5按钮底部导航栏功能
 
 ### 向后兼容性
 - ✅ 保持创建功能完全不变
-- ✅ 保持个人功能完全不变  
+- ✅ 保持个人功能完全不变
 - ✅ 新增功能不影响现有业务逻辑
 - ✅ 配置变更可完全回滚
 
 ## 📊 工作量统计
 
 - **开发时间**: 3小时
-- **测试时间**: 1小时  
+- **测试时间**: 1小时
 - **文档时间**: 0.5小时
 - **总计**: 4.5小时
 
 ## 🔗 相关文档
 
 - [需求文档](./01-requirements.md)
-- [设计文档](./02-design.md)  
+- [设计文档](./02-design.md)
 - [任务清单](./03-tasks.md)
 - [实施计划](./04-implementation-plan.md)
 
@@ -954,7 +958,7 @@ feat: 实现5按钮底部导航栏功能
 - **配置文件修改**: `pages.json` 属于Level 1文件，需要特别注意
 - **路径配置**: 新页面路径配置错误可能导致导航失效
 
-### 中风险项  
+### 中风险项
 - **图标资源**: 图标文件缺失或路径错误影响显示
 - **页面兼容性**: 新页面在不同平台的兼容性问题
 
@@ -1014,8 +1018,8 @@ feat: 实现5按钮底部导航栏功能
 
 ---
 
-**文档版本**: v1.1  
-**创建时间**: 2025-01-07  
-**更新时间**: 2025-01-07  
-**作者**: Claude Code  
+**文档版本**: v1.2
+**创建时间**: 2025-01-07
+**更新时间**: 2025-01-07
+**作者**: Claude Code
 **审核状态**: 待审核

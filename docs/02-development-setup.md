@@ -74,7 +74,7 @@ git config --global init.defaultBranch main
   "typescript.preferences.quoteStyle": "single",
   "typescript.suggest.autoImports": true,
   "typescript.updateImportsOnFileMove.enabled": "always",
-  
+
   // 编辑器配置
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
@@ -84,18 +84,18 @@ git config --global init.defaultBranch main
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
   "editor.detectIndentation": false,
-  
+
   // Vue 配置
   "volar.takeOverMode.enabled": true,
   "vue.codeActions.enabled": true,
-  
+
   // 文件关联
   "files.associations": {
     "*.vue": "vue",
     "pages.json": "jsonc",
     "manifest.json": "jsonc"
   },
-  
+
   // 排除文件
   "files.exclude": {
     "**/node_modules": true,
@@ -103,7 +103,7 @@ git config --global init.defaultBranch main
     "**/.git": true,
     "**/unpackage": true
   },
-  
+
   // 搜索排除
   "search.exclude": {
     "**/node_modules": true,
@@ -111,7 +111,7 @@ git config --global init.defaultBranch main
     "**/unpackage": true,
     "**/*.d.ts": true
   },
-  
+
   // ESLint 配置
   "eslint.validate": [
     "javascript",
@@ -120,11 +120,11 @@ git config --global init.defaultBranch main
     "typescriptreact",
     "vue"
   ],
-  
+
   // Prettier 配置
   "prettier.requireConfig": true,
   "prettier.useEditorConfig": false,
-  
+
   // UnoCSS 配置
   "unocss.root": "./"
 }
@@ -152,7 +152,7 @@ git config --global init.defaultBranch main
    ```bash
    # 构建微信小程序版本
    npm run build:mp-weixin
-   
+
    # 在微信开发者工具中导入 dist/build/mp-weixin 目录
    ```
 
@@ -165,12 +165,12 @@ git config --global init.defaultBranch main
 
 1. **下载安装**
    - 访问 [支付宝开发者工具官网](https://opendocs.alipay.com/mini/ide/download)
-   
+
 2. **项目配置**
    ```bash
    # 构建支付宝小程序版本
    npm run build:mp-alipay
-   
+
    # 导入 dist/build/mp-alipay 目录
    ```
 
@@ -361,7 +361,7 @@ pnpm install  # 替代 npm install
    ```bash
    # 重启 TypeScript 服务
    # VSCode: Ctrl+Shift+P -> "TypeScript: Restart TS Server"
-   
+
    # 检查类型
    npm run type-check
    ```
@@ -370,7 +370,7 @@ pnpm install  # 替代 npm install
    ```bash
    # 查看具体错误
    npm run lint
-   
+
    # 自动修复
    npm run lint:fix
    ```

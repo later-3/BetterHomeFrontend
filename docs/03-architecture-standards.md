@@ -165,7 +165,7 @@ uni-vue3-vite-ts-pinia/
 - **特点**: 支持全局类型，无需import即可使用
 - **约束**: 只定义类型，不包含实现逻辑
 
-#### 📁 `src/api/` - API接口模块  
+#### 📁 `src/api/` - API接口模块
 - **职责**: 后端接口封装和管理
 - **依赖**: utils/request.ts
 - **约束**: 不处理业务逻辑，只负责数据请求
@@ -413,11 +413,11 @@ module.exports = {
     'no-console': 'warn',           // 警告console使用
     'no-debugger': 'error',         // 禁止debugger
     'no-unused-vars': 'error',      // 禁止未使用变量
-    
+
     // Vue特定
     'vue/multi-word-component-names': 'off',
     'vue/no-v-html': 'warn',
-    
+
     // TypeScript
     '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/no-unused-vars': 'error'
