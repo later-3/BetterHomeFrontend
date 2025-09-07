@@ -1,3 +1,4 @@
+tat
 <script lang="ts" setup>
 import { useInit } from '@/hooks/useInit';
 import { usePageNavigation } from '@/hooks/useNavigation';

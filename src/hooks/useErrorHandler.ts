@@ -3,7 +3,7 @@
  * 为Vue组件提供统一的错误处理能力
  */
 
-import { getCurrentInstance, onErrorCaptured, ref } from 'vue';
+import { getCurrentInstance, onErrorCaptured, readonly, ref } from 'vue';
 import { type ErrorHandlerOptions, errorHandler } from '@/utils/errorHandler';
 
 export interface UseErrorHandlerOptions {

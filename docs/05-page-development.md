@@ -197,7 +197,7 @@ uni.setNavigationBarTitle({
     <view v-if="pageData.loading" class="loading-container">
       <uni-load-more status="loading" />
     </view>
-    
+
     <!-- 页面内容 -->
     <view v-else class="content-container">
       <text>用户资料页面</text>
@@ -304,7 +304,7 @@ const isCurrentUser = computed(() => {
 // 页面加载
 onLoad(async (query: ProfilePageQuery) => {
   await loadUserProfile(query.userId)
-  
+
   // 设置默认标签页
   if (query.tab) {
     pageState.value.activeTab = query.tab
@@ -342,10 +342,10 @@ const saveProfile = async (formData: ProfileFormData) => {
     const result = await updateUserProfile(formData)
     pageState.value.userInfo = result.data
     pageState.value.editMode = false
-    
+
     // 更新全局用户信息
     userStore.updateUserInfo(result.data)
-    
+
     uni.showToast({ title: '保存成功', icon: 'success' })
   } catch (error) {
     console.error('保存失败:', error)
@@ -362,8 +362,8 @@ const saveProfile = async (formData: ProfileFormData) => {
   <view class="user-profile-page">
     <!-- 页面头部 -->
     <view class="page-header">
-      <UserAvatar 
-        :src="pageState.userInfo?.avatar" 
+      <UserAvatar
+        :src="pageState.userInfo?.avatar"
         :size="120"
         :editable="isCurrentUser && pageState.editMode"
         @change="handleAvatarChange"
@@ -372,11 +372,11 @@ const saveProfile = async (formData: ProfileFormData) => {
         <text class="username">{{ pageState.userInfo?.nickname }}</text>
         <text class="user-id">ID: {{ pageState.userInfo?.id }}</text>
       </view>
-      
+
       <!-- 操作按钮 -->
       <view v-if="isCurrentUser" class="action-buttons">
-        <button 
-          v-if="!pageState.editMode" 
+        <button
+          v-if="!pageState.editMode"
           class="edit-btn"
           @click="toggleEditMode"
         >
@@ -388,34 +388,34 @@ const saveProfile = async (formData: ProfileFormData) => {
         </view>
       </view>
     </view>
-    
+
     <!-- 标签页 -->
     <view class="tab-container">
-      <TabBar 
+      <TabBar
         :tabs="tabList"
         :active="pageState.activeTab"
         @change="handleTabChange"
       />
     </view>
-    
+
     <!-- 标签页内容 -->
     <view class="tab-content">
       <!-- 基本信息 -->
-      <UserInfoTab 
+      <UserInfoTab
         v-if="pageState.activeTab === 'info'"
         :user-info="pageState.userInfo"
         :edit-mode="pageState.editMode"
         @save="saveProfile"
       />
-      
+
       <!-- 设置 -->
-      <UserSettingsTab 
+      <UserSettingsTab
         v-else-if="pageState.activeTab === 'settings'"
         :user-info="pageState.userInfo"
       />
-      
+
       <!-- 安全 -->
-      <UserSecurityTab 
+      <UserSecurityTab
         v-else-if="pageState.activeTab === 'security'"
         :user-info="pageState.userInfo"
       />
@@ -438,29 +438,29 @@ const saveProfile = async (formData: ProfileFormData) => {
   padding: 40rpx 30rpx;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  
+
   .user-basic-info {
     margin-top: 20rpx;
     text-align: center;
-    
+
     .username {
       display: block;
       font-size: 36rpx;
       font-weight: 600;
       margin-bottom: 10rpx;
     }
-    
+
     .user-id {
       font-size: 24rpx;
       opacity: 0.8;
     }
   }
-  
+
   .action-buttons {
     position: absolute;
     top: 40rpx;
     right: 30rpx;
-    
+
     .edit-btn {
       padding: 12rpx 24rpx;
       background-color: rgba(255, 255, 255, 0.2);
@@ -469,23 +469,23 @@ const saveProfile = async (formData: ProfileFormData) => {
       border-radius: 20rpx;
       font-size: 26rpx;
     }
-    
+
     .edit-actions {
       display: flex;
       gap: 20rpx;
-      
+
       button {
         padding: 12rpx 20rpx;
         border-radius: 20rpx;
         font-size: 26rpx;
       }
-      
+
       .cancel-btn {
         background-color: transparent;
         color: white;
         border: 1rpx solid rgba(255, 255, 255, 0.5);
       }
-      
+
       .save-btn {
         background-color: #4CAF50;
         color: white;
@@ -509,7 +509,7 @@ const saveProfile = async (formData: ProfileFormData) => {
 @media (max-width: 750rpx) {
   .page-header {
     padding: 30rpx 20rpx;
-    
+
     .action-buttons {
       position: static;
       margin-top: 20rpx;
@@ -535,30 +535,30 @@ describe('UserProfilePage', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
-  
+
   it('应该正确渲染用户信息', async () => {
     const wrapper = mount(UserProfilePage)
     const userStore = useUserStore()
-    
+
     // 模拟用户数据
     userStore.userInfo = {
       id: '123',
       nickname: '测试用户',
       avatar: 'https://example.com/avatar.jpg'
     }
-    
+
     await wrapper.vm.$nextTick()
-    
+
     expect(wrapper.find('.username').text()).toBe('测试用户')
     expect(wrapper.find('.user-id').text()).toBe('ID: 123')
   })
-  
+
   it('应该支持编辑模式切换', async () => {
     const wrapper = mount(UserProfilePage)
-    
+
     // 点击编辑按钮
     await wrapper.find('.edit-btn').trigger('click')
-    
+
     expect(wrapper.vm.pageState.editMode).toBe(true)
     expect(wrapper.find('.edit-actions').exists()).toBe(true)
   })
@@ -575,25 +575,25 @@ test.describe('用户资料页面', () => {
   test('应该能够查看和编辑用户资料', async ({ page }) => {
     // 导航到用户资料页面
     await page.goto('/pages/user/profile/index')
-    
+
     // 检查页面标题
     await expect(page).toHaveTitle('用户资料')
-    
+
     // 检查用户信息显示
     await expect(page.locator('.username')).toBeVisible()
-    
+
     // 点击编辑按钮
     await page.click('.edit-btn')
-    
+
     // 检查编辑模式
     await expect(page.locator('.edit-actions')).toBeVisible()
-    
+
     // 修改昵称
     await page.fill('input[name="nickname"]', '新昵称')
-    
+
     // 保存修改
     await page.click('.save-btn')
-    
+
     // 检查保存结果
     await expect(page.locator('.username')).toHaveText('新昵称')
   })
@@ -611,11 +611,11 @@ test.describe('用户资料页面', () => {
 ```vue
 <script setup lang="ts">
 // 懒加载组件
-const UserInfoTab = defineAsyncComponent(() => 
+const UserInfoTab = defineAsyncComponent(() =>
   import('./components/UserInfoTab.vue')
 )
 
-const UserSettingsTab = defineAsyncComponent(() => 
+const UserSettingsTab = defineAsyncComponent(() =>
   import('./components/UserSettingsTab.vue')
 )
 
@@ -638,16 +638,16 @@ const HeavyComponent = defineAsyncComponent({
 // 使用 Store 缓存数据
 const loadUserProfile = async (userId?: string, forceRefresh = false) => {
   const cachedData = userStore.getCachedProfile(userId)
-  
+
   if (cachedData && !forceRefresh) {
     pageState.value.userInfo = cachedData
     return
   }
-  
+
   // 从服务器获取数据
   const result = await getUserProfile(userId)
   pageState.value.userInfo = result.data
-  
+
   // 缓存数据
   userStore.cacheProfile(userId, result.data)
 }
@@ -658,7 +658,7 @@ const loadUserProfile = async (userId?: string, forceRefresh = false) => {
 ```vue
 <template>
   <!-- 使用 lazy-load 和 webp 格式 -->
-  <image 
+  <image
     :src="optimizedImageUrl"
     :lazy-load="true"
     mode="aspectFit"
@@ -669,11 +669,11 @@ const loadUserProfile = async (userId?: string, forceRefresh = false) => {
 <script setup lang="ts">
 const optimizedImageUrl = computed(() => {
   if (!props.src) return ''
-  
+
   // 根据设备像素比选择合适尺寸
   const dpr = uni.getSystemInfoSync().pixelRatio
   const size = Math.ceil(props.size * dpr)
-  
+
   return `${props.src}?w=${size}&h=${size}&format=webp`
 })
 </script>
@@ -688,15 +688,15 @@ const optimizedImageUrl = computed(() => {
   <view class="page-container">
     <!-- 骨架屏 -->
     <SkeletonLoader v-if="pageState.loading" />
-    
+
     <!-- 空状态 -->
-    <EmptyState 
+    <EmptyState
       v-else-if="!pageState.userInfo"
       title="用户不存在"
       description="该用户可能已被删除或不存在"
       @retry="loadUserProfile"
     />
-    
+
     <!-- 正常内容 -->
     <view v-else class="content">
       <!-- 页面内容 -->
@@ -711,24 +711,24 @@ const optimizedImageUrl = computed(() => {
 // 统一错误处理
 const handleError = (error: any, context: string) => {
   console.error(`${context}失败:`, error)
-  
+
   let message = '操作失败，请稍后重试'
-  
+
   if (error.code === 401) {
     message = '登录已过期，请重新登录'
     // 跳转到登录页
     uni.navigateTo({ url: '/pages/auth/login/index' })
     return
   }
-  
+
   if (error.code === 403) {
     message = '没有权限执行此操作'
   }
-  
+
   if (error.code === 404) {
     message = '请求的资源不存在'
   }
-  
+
   uni.showToast({
     title: message,
     icon: 'error',
@@ -780,27 +780,27 @@ const hideLoading = () => {
   <!-- 语义化标签 -->
   <view class="user-profile-page" role="main">
     <view class="page-header" role="banner">
-      <image 
+      <image
         :src="userInfo.avatar"
         :alt="`${userInfo.nickname}的头像`"
         role="img"
       />
       <text role="heading" aria-level="1">{{ userInfo.nickname }}</text>
     </view>
-    
+
     <!-- 可访问的按钮 -->
-    <button 
+    <button
       class="edit-btn"
       :aria-label="editMode ? '取消编辑' : '编辑资料'"
       @click="toggleEditMode"
     >
       {{ editMode ? '取消' : '编辑' }}
     </button>
-    
+
     <!-- 表单标签 -->
     <view class="form-group">
       <label for="nickname">昵称</label>
-      <input 
+      <input
         id="nickname"
         v-model="formData.nickname"
         type="text"
@@ -831,8 +831,8 @@ uni.navigateTo({ url: '/pages/user/profile' })  // 缺少 /index
 uni.navigateTo({ url: '/pages/user/profile/index' })
 
 // ✅ 带参数的路由跳转
-uni.navigateTo({ 
-  url: '/pages/user/profile/index?userId=123&tab=settings' 
+uni.navigateTo({
+  url: '/pages/user/profile/index?userId=123&tab=settings'
 })
 ```
 
@@ -900,20 +900,20 @@ console.log(`加载用户资料耗时: ${endTime - startTime}ms`)
 // API 请求拦截
 const loadUserProfile = async (userId?: string) => {
   console.log('开始加载用户资料:', { userId })
-  
+
   try {
     const result = await getUserProfile(userId)
     console.log('用户资料加载成功:', result)
     return result
   } catch (error) {
     console.error('用户资料加载失败:', error)
-    
+
     // 详细错误信息
     if (error.response) {
       console.error('响应状态:', error.response.status)
       console.error('响应数据:', error.response.data)
     }
-    
+
     throw error
   }
 }
@@ -926,17 +926,17 @@ const loadUserProfile = async (userId?: string) => {
 const performanceMonitor = {
   pageLoadStart: 0,
   pageLoadEnd: 0,
-  
+
   startTiming() {
     this.pageLoadStart = performance.now()
   },
-  
+
   endTiming() {
     this.pageLoadEnd = performance.now()
     const loadTime = this.pageLoadEnd - this.pageLoadStart
-    
+
     console.log(`页面加载耗时: ${loadTime.toFixed(2)}ms`)
-    
+
     // 上报性能数据
     if (loadTime > 3000) {
       console.warn('页面加载时间过长:', loadTime)

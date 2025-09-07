@@ -44,13 +44,13 @@ export default defineConfig({
   test: {
     // 测试环境
     environment: 'jsdom',
-    
+
     // 全局配置
     globals: true,
-    
+
     // 设置文件
     setupFiles: ['./tests/setup.ts'],
-    
+
     // 覆盖率配置
     coverage: {
       provider: 'v8',
@@ -71,13 +71,13 @@ export default defineConfig({
         }
       }
     },
-    
+
     // 测试文件匹配
     include: [
       'tests/**/*.{test,spec}.{js,ts}',
       'src/**/__tests__/*.{test,spec}.{js,ts}'
     ],
-    
+
     // 排除文件
     exclude: [
       'node_modules',
@@ -87,7 +87,7 @@ export default defineConfig({
       '.cache'
     ]
   },
-  
+
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
@@ -160,7 +160,7 @@ export function createTestPinia() {
 // 挂载组件的辅助函数
 export function mountComponent(component: Component, options: any = {}) {
   const pinia = createTestPinia()
-  
+
   return mount(component, {
     global: {
       plugins: [pinia],
@@ -182,21 +182,21 @@ export async function flushPromises() {
 // 模拟用户交互
 export class UserInteraction {
   constructor(private wrapper: VueWrapper<any>) {}
-  
+
   async click(selector: string) {
     const element = this.wrapper.find(selector)
     await element.trigger('click')
     await flushPromises()
     return this
   }
-  
+
   async input(selector: string, value: string) {
     const element = this.wrapper.find(selector)
     await element.setValue(value)
     await flushPromises()
     return this
   }
-  
+
   async submit(selector: string = 'form') {
     const form = this.wrapper.find(selector)
     await form.trigger('submit')
@@ -229,10 +229,10 @@ describe('Button 组件', () => {
         text: '点击我'
       }
     })
-    
+
     expect(wrapper.text()).toBe('点击我')
   })
-  
+
   it('应该在点击时触发事件', async () => {
     const onClick = vi.fn()
     const wrapper = mountComponent(Button, {
@@ -241,13 +241,13 @@ describe('Button 组件', () => {
         onClick
       }
     })
-    
+
     const interaction = createUserInteraction(wrapper)
     await interaction.click('button')
-    
+
     expect(onClick).toHaveBeenCalledTimes(1)
   })
-  
+
   it('应该在禁用状态下不触发事件', async () => {
     const onClick = vi.fn()
     const wrapper = mountComponent(Button, {
@@ -257,17 +257,17 @@ describe('Button 组件', () => {
         onClick
       }
     })
-    
+
     const interaction = createUserInteraction(wrapper)
     await interaction.click('button')
-    
+
     expect(onClick).not.toHaveBeenCalled()
     expect(wrapper.find('button').attributes('disabled')).toBeDefined()
   })
-  
+
   it('应该正确应用不同的按钮类型样式', () => {
     const types = ['primary', 'secondary', 'danger']
-    
+
     types.forEach(type => {
       const wrapper = mountComponent(Button, {
         props: {
@@ -275,11 +275,11 @@ describe('Button 组件', () => {
           type
         }
       })
-      
+
       expect(wrapper.find('button').classes()).toContain(`btn-${type}`)
     })
   })
-  
+
   it('应该支持加载状态', () => {
     const wrapper = mountComponent(Button, {
       props: {
@@ -287,7 +287,7 @@ describe('Button 组件', () => {
         loading: true
       }
     })
-    
+
     expect(wrapper.find('.loading-icon').exists()).toBe(true)
     expect(wrapper.find('button').attributes('disabled')).toBeDefined()
   })
@@ -304,56 +304,56 @@ import { useCounter } from '@/composables/useCounter'
 describe('useCounter', () => {
   it('应该初始化为默认值', () => {
     const { count, increment, decrement, reset } = useCounter()
-    
+
     expect(count.value).toBe(0)
   })
-  
+
   it('应该初始化为指定值', () => {
     const { count } = useCounter(10)
-    
+
     expect(count.value).toBe(10)
   })
-  
+
   it('应该正确递增', () => {
     const { count, increment } = useCounter(5)
-    
+
     increment()
     expect(count.value).toBe(6)
-    
+
     increment(3)
     expect(count.value).toBe(9)
   })
-  
+
   it('应该正确递减', () => {
     const { count, decrement } = useCounter(10)
-    
+
     decrement()
     expect(count.value).toBe(9)
-    
+
     decrement(4)
     expect(count.value).toBe(5)
   })
-  
+
   it('应该正确重置', () => {
     const { count, increment, reset } = useCounter(0)
-    
+
     increment(5)
     expect(count.value).toBe(5)
-    
+
     reset()
     expect(count.value).toBe(0)
   })
-  
+
   it('应该支持最小值限制', () => {
     const { count, decrement } = useCounter(0, { min: 0 })
-    
+
     decrement(5)
     expect(count.value).toBe(0)
   })
-  
+
   it('应该支持最大值限制', () => {
     const { count, increment } = useCounter(8, { max: 10 })
-    
+
     increment(5)
     expect(count.value).toBe(10)
   })
@@ -382,22 +382,22 @@ describe('User Store', () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
   })
-  
+
   it('应该初始化为默认状态', () => {
     const store = useUserStore()
-    
+
     expect(store.userInfo).toBeNull()
     expect(store.isLoggedIn).toBe(false)
     expect(store.loading).toBe(false)
   })
-  
+
   it('应该正确处理登录', async () => {
     const mockUserInfo = {
       id: '1',
       name: '张三',
       email: 'zhangsan@example.com'
     }
-    
+
     vi.mocked(userApi.login).mockResolvedValue({
       code: 200,
       data: {
@@ -405,57 +405,57 @@ describe('User Store', () => {
         userInfo: mockUserInfo
       }
     })
-    
+
     const store = useUserStore()
     await store.login('zhangsan@example.com', 'password')
-    
+
     expect(store.userInfo).toEqual(mockUserInfo)
     expect(store.isLoggedIn).toBe(true)
     expect(userApi.login).toHaveBeenCalledWith('zhangsan@example.com', 'password')
   })
-  
+
   it('应该正确处理登录失败', async () => {
     vi.mocked(userApi.login).mockRejectedValue(new Error('登录失败'))
-    
+
     const store = useUserStore()
-    
+
     await expect(store.login('wrong@example.com', 'wrong')).rejects.toThrow('登录失败')
     expect(store.userInfo).toBeNull()
     expect(store.isLoggedIn).toBe(false)
   })
-  
+
   it('应该正确处理登出', async () => {
     const store = useUserStore()
-    
+
     // 先设置登录状态
     store.userInfo = {
       id: '1',
       name: '张三',
       email: 'zhangsan@example.com'
     }
-    
+
     await store.logout()
-    
+
     expect(store.userInfo).toBeNull()
     expect(store.isLoggedIn).toBe(false)
     expect(userApi.logout).toHaveBeenCalled()
   })
-  
+
   it('应该正确更新用户信息', async () => {
     const updatedInfo = {
       id: '1',
       name: '李四',
       email: 'lisi@example.com'
     }
-    
+
     vi.mocked(userApi.updateUserInfo).mockResolvedValue({
       code: 200,
       data: updatedInfo
     })
-    
+
     const store = useUserStore()
     await store.updateUserInfo(updatedInfo)
-    
+
     expect(store.userInfo).toEqual(updatedInfo)
     expect(userApi.updateUserInfo).toHaveBeenCalledWith(updatedInfo)
   })
@@ -473,38 +473,38 @@ describe('格式化工具函数', () => {
   describe('formatDate', () => {
     it('应该正确格式化日期', () => {
       const date = new Date('2024-01-15T10:30:00')
-      
+
       expect(formatDate(date)).toBe('2024-01-15')
       expect(formatDate(date, 'YYYY-MM-DD HH:mm')).toBe('2024-01-15 10:30')
       expect(formatDate(date, 'MM/DD/YYYY')).toBe('01/15/2024')
     })
-    
+
     it('应该处理无效日期', () => {
       expect(formatDate(null)).toBe('')
       expect(formatDate(undefined)).toBe('')
       expect(formatDate('invalid')).toBe('')
     })
   })
-  
+
   describe('formatCurrency', () => {
     it('应该正确格式化货币', () => {
       expect(formatCurrency(1234.56)).toBe('¥1,234.56')
       expect(formatCurrency(0)).toBe('¥0.00')
       expect(formatCurrency(1000000)).toBe('¥1,000,000.00')
     })
-    
+
     it('应该支持不同货币符号', () => {
       expect(formatCurrency(100, '$')).toBe('$100.00')
       expect(formatCurrency(100, '€')).toBe('€100.00')
     })
-    
+
     it('应该处理无效数值', () => {
       expect(formatCurrency(null)).toBe('¥0.00')
       expect(formatCurrency(undefined)).toBe('¥0.00')
       expect(formatCurrency('invalid')).toBe('¥0.00')
     })
   })
-  
+
   describe('formatFileSize', () => {
     it('应该正确格式化文件大小', () => {
       expect(formatFileSize(0)).toBe('0 B')
@@ -512,7 +512,7 @@ describe('格式化工具函数', () => {
       expect(formatFileSize(1048576)).toBe('1.00 MB')
       expect(formatFileSize(1073741824)).toBe('1.00 GB')
     })
-    
+
     it('应该支持自定义精度', () => {
       expect(formatFileSize(1536, 1)).toBe('1.5 KB')
       expect(formatFileSize(1536, 0)).toBe('2 KB')
@@ -544,57 +544,57 @@ describe('用户资料页面', () => {
     avatar: 'https://example.com/avatar.jpg',
     phone: '13800138000'
   }
-  
+
   beforeEach(() => {
     vi.mocked(userApi.getUserInfo).mockResolvedValue({
       code: 200,
       data: mockUserInfo
     })
   })
-  
+
   it('应该正确加载和显示用户信息', async () => {
     const wrapper = mountComponent(UserProfile)
-    
+
     // 等待异步数据加载
     await flushPromises()
-    
+
     expect(wrapper.find('[data-testid="user-name"]').text()).toBe('张三')
     expect(wrapper.find('[data-testid="user-email"]').text()).toBe('zhangsan@example.com')
     expect(wrapper.find('[data-testid="user-phone"]').text()).toBe('13800138000')
   })
-  
+
   it('应该支持编辑用户信息', async () => {
     vi.mocked(userApi.updateUserInfo).mockResolvedValue({
       code: 200,
       data: { ...mockUserInfo, name: '李四' }
     })
-    
+
     const wrapper = mountComponent(UserProfile)
     await flushPromises()
-    
+
     const interaction = createUserInteraction(wrapper)
-    
+
     // 点击编辑按钮
     await interaction.click('[data-testid="edit-button"]')
-    
+
     // 修改姓名
     await interaction.input('[data-testid="name-input"]', '李四')
-    
+
     // 提交表单
     await interaction.click('[data-testid="save-button"]')
-    
+
     expect(userApi.updateUserInfo).toHaveBeenCalledWith({
       ...mockUserInfo,
       name: '李四'
     })
   })
-  
+
   it('应该处理加载错误', async () => {
     vi.mocked(userApi.getUserInfo).mockRejectedValue(new Error('网络错误'))
-    
+
     const wrapper = mountComponent(UserProfile)
     await flushPromises()
-    
+
     expect(wrapper.find('[data-testid="error-message"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="error-message"]').text()).toContain('加载失败')
   })
@@ -615,7 +615,7 @@ describe('用户 API', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
-  
+
   describe('getUserInfo', () => {
     it('应该正确获取用户信息', async () => {
       const mockResponse = {
@@ -626,29 +626,29 @@ describe('用户 API', () => {
           email: 'zhangsan@example.com'
         }
       }
-      
+
       vi.mocked(request.get).mockResolvedValue(mockResponse)
-      
+
       const result = await getUserInfo('1')
-      
+
       expect(request.get).toHaveBeenCalledWith('/api/user/1')
       expect(result).toEqual(mockResponse)
     })
-    
+
     it('应该处理 API 错误', async () => {
       vi.mocked(request.get).mockRejectedValue(new Error('网络错误'))
-      
+
       await expect(getUserInfo('1')).rejects.toThrow('网络错误')
     })
   })
-  
+
   describe('updateUserInfo', () => {
     it('应该正确更新用户信息', async () => {
       const updateData = {
         name: '李四',
         email: 'lisi@example.com'
       }
-      
+
       const mockResponse = {
         code: 200,
         data: {
@@ -656,23 +656,23 @@ describe('用户 API', () => {
           ...updateData
         }
       }
-      
+
       vi.mocked(request.put).mockResolvedValue(mockResponse)
-      
+
       const result = await updateUserInfo('1', updateData)
-      
+
       expect(request.put).toHaveBeenCalledWith('/api/user/1', updateData)
       expect(result).toEqual(mockResponse)
     })
   })
-  
+
   describe('login', () => {
     it('应该正确处理登录', async () => {
       const credentials = {
         email: 'zhangsan@example.com',
         password: 'password123'
       }
-      
+
       const mockResponse = {
         code: 200,
         data: {
@@ -684,11 +684,11 @@ describe('用户 API', () => {
           }
         }
       }
-      
+
       vi.mocked(request.post).mockResolvedValue(mockResponse)
-      
+
       const result = await login(credentials.email, credentials.password)
-      
+
       expect(request.post).toHaveBeenCalledWith('/api/auth/login', credentials)
       expect(result).toEqual(mockResponse)
     })
@@ -708,32 +708,32 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tests/e2e',
-  
+
   // 并行运行测试
   fullyParallel: true,
-  
+
   // 失败时重试次数
   retries: process.env.CI ? 2 : 0,
-  
+
   // 并行工作进程数
   workers: process.env.CI ? 1 : undefined,
-  
+
   // 报告配置
   reporter: [
     ['html'],
     ['json', { outputFile: 'test-results/results.json' }]
   ],
-  
+
   use: {
     // 基础 URL
     baseURL: 'http://localhost:3000',
-    
+
     // 浏览器上下文配置
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure'
   },
-  
+
   // 项目配置
   projects: [
     {
@@ -757,7 +757,7 @@ export default defineConfig({
       use: { ...devices['iPhone 12'] }
     }
   ],
-  
+
   // 开发服务器配置
   webServer: {
     command: 'npm run dev',
@@ -778,79 +778,79 @@ test.describe('用户流程测试', () => {
     // 每个测试前的准备工作
     await page.goto('/')
   })
-  
+
   test('用户注册流程', async ({ page }) => {
     // 导航到注册页面
     await page.click('[data-testid="register-link"]')
     await expect(page).toHaveURL('/register')
-    
+
     // 填写注册表单
     await page.fill('[data-testid="name-input"]', '测试用户')
     await page.fill('[data-testid="email-input"]', 'test@example.com')
     await page.fill('[data-testid="password-input"]', 'password123')
     await page.fill('[data-testid="confirm-password-input"]', 'password123')
-    
+
     // 提交表单
     await page.click('[data-testid="register-button"]')
-    
+
     // 验证注册成功
     await expect(page.locator('[data-testid="success-message"]')).toBeVisible()
     await expect(page).toHaveURL('/login')
   })
-  
+
   test('用户登录流程', async ({ page }) => {
     // 导航到登录页面
     await page.click('[data-testid="login-link"]')
     await expect(page).toHaveURL('/login')
-    
+
     // 填写登录表单
     await page.fill('[data-testid="email-input"]', 'test@example.com')
     await page.fill('[data-testid="password-input"]', 'password123')
-    
+
     // 提交登录
     await page.click('[data-testid="login-button"]')
-    
+
     // 验证登录成功
     await expect(page).toHaveURL('/dashboard')
     await expect(page.locator('[data-testid="user-avatar"]')).toBeVisible()
   })
-  
+
   test('用户资料编辑流程', async ({ page }) => {
     // 先登录
     await page.goto('/login')
     await page.fill('[data-testid="email-input"]', 'test@example.com')
     await page.fill('[data-testid="password-input"]', 'password123')
     await page.click('[data-testid="login-button"]')
-    
+
     // 导航到用户资料页面
     await page.click('[data-testid="user-avatar"]')
     await page.click('[data-testid="profile-link"]')
     await expect(page).toHaveURL('/user/profile')
-    
+
     // 编辑用户信息
     await page.click('[data-testid="edit-button"]')
     await page.fill('[data-testid="name-input"]', '更新的用户名')
     await page.fill('[data-testid="phone-input"]', '13800138000')
-    
+
     // 保存更改
     await page.click('[data-testid="save-button"]')
-    
+
     // 验证更新成功
     await expect(page.locator('[data-testid="success-toast"]')).toBeVisible()
     await expect(page.locator('[data-testid="user-name"]')).toHaveText('更新的用户名')
   })
-  
+
   test('响应式设计测试', async ({ page }) => {
     // 测试桌面视图
     await page.setViewportSize({ width: 1200, height: 800 })
     await expect(page.locator('[data-testid="desktop-nav"]')).toBeVisible()
     await expect(page.locator('[data-testid="mobile-nav"]')).not.toBeVisible()
-    
+
     // 测试移动视图
     await page.setViewportSize({ width: 375, height: 667 })
     await expect(page.locator('[data-testid="mobile-nav"]')).toBeVisible()
     await expect(page.locator('[data-testid="desktop-nav"]')).not.toBeVisible()
-    
+
     // 测试移动导航
     await page.click('[data-testid="mobile-menu-button"]')
     await expect(page.locator('[data-testid="mobile-menu"]')).toBeVisible()
@@ -870,7 +870,7 @@ export class LoginPage {
   readonly passwordInput: Locator
   readonly loginButton: Locator
   readonly errorMessage: Locator
-  
+
   constructor(page: Page) {
     this.page = page
     this.emailInput = page.locator('[data-testid="email-input"]')
@@ -878,17 +878,17 @@ export class LoginPage {
     this.loginButton = page.locator('[data-testid="login-button"]')
     this.errorMessage = page.locator('[data-testid="error-message"]')
   }
-  
+
   async goto() {
     await this.page.goto('/login')
   }
-  
+
   async login(email: string, password: string) {
     await this.emailInput.fill(email)
     await this.passwordInput.fill(password)
     await this.loginButton.click()
   }
-  
+
   async getErrorMessage() {
     return await this.errorMessage.textContent()
   }
@@ -931,32 +931,32 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: 设置 Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '18'
         cache: 'npm'
-    
+
     - name: 安装依赖
       run: npm ci
-    
+
     - name: 运行单元测试
       run: npm run test:coverage
-    
+
     - name: 上传覆盖率报告
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage/lcov.info
-    
+
     - name: 运行 E2E 测试
       run: |
         npx playwright install --with-deps
         npm run test:e2e
-    
+
     - name: 上传测试报告
       uses: actions/upload-artifact@v3
       if: always()
@@ -1001,14 +1001,14 @@ export const userFixtures = {
     email: 'zhangsan@example.com',
     phone: '13800138000'
   },
-  
+
   adminUser: {
     id: '2',
     name: '管理员',
     email: 'admin@example.com',
     role: 'admin'
   },
-  
+
   incompleteUser: {
     id: '3',
     name: '李四'

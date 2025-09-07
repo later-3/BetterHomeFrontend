@@ -61,6 +61,8 @@
     "@dcloudio/uni-mp-toutiao": "3.0.0-3070320230222002",
     "@dcloudio/uni-mp-weixin": "3.0.0-3070320230222002",
     "@dcloudio/uni-quickapp-webview": "3.0.0-3070320230222002",
+    "@iconify/vue": "^5.0.0",
+    "@tabler/icons-vue": "^3.34.1",
     "pinia": "2.0.33",
     "pinia-auto-refs": "0.0.10",
     "pinia-plugin-persist-uni": "1.2.0",

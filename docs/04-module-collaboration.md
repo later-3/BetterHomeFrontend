@@ -218,7 +218,7 @@ const handleClick = (event: MouseEvent) => {
 </script>
 
 <template>
-  <button 
+  <button
     :class="[
       'base-button',
       `base-button--${type}`,
@@ -407,7 +407,7 @@ export function formatDate(
   format: string = 'YYYY-MM-DD'
 ): string {
   const d = new Date(date)
-  
+
   if (isNaN(d.getTime())) {
     throw new Error('Invalid date')
   }
@@ -459,7 +459,7 @@ sequenceDiagram
     participant S as Store
     participant A as API
     participant U as Utils
-    
+
     P->>S: 调用 action
     S->>A: 请求数据
     A->>U: 使用工具函数
@@ -602,7 +602,7 @@ npm run analyze-deps
 // moduleA.ts
 import { funcB } from './moduleB'
 
-// moduleB.ts  
+// moduleB.ts
 import { funcA } from './moduleA'
 
 // ✅ 解决方案1: 提取公共依赖
@@ -634,7 +634,7 @@ export const createModuleA = (deps: { funcB: Function }) => {
 // ComponentA.vue
 const userInfo = ref(null)
 
-// ComponentB.vue  
+// ComponentB.vue
 const userInfo = ref(null)
 
 // ✅ 集中状态管理
