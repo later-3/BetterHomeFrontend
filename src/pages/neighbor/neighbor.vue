@@ -1,9 +1,10 @@
 <script setup lang="ts" name="neighbor">
 import { computed, ref } from 'vue';
+import SocialFeedContent from '../../components/SocialFeedContent.vue';
 
 /**
- * 邻里页面 - 获取业主动态
- * 从Directus获取所有业主发送的content数据
+ * 业主圈页面 - 获取业主圈帖子
+ * 从Directus获取所有type为post的业主圈帖子内容
  */
 
 // 基础配置
@@ -282,7 +283,10 @@ async function getContents() {
       method: 'GET',
       data: {
         limit: 5,
-        fields: 'id,title,body,type,attachments.*'
+        fields: 'id,title,body,type,attachments.*',
+        filter: {
+          type: { _eq: 'post' }
+        }
       },
       header: {
         'Content-Type': 'application/json',
@@ -421,7 +425,7 @@ function fallbackCopyTextToClipboard(text: string) {
     <!-- 页面标题 -->
     <view class="header">
       <text class="title">业主圈</text>
-      <text class="subtitle">获取业主动态数据</text>
+      <text class="subtitle">获取业主圈帖子数据</text>
     </view>
 
     <!-- 操作区域 -->
@@ -451,7 +455,7 @@ function fallbackCopyTextToClipboard(text: string) {
           :disabled="loading"
           @click="getContents"
         >
-          获取数据
+          获取业主圈帖子
         </button>
       </view>
 
@@ -536,7 +540,7 @@ function fallbackCopyTextToClipboard(text: string) {
       <view class="placeholder">
         <text class="placeholder-text">📱 点击上方按钮开始获取数据</text>
         <text class="placeholder-desc">
-          🏠 这里将展示社区业主发布的动态内容
+          🏠 这里将展示业主圈发布的帖子内容
         </text>
       </view>
     </view>
@@ -547,6 +551,15 @@ function fallbackCopyTextToClipboard(text: string) {
       <view class="close-btn" @click="closeImagePreview">
         <text class="close-icon">✕</text>
       </view>
+    </view>
+
+    <!-- 社交动态区域 -->
+    <view class="section">
+      <view class="result-header">
+        <text class="section-title">🌟 社交动态</text>
+        <text class="section-desc">社区用户最新动态</text>
+      </view>
+      <SocialFeedContent />
     </view>
   </view>
 </template>
@@ -651,6 +664,11 @@ function fallbackCopyTextToClipboard(text: string) {
   font-weight: bold;
   font-size: 16px;
   color: #333;
+}
+.section-desc {
+  font-size: 12px;
+  color: #999;
+  margin-left: 8px;
 }
 /* 内容卡片列表 */
 .content-list {

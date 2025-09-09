@@ -2,8 +2,8 @@
 import { computed, ref } from 'vue';
 
 /**
- * 事项页面 - 获取业主事项数据
- * 从Directus获取所有业主提交的事项内容
+ * 事项页面 - 获取业主投诉工单数据
+ * 从Directus获取所有type为complaint的投诉工单内容
  */
 
 // 基础配置
@@ -137,7 +137,10 @@ async function getContents() {
       method: 'GET',
       data: {
         limit: 5,
-        fields: 'id,title,body,type,attachments.*'
+        fields: 'id,title,body,type,attachments.*',
+        filter: {
+          type: { _eq: 'complaint' }
+        }
       },
       header: {
         'Content-Type': 'application/json',
@@ -306,7 +309,7 @@ function fallbackCopyTextToClipboard(text: string) {
           :disabled="loading"
           @click="getContents"
         >
-          获取事项数据
+          获取投诉工单
         </button>
       </view>
     </view>
@@ -314,7 +317,7 @@ function fallbackCopyTextToClipboard(text: string) {
     <!-- 成功数据展示 - 事项卡片形式展示 -->
     <view v-if="contentData && contentData.success" class="section">
       <view class="result-header">
-        <text class="section-title">📋 业主事项 ({{ contentData.total }}条)</text>
+        <text class="section-title">📋 投诉工单 ({{ contentData.total }}条)</text>
         <button size="mini" class="btn-primary" @click="copyContent">
           复制数据
         </button>
