@@ -3,7 +3,7 @@
     {
       "name": "neighbor",
       "path": "pages/neighbor/neighbor",
-      "style": { 
+      "style": {
         "navigationBarTitleText": "邻里",
         "navigationBarBackgroundColor": "#ffffff",
         "navigationBarTextStyle": "black"
