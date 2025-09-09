@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complaint Message Component</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        .complaint-container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .complaint-item {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 0;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .cat-head-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .avatars-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: -10px;
+            padding: 0 60px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            position: relative;
+            border: 3px solid #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cat-head {
+            width: 100%;
+            max-width: 600px;
+            min-height: 220px;
+            background: linear-gradient(145deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            border-radius: 50% 50% 45% 45%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 35px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            margin: 0 15px;
+            color: #2c3e50;
+        }
+
+        .cat-ear {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(145deg, #ff7b7b 0%, #ff9a9e 100%);
+            border-radius: 50% 50% 0 50%;
+            position: absolute;
+            top: -25px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .cat-ear.left {
+            left: 80px;
+            transform: rotate(-30deg);
+        }
+
+        .cat-ear.right {
+            right: 80px;
+            transform: rotate(30deg);
+        }
+
+        .cat-ear:hover {
+            transform: scale(1.1) rotate(-30deg);
+            background: linear-gradient(145deg, #ff6b6b 0%, #ff8a8e 100%);
+        }
+
+        .cat-ear.right:hover {
+            transform: scale(1.1) rotate(30deg);
+        }
+
+        .message-subject {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #ecf0f1;
+        }
+
+        .message-preview {
+            font-size: 14px;
+            color: #bdc3c7;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
+        .message-image {
+            width: 100%;
+            height: 120px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .message-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .username {
+            font-size: 12px;
+            font-weight: 500;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            background: #27ae60;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+        }
+
+        .sender {
+            position: relative;
+        }
+
+        .receiver {
+            position: relative;
+        }
+
+        .message-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 11px;
+            color: #95a5a6;
+        }
+
+        .timestamp {
+            opacity: 0.8;
+        }
+
+        .message-type {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        /* 桌面端优化 */
+        @media (min-width: 768px) {
+            .complaint-container {
+                padding: 20px;
+            }
+            
+            .complaint-item {
+                padding: 40px 20px;
+            }
+            
+            .cat-head-container {
+                max-width: 800px;
+            }
+            
+            .avatar {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .cat-head {
+                max-width: 700px;
+                min-height: 250px;
+                padding: 35px 45px;
+                margin: 0 30px;
+            }
+            
+            .cat-ear {
+                width: 60px;
+                height: 60px;
+                top: -30px;
+            }
+            
+            .cat-ear.left {
+                left: 100px;
+            }
+            
+            .cat-ear.right {
+                right: 100px;
+            }
+            
+            .avatars-container {
+                max-width: 450px;
+                padding: 0 80px;
+            }
+        }
+
+        /* 移动端优化 */
+        @media (max-width: 767px) {
+            .complaint-container {
+                padding: 0;
+            }
+            
+            .complaint-item {
+                padding: 20px 15px;
+            }
+            
+            .avatar {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .cat-head {
+                margin: 0 15px;
+                padding: 25px 30px;
+                min-height: 180px;
+                max-width: 500px;
+            }
+            
+            .cat-ear {
+                width: 40px;
+                height: 40px;
+                top: -20px;
+            }
+            
+            .cat-ear.left {
+                left: 60px;
+            }
+            
+            .cat-ear.right {
+                right: 60px;
+            }
+            
+            .avatars-container {
+                max-width: 320px;
+                padding: 0 40px;
+            }
+            
+            .message-subject {
+                font-size: 16px;
+            }
+            
+            .message-preview {
+                font-size: 13px;
+            }
+            
+            .username {
+                font-size: 11px;
+            }
+        }
+        
+        /* 超小屏幕优化 */
+        @media (max-width: 480px) {
+            .complaint-item {
+                padding: 15px 10px;
+            }
+            
+            .cat-head {
+                margin: 0 10px;
+                padding: 18px 20px;
+                min-height: 140px;
+            }
+            
+            .avatars-container {
+                max-width: 250px;
+                padding: 0 10px;
+            }
+            
+            .message-subject {
+                font-size: 15px;
+            }
+            
+            .message-preview {
+                font-size: 12px;
+                line-height: 1.3;
+            }
+        }
+        
+        /* 极小屏幕优化 */
+        @media (max-width: 360px) {
+            .complaint-item {
+                padding: 10px 5px;
+            }
+            
+            .cat-head {
+                margin: 0 5px;
+                padding: 15px 18px;
+                min-height: 120px;
+            }
+            
+            .avatars-container {
+                max-width: 220px;
+                padding: 0 5px;
+            }
+            
+            .avatar {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .message-subject {
+                font-size: 14px;
+            }
+            
+            .message-preview {
+                font-size: 11px;
+                line-height: 1.2;
+            }
+            
+            .username {
+                font-size: 10px;
+            }
+        }
+
+        /* 动画效果 */
+        .complaint-item {
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .avatar {
+            transition: transform 0.3s ease;
+        }
+
+        .avatar:hover {
+            transform: scale(1.05);
+        }
+
+        .cat-head {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .cat-head:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(44, 62, 80, 0.4);
+        }
+
+        .cat-ear {
+            transition: transform 0.3s ease;
+        }
+
+        .cat-ear:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="complaint-container">
+        <!-- 投诉消息组件 - 小猫头形状 -->
+        <div class="complaint-item">
+            <div class="cat-head-container">
+                <!-- 头像放在耳朵上方 -->
+                <div class="avatars-container">
+                    <div class="user-info sender">
+                        <div class="avatar">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="发送者头像">
+                            <div class="status-indicator"></div>
+                        </div>
+                        <div class="username">alex.smith</div>
+                    </div>
+                    <div class="user-info receiver">
+                        <div class="avatar">
+                            <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face" alt="接收者头像">
+                            <div class="status-indicator"></div>
+                        </div>
+                        <div class="username">sarah.jones</div>
+                    </div>
+                </div>
+
+                <!-- 小猫头主体 -->
+                <div class="cat-head">
+                    <!-- 左耳朵 -->
+                    <div class="cat-ear left"></div>
+                    <!-- 右耳朵 -->
+                    <div class="cat-ear right"></div>
+                    
+                    <!-- 消息内容 -->
+                    <div class="message-subject">投诉：噪音扰民问题</div>
+                    <div class="message-preview">您好，我想投诉楼上邻居深夜制造噪音，严重影响休息...</div>
+                    
+                    <div class="message-meta">
+                        <span class="timestamp">2小时前</span>
+                        <span class="message-type">投诉</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 简单的交互效果
+        document.addEventListener('DOMContentLoaded', function() {
+            const catHead = document.querySelector('.cat-head');
+            const avatars = document.querySelectorAll('.avatar');
+            const catEars = document.querySelectorAll('.cat-ear');
+            
+            // 点击小猫头的效果
+            catHead.addEventListener('click', function() {
+                this.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 150);
+            });
+            
+            // 头像悬停效果
+            avatars.forEach(avatar => {
+                avatar.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.1) rotate(5deg)';
+                });
+                
+                avatar.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1) rotate(0deg)';
+                });
+            });
+            
+            // 猫耳朵点击效果
+            catEars.forEach(ear => {
+                ear.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    this.style.transform = 'scale(1.2) rotate(10deg)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1) rotate(0deg)';
+                    }, 200);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

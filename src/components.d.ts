@@ -9,9 +9,9 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
-    CustomTabBar: typeof import('./components/CustomTabBar.vue')['default']
     PullList: typeof import('./components/pullList.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SocialFeedContent: typeof import('./components/SocialFeedContent.vue')['default']
   }
 }
