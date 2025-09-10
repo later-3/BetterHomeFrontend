@@ -1,493 +1,610 @@
-tat
-<script lang="ts" setup>
-import { useInit } from '@/hooks/useInit';
-import { usePageNavigation } from '@/hooks/useNavigation';
-import { useErrorHandler } from '@/hooks/useErrorHandler';
+<script setup lang="ts" name="profile">
+import { ref } from 'vue';
 
-const userStore = useStore('user');
-const appStore = useStore('app');
-const { navigationStore } = usePageNavigation('profile');
+// 昵称
+const nickname = ref('');
 
-// 错误处理
-const {
-  hasError,
-  errorMessage,
-  isLoading,
-  handlePageError: _handlePageError,
-  safeAsync,
-  safeSync,
-  resetError
-} = useErrorHandler({
-  pageName: 'profile',
-  enableErrorBoundary: true
-});
+// 头像
+const avatarPath = ref('/static/logo.png');
 
-// 用户信息
-const _userInfo = computed(() => userStore.userInfo);
-const isLoggedIn = computed(() => userStore.logged);
-const userId = computed(() => userStore.userId);
+// 小区信息
+const communities = ref<any[]>([]);
+const loading = ref(false);
 
-// 系统信息
-const systemInfo = computed(() => appStore.getSystemInfo());
+// 注册相关
+const registerLoading = ref(false);
+const registerError = ref('');
+const uploadedAvatarId = ref('');
 
-// 设置选项
-const settingsOptions = ref([
-  {
-    id: 'account',
-    title: '账户设置',
-    description: '修改个人信息',
-    icon: '👤',
-    action: 'account'
-  },
-  {
-    id: 'notification',
-    title: '通知设置',
-    description: '管理通知偏好',
-    icon: '🔔',
-    action: 'notification'
-  },
-  {
-    id: 'privacy',
-    title: '隐私设置',
-    description: '隐私和安全',
-    icon: '🔒',
-    action: 'privacy'
-  },
-  {
-    id: 'about',
-    title: '关于应用',
-    description: '版本信息和帮助',
-    icon: 'ℹ️',
-    action: 'about'
-  }
-]);
+// 选择头像
+async function chooseAvatar() {
+  try {
+    const res: any = await uni.chooseImage({
+      count: 1,
+      sizeType: ['original', 'compressed'],
+      sourceType: ['album', 'camera']
+    });
 
-// 功能入口
-const functionEntries = ref([
-  {
-    id: 'favorites',
-    title: '我的收藏',
-    icon: '⭐',
-    count: 12
-  },
-  {
-    id: 'history',
-    title: '浏览历史',
-    icon: '📖',
-    count: 25
-  },
-  {
-    id: 'downloads',
-    title: '我的下载',
-    icon: '📥',
-    count: 8
-  }
-]);
-
-// 处理设置选项点击
-function handleSettingClick(option: any) {
-  safeSync(
-    () => {
-      console.log('设置选项点击:', option);
-      uni.showToast({
-        title: `${option.title}功能开发中`,
-        icon: 'none'
-      });
-    },
-    {
-      fallbackMessage: `打开${option.title}失败，请重试`
+    if (res.tempFilePaths && res.tempFilePaths[0]) {
+      avatarPath.value = res.tempFilePaths[0];
+      uni.showToast({ title: '头像选择成功', icon: 'success' });
     }
-  );
+  } catch (error: any) {
+    uni.showToast({ title: '头像选择失败', icon: 'error' });
+  }
 }
 
-// 处理功能入口点击
-function handleFunctionClick(func: any) {
-  safeSync(
-    () => {
-      console.log('功能入口点击:', func);
-      uni.showToast({
-        title: `${func.title}功能开发中`,
-        icon: 'none'
-      });
-    },
-    {
-      fallbackMessage: `打开${func.title}失败，请重试`
+// 获取小区信息
+async function getCommunityInfo() {
+  loading.value = true;
+  try {
+    const res: any = await uni.request({
+      url: '/api/items/communities',
+      method: 'GET',
+      header: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (res.statusCode === 200 && res.data?.data) {
+      // 确保数据是数组格式
+      communities.value = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+      uni.showToast({ title: `获取成功，共${communities.value.length}个小区`, icon: 'success' });
+    } else {
+      throw new Error(`获取失败: ${res.statusCode}`);
     }
-  );
+  } catch (error: any) {
+    uni.showToast({ title: '获取小区信息失败', icon: 'error' });
+    console.error('获取小区信息失败:', error);
+  } finally {
+    loading.value = false;
+  }
 }
 
-// 退出登录
-function handleLogout() {
-  safeSync(
-    () => {
-      uni.showModal({
-        title: '确认退出',
-        content: '确定要退出登录吗？',
-        success: (res) => {
-          if (res.confirm) {
-            // 这里可以调用退出登录的逻辑
-            uni.showToast({
-              title: '退出登录功能开发中',
-              icon: 'none'
-            });
-          }
+// 复制错误信息
+function copyError() {
+  if (registerError.value) {
+    uni.setClipboardData({
+      data: registerError.value,
+      success: () => {
+        uni.showToast({ title: '已复制到剪贴板', icon: 'success' });
+      }
+    });
+  }
+}
+
+// 注册功能 - 使用确认可用的方案
+async function handleRegister() {
+  if (!nickname.value.trim()) {
+    uni.showToast({ title: '请输入昵称', icon: 'none' });
+    return;
+  }
+
+  registerLoading.value = true;
+  registerError.value = '';
+
+  let residentRoleId = null;
+  let userData: any = {};
+
+  try {
+    // 第一步：获取resident角色ID
+    
+    try {
+      const rolesRes: any = await uni.request({
+        url: '/api/roles',
+        method: 'GET',
+        header: {
+          'Content-Type': 'application/json'
         }
       });
-    },
-    {
-      fallbackMessage: '退出登录操作失败，请重试'
+      
+      if (rolesRes.statusCode === 200 && rolesRes.data?.data) {
+        const roles = rolesRes.data.data;
+        const residentRole = roles.find((role: any) => 
+          role.name === 'resident' || role.name === 'Resident'
+        );
+        
+        if (residentRole) {
+          residentRoleId = residentRole.id;
+          console.log('找到resident角色ID:', residentRoleId);
+        } else {
+          console.log('未找到resident角色，可用角色:', roles.map((r: any) => ({ name: r.name, id: r.id })));
+        }
+      }
+    } catch (error) {
+      console.log('获取角色失败:', error);
     }
-  );
-}
 
-onMounted(async () => {
-  await safeAsync(
-    async () => {
-      const { pageName, pagePath, pageQuery } = useInit();
-      console.log(
-        pageName,
-        pagePath,
-        pageQuery,
-        'pageName,pagePath, pageQuery'
-      );
-      console.log(
-        '个人中心页面加载完成，当前导航状态:',
-        navigationStore.currentTab
-      );
-    },
-    {
-      fallbackMessage: '个人中心页面加载失败，请刷新重试'
+    // 使用正确的Directus字段
+    userData = {
+      first_name: nickname.value.trim(),
+      last_name: '用户', // 默认姓氏
+      email: `${nickname.value.trim().toLowerCase()}@test.com`, // 生成测试邮箱
+      password: '123456' // 默认密码
+    };
+
+    // 如果找到了resident角色，添加到用户数据中
+    if (residentRoleId) {
+      userData.role = residentRoleId;
     }
-  );
-});
+
+    console.log('用户注册数据:', userData);
+
+    // 尝试不同的注册方式
+    let success = false;
+    let userId = null;
+    let response = null;
+
+    // 方式1: 尝试直接创建用户
+    try {
+      response = await uni.request({
+        url: '/api/users',
+        method: 'POST',
+        data: userData,
+        header: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        success = true;
+        userId = response.data?.data?.id;
+        console.log('方式1成功，用户ID:', userId);
+      }
+    } catch (error) {
+      console.log('方式1失败:', error);
+    }
+
+    // 方式2: 如果方式1失败，尝试注册端点（如果存在）
+    if (!success) {
+      try {
+        response = await uni.request({
+          url: '/api/auth/register',
+          method: 'POST', 
+          data: userData,
+          header: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          success = true;
+          userId = response.data?.data?.id || response.data?.id;
+          console.log('方式2成功，用户ID:', userId);
+        }
+      } catch (error) {
+        console.log('方式2失败:', error);
+      }
+    }
+
+    // 方式3: 尝试系统用户表
+    if (!success) {
+      try {
+        response = await uni.request({
+          url: '/api/items/directus_users',
+          method: 'POST',
+          data: userData,
+          header: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          success = true;
+          userId = response.data?.data?.id;
+          console.log('方式3成功，用户ID:', userId);
+        }
+      } catch (error) {
+        console.log('方式3失败:', error);
+      }
+    }
+
+    const res = response;
+
+    console.log('最终注册响应:', res);
+
+    if (success && userId) {
+      // 第二步：如果基本注册成功，尝试添加小区信息
+      if (communities.value.length >= 2) {
+        try {
+          const communityId = communities.value[1].id;
+          
+          const updateRes: any = await uni.request({
+            url: `/api/users/${userId}`,
+            method: 'PATCH',
+            data: {
+              community_id: communityId
+            },
+            header: {
+              'Content-Type': 'application/json'
+            }
+          });
+
+          console.log('更新小区信息响应:', updateRes);
+          
+          if (updateRes.statusCode >= 200 && updateRes.statusCode < 300) {
+            uni.showToast({ title: '注册成功并关联小区!', icon: 'success' });
+          } else {
+            uni.showToast({ title: '注册成功，但小区关联失败', icon: 'none' });
+          }
+        } catch (updateError) {
+          console.log('更新小区信息失败:', updateError);
+          uni.showToast({ title: '注册成功，但小区关联失败', icon: 'none' });
+        }
+      } else {
+        uni.showToast({ title: '注册成功!', icon: 'success' });
+      }
+      
+      registerError.value = '';
+      
+      // 清空表单
+      nickname.value = '';
+      avatarPath.value = '/static/logo.png';
+      
+    } else {
+      throw new Error(`所有注册方式都失败了\n最后响应: ${res ? `HTTP ${res.statusCode} - ${JSON.stringify(res.data, null, 2)}` : '无响应'}`);
+    }
+
+  } catch (error: any) {
+    const errorInfo = {
+      message: error.message || '注册失败',
+      timestamp: new Date().toLocaleString(),
+      nickname: nickname.value,
+      communityId: communities.value.length >= 2 ? communities.value[1].id : 'unknown',
+      communities: communities.value.map(c => ({ id: c.id, name: c.name })),
+      avatarPath: avatarPath.value,
+      residentRoleId: residentRoleId || 'not found',
+      userData: userData || {},
+      error: error
+    };
+    
+    registerError.value = JSON.stringify(errorInfo, null, 2);
+    uni.showToast({ title: '注册失败', icon: 'error' });
+    console.error('注册失败详细信息:', errorInfo);
+  } finally {
+    registerLoading.value = false;
+  }
+}
 </script>
 
 <template>
   <view class="profile-container">
-    <!-- 错误状态显示 -->
-    <view v-if="hasError" class="error-container">
-      <view class="error-icon">⚠️</view>
-      <view class="error-message">{{ errorMessage }}</view>
-      <button class="retry-btn" @click="resetError">重试</button>
+    <!-- 头像 -->
+    <view class="avatar-section">
+      <image class="avatar-img" :src="avatarPath" @click="chooseAvatar" />
+      <text class="avatar-tip">点击更换头像</text>
     </view>
 
-    <!-- 加载状态 -->
-    <view v-else-if="isLoading" class="loading-container">
-      <view class="loading-spinner"></view>
-      <text class="loading-text">加载中...</text>
+    <!-- 昵称输入 -->
+    <view class="nickname-section">
+      <view class="section-title">昵称</view>
+      <input
+        v-model="nickname"
+        class="nickname-input"
+        type="text"
+        placeholder="请输入昵称"
+      />
     </view>
 
-    <!-- 正常内容 -->
-    <template v-else>
-      <!-- 用户信息头部 -->
-      <view class="user-header">
-        <view class="user-avatar">
-          <image class="avatar-img" src="/static/logo.png" />
-        </view>
-        <view class="user-info">
-          <view class="user-name">
-            {{ isLoggedIn ? `用户 ${userId}` : '未登录用户' }}
-          </view>
-          <view class="user-status">
-            {{ isLoggedIn ? '已登录' : '点击登录' }}
-          </view>
-        </view>
-        <view class="user-actions">
-          <text class="edit-btn">编辑</text>
-        </view>
-      </view>
+    <!-- 获取小区信息 -->
+    <view class="community-section">
+      <button
+        class="get-community-btn"
+        :disabled="loading"
+        @click="getCommunityInfo"
+      >
+        {{ loading ? '获取中...' : '获取小区信息' }}
+      </button>
+    </view>
 
-      <!-- 功能入口 -->
-      <view class="function-section">
-        <view class="section-title">我的功能</view>
-        <view class="function-grid">
-          <view
-            v-for="func in functionEntries"
-            :key="func.id"
-            class="function-item"
-            @click="handleFunctionClick(func)"
-          >
-            <view class="function-icon">{{ func.icon }}</view>
-            <view class="function-info">
-              <text class="function-title">{{ func.title }}</text>
-              <text class="function-count">{{ func.count }}</text>
-            </view>
-          </view>
+    <!-- 小区信息显示 -->
+    <view v-if="communities.length > 0" class="communities-info">
+      <view class="section-title">小区信息 (共{{ communities.length }}个)</view>
+      <view 
+        v-for="(community, index) in communities" 
+        :key="community.id || index"
+        class="community-item"
+      >
+        <view class="community-title">小区 {{ index + 1 }}</view>
+        <view class="info-item">
+          <text class="info-label">名称:</text>
+          <input
+            class="info-input"
+            type="text"
+            :value="community.name || ''"
+            readonly
+          />
+        </view>
+        <view class="info-item">
+          <text class="info-label">地址:</text>
+          <input
+            class="info-input"
+            type="text"
+            :value="community.address || ''"
+            readonly
+          />
+        </view>
+        <view class="info-item">
+          <text class="info-label">描述:</text>
+          <textarea
+            class="info-textarea"
+            :value="community.description || ''"
+            readonly
+          />
         </view>
       </view>
+    </view>
 
-      <!-- 设置选项 -->
-      <view class="settings-section">
-        <view class="section-title">设置</view>
-        <view class="settings-list">
-          <view
-            v-for="option in settingsOptions"
-            :key="option.id"
-            class="setting-item"
-            @click="handleSettingClick(option)"
-          >
-            <view class="setting-icon">{{ option.icon }}</view>
-            <view class="setting-info">
-              <text class="setting-title">{{ option.title }}</text>
-              <text class="setting-desc">{{ option.description }}</text>
-            </view>
-            <view class="setting-arrow">›</view>
-          </view>
-        </view>
-      </view>
+    <!-- 注册按钮 -->
+    <view class="register-section">
+      <button 
+        class="register-btn" 
+        :disabled="registerLoading" 
+        @click="handleRegister"
+      >
+        {{ registerLoading ? '注册中...' : '注册' }}
+      </button>
+    </view>
 
-      <!-- 系统信息 -->
-      <view class="system-info">
-        <text class="info-text">设备: {{ systemInfo.model }}</text>
-        <text class="info-text">系统: {{ systemInfo.system }}</text>
-        <text class="info-text">版本: v1.0.0</text>
+    <!-- 错误信息显示 -->
+    <view v-if="registerError" class="error-section">
+      <view class="error-header">
+        <text class="error-title">注册失败原因分析</text>
+        <button class="copy-btn" @click="copyError">复制</button>
       </view>
-
-      <!-- 退出登录 -->
-      <view v-if="isLoggedIn" class="logout-section">
-        <button class="logout-btn" @click="handleLogout">退出登录</button>
-      </view>
-    </template>
+      <textarea 
+        class="error-textarea"
+        :value="registerError"
+        readonly
+        placeholder="这里会显示注册失败的详细信息"
+      />
+    </view>
   </view>
 </template>
 
 <style lang="scss" scoped>
 .profile-container {
-  padding-bottom: 40rpx;
+  padding: 30rpx;
   min-height: 100vh;
   background: #f5f5f5;
 }
 
-// 用户信息头部
-.user-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20rpx;
-  padding: 40rpx 30rpx;
-  background: #fff;
-  .user-avatar {
-    margin-right: 24rpx;
-    .avatar-img {
-      border: 4rpx solid #f0f0f0;
-      border-radius: 60rpx;
-      width: 120rpx;
-      height: 120rpx;
-    }
-  }
-  .user-info {
-    flex: 1;
-    .user-name {
-      margin-bottom: 8rpx;
-      font-weight: 600;
-      font-size: 32rpx;
-      color: #333;
-    }
-    .user-status {
-      font-size: 24rpx;
-      color: #999;
-    }
-  }
-  .user-actions {
-    .edit-btn {
-      padding: 12rpx 24rpx;
-      border: 2rpx solid #1aa86c;
-      border-radius: 20rpx;
-      font-size: 28rpx;
-      color: #1aa86c;
-    }
-  }
-}
-
-// 功能入口
-.function-section {
-  margin-bottom: 20rpx;
-  .section-title {
-    padding: 20rpx 30rpx 16rpx;
-    font-weight: 600;
-    font-size: 28rpx;
-    color: #333;
-  }
-  .function-grid {
-    display: flex;
-    justify-content: space-around;
-    padding: 20rpx 30rpx;
-    background: #fff;
-  }
-  .function-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20rpx;
-    border-radius: 12rpx;
-    transition: background 0.3s ease;
-    &:active {
-      background: #f5f5f5;
-    }
-    .function-icon {
-      margin-bottom: 12rpx;
-      font-size: 48rpx;
-    }
-    .function-info {
-      text-align: center;
-      .function-title {
-        display: block;
-        margin-bottom: 4rpx;
-        font-size: 24rpx;
-        color: #333;
-      }
-      .function-count {
-        display: block;
-        font-weight: 500;
-        font-size: 20rpx;
-        color: #1aa86c;
-      }
-    }
-  }
-}
-
-// 设置选项
-.settings-section {
-  margin-bottom: 20rpx;
-  .section-title {
-    padding: 20rpx 30rpx 16rpx;
-    font-weight: 600;
-    font-size: 28rpx;
-    color: #333;
-  }
-  .settings-list {
-    background: #fff;
-  }
-  .setting-item {
-    display: flex;
-    align-items: center;
-    padding: 30rpx;
-    border-bottom: 1rpx solid #f0f0f0;
-    transition: background 0.3s ease;
-    &:last-child {
-      border-bottom: none;
-    }
-    &:active {
-      background: #f5f5f5;
-    }
-    .setting-icon {
-      margin-right: 24rpx;
-      font-size: 40rpx;
-    }
-    .setting-info {
-      flex: 1;
-      .setting-title {
-        display: block;
-        margin-bottom: 6rpx;
-        font-size: 28rpx;
-        color: #333;
-      }
-      .setting-desc {
-        display: block;
-        font-size: 24rpx;
-        color: #999;
-      }
-    }
-    .setting-arrow {
-      font-weight: 300;
-      font-size: 32rpx;
-      color: #ccc;
-    }
-  }
-}
-
-// 系统信息
-.system-info {
-  margin-bottom: 20rpx;
-  padding: 30rpx;
-  background: #fff;
-  .info-text {
-    display: block;
-    margin-bottom: 8rpx;
-    font-size: 24rpx;
-    color: #666;
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-}
-
-// 退出登录
-.logout-section {
-  padding: 0 30rpx;
-  .logout-btn {
-    border: none;
-    border-radius: 12rpx;
-    width: 100%;
-    height: 88rpx;
-    background: #ff4757;
-    font-weight: 500;
-    font-size: 28rpx;
-    color: #fff;
-    &:active {
-      background: #ff3742;
-    }
-  }
-}
-
-// 错误状态样式
-.error-container {
+// 头像区域
+.avatar-section {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  margin-bottom: 40rpx;
   padding: 40rpx;
-  min-height: 60vh;
-  .error-icon {
-    margin-bottom: 30rpx;
-    font-size: 120rpx;
+  background: #fff;
+  border-radius: 12rpx;
+
+  .avatar-img {
+    width: 160rpx;
+    height: 160rpx;
+    border: 4rpx solid #f0f0f0;
+    border-radius: 80rpx;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+    
+    &:active {
+      opacity: 0.8;
+    }
   }
-  .error-message {
-    margin-bottom: 40rpx;
-    line-height: 1.5;
-    text-align: center;
+
+  .avatar-tip {
+    margin-top: 20rpx;
+    font-size: 24rpx;
+    color: #999;
+  }
+}
+
+// 昵称区域
+.nickname-section {
+  margin-bottom: 30rpx;
+  padding: 30rpx;
+  background: #fff;
+  border-radius: 12rpx;
+
+  .section-title {
+    margin-bottom: 20rpx;
+    font-weight: 600;
+    font-size: 32rpx;
+    color: #333;
+  }
+
+  .nickname-input {
+    width: 100%;
+    padding: 20rpx;
+    border: 2rpx solid #e5e6eb;
+    border-radius: 8rpx;
+    background: #fafafa;
     font-size: 28rpx;
-    color: #666;
+    color: #333;
+
+    &::placeholder {
+      color: #999;
+    }
+
+    &:focus {
+      border-color: #1aa86c;
+      outline: none;
+    }
   }
-  .retry-btn {
-    padding: 20rpx 40rpx;
+}
+
+// 获取小区信息按钮
+.community-section {
+  margin-bottom: 30rpx;
+
+  .get-community-btn {
+    width: 100%;
+    height: 88rpx;
     border: none;
     border-radius: 12rpx;
     background: #1aa86c;
+    font-weight: 500;
     font-size: 28rpx;
     color: #fff;
+
     &:active {
       background: #168f5a;
+    }
+
+    &:disabled {
+      background: #ccc;
+      color: #999;
     }
   }
 }
 
-// 加载状态样式
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 60vh;
-  .loading-spinner {
-    margin-bottom: 30rpx;
-    border: 4rpx solid #f3f3f3;
-    border-top: 4rpx solid #1aa86c;
-    border-radius: 50%;
-    width: 60rpx;
-    height: 60rpx;
-    animation: spin 1s linear infinite;
+// 小区信息显示
+.communities-info {
+  margin-bottom: 30rpx;
+
+  .section-title {
+    margin-bottom: 20rpx;
+    padding: 0 30rpx;
+    font-weight: 600;
+    font-size: 32rpx;
+    color: #333;
   }
-  .loading-text {
-    font-size: 28rpx;
-    color: #666;
+
+  .community-item {
+    margin-bottom: 20rpx;
+    padding: 30rpx;
+    background: #fff;
+    border-radius: 12rpx;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .community-title {
+      margin-bottom: 20rpx;
+      padding: 10rpx 20rpx;
+      background: #f0f8f0;
+      border-radius: 8rpx;
+      font-weight: 600;
+      font-size: 28rpx;
+      color: #1aa86c;
+      text-align: center;
+    }
+
+    .info-item {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 20rpx;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .info-label {
+        width: 80rpx;
+        margin-right: 20rpx;
+        font-size: 28rpx;
+        color: #666;
+        line-height: 88rpx;
+      }
+
+      .info-input {
+        flex: 1;
+        padding: 20rpx;
+        border: 2rpx solid #e5e6eb;
+        border-radius: 8rpx;
+        background: #f9f9f9;
+        font-size: 28rpx;
+        color: #333;
+      }
+
+      .info-textarea {
+        flex: 1;
+        padding: 20rpx;
+        border: 2rpx solid #e5e6eb;
+        border-radius: 8rpx;
+        background: #f9f9f9;
+        min-height: 120rpx;
+        font-size: 28rpx;
+        color: #333;
+        resize: none;
+      }
+    }
   }
 }
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
+
+// 注册按钮
+.register-section {
+  margin-bottom: 30rpx;
+
+  .register-btn {
+    width: 100%;
+    height: 88rpx;
+    border: none;
+    border-radius: 12rpx;
+    background: #ff6b35;
+    font-weight: 500;
+    font-size: 28rpx;
+    color: #fff;
+
+    &:active {
+      background: #e55a2b;
+    }
+
+    &:disabled {
+      background: #ccc;
+      color: #999;
+    }
   }
-  100% {
-    transform: rotate(360deg);
+}
+
+// 错误信息显示
+.error-section {
+  padding: 30rpx;
+  background: #fff;
+  border-radius: 12rpx;
+  border: 2rpx solid #ff4757;
+
+  .error-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20rpx;
+
+    .error-title {
+      font-weight: 600;
+      font-size: 28rpx;
+      color: #ff4757;
+    }
+
+    .copy-btn {
+      padding: 8rpx 20rpx;
+      border: 2rpx solid #ff4757;
+      border-radius: 6rpx;
+      background: transparent;
+      font-size: 24rpx;
+      color: #ff4757;
+
+      &:active {
+        background: #ff4757;
+        color: #fff;
+      }
+    }
+  }
+
+  .error-textarea {
+    width: 100%;
+    min-height: 200rpx;
+    padding: 20rpx;
+    border: 2rpx solid #ffebee;
+    border-radius: 8rpx;
+    background: #fafafa;
+    font-family: monospace;
+    font-size: 24rpx;
+    color: #666;
+    line-height: 1.4;
+    resize: none;
   }
 }
 </style>
