@@ -1,5 +1,12 @@
 <script setup lang="ts" name="create">
 import { computed, ref } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useUserStore } from '@/store/user';
+import UserStatusCard from '../../components/UserStatusCard.vue';
+
+// 用户状态管理
+const userStore = useUserStore();
+const { loggedIn, userInfo } = storeToRefs(userStore);
 
 // --- 登录与通用状态 ---
 const apiBaseUrl = ref('/api');
@@ -201,8 +208,11 @@ function clearForm() {
 
 <template>
   <view class="create-poc">
-    <!-- 登录区 -->
-    <view class="section">
+    <!-- 用户状态显示 -->
+    <UserStatusCard theme="blue" />
+
+    <!-- 登录区 - 仅在未登录时显示 -->
+    <view v-if="!loggedIn" class="section">
       <view class="form-title">🔐 登录认证</view>
       <view class="row">
         <text class="label">邮箱 *</text>
