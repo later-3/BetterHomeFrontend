@@ -1,11 +1,18 @@
 <script setup lang="ts" name="neighbor">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useUserStore } from '@/store/user';
 import SocialFeedContent from '../../components/SocialFeedContent.vue';
 
 /**
  * 业主圈页面 - 获取业主圈帖子
  * 从Directus获取所有type为post的业主圈帖子内容
+ * 如果用户已登录，自动获取用户所在小区的帖子内容
  */
+
+// 用户状态管理
+const userStore = useUserStore();
+const { isLoggedIn, userInfo, loggedIn } = storeToRefs(userStore);
 
 // 基础配置
 const apiBaseUrl = ref('/api');
@@ -15,6 +22,7 @@ const token = ref<string | null>(null);
 const loading = ref(false);
 const contentData = ref<any>(null);
 const errorInfo = ref<any>(null);
+const autoLoading = ref(false); // 新增：自动加载状态
 
 // 格式化显示内容
 const prettyContentData = computed(() => {
@@ -266,6 +274,8 @@ async function login() {
   }
 }
 
+// 移除自动获取用户小区内容的旧逻辑
+
 // 获取Content数据
 async function getContents() {
   if (!token.value) {
@@ -418,6 +428,11 @@ function fallbackCopyTextToClipboard(text: string) {
 
   document.body.removeChild(textArea);
 }
+
+// 移除页面加载时的自动状态检查逻辑
+// onMounted(() => {
+//   // 暂时移除自动获取逻辑，等待新的状态方案实施
+// });
 </script>
 
 <template>
@@ -428,8 +443,21 @@ function fallbackCopyTextToClipboard(text: string) {
       <text class="subtitle">获取业主圈帖子数据</text>
     </view>
 
-    <!-- 操作区域 -->
-    <view class="section">
+    <!-- 用户登录状态显示 -->
+    <view v-if="loggedIn" class="section user-status-section">
+      <view class="status-header">
+        <text class="section-title">👤 用户状态</text>
+        <text class="status-badge logged-in">已登录</text>
+      </view>
+      <view class="user-info">
+        <text class="user-name">{{ userInfo.first_name }} {{ userInfo.last_name }}</text>
+        <text class="user-detail">{{ userInfo.email }}</text>
+        <text v-if="userInfo.community_name" class="user-community">🏠 {{ userInfo.community_name }}</text>
+      </view>
+    </view>
+
+    <!-- 操作区域 - 已登录时隐藏 -->
+    <view v-if="!loggedIn" class="section">
       <view class="account-info">
         <text class="label">预设账户: {{ email }}</text>
         <text class="token-status" :class="{ 'has-token': token }">
@@ -874,5 +902,56 @@ function fallbackCopyTextToClipboard(text: string) {
   line-height: 1.6;
   font-size: 14px;
   color: #999;
+}
+
+/* 用户状态显示 */
+.user-status-section {
+  border-left: 4px solid #07c160;
+  background: #f0f9f4;
+}
+.status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.status-badge.logged-in {
+  background: #07c160;
+  color: white;
+}
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.user-name {
+  font-weight: 600;
+  font-size: 16px;
+  color: #333;
+}
+.user-detail {
+  font-size: 14px;
+  color: #666;
+}
+.user-community {
+  font-size: 13px;
+  color: #07c160;
+  font-weight: 500;
+}
+
+/* 加载动画 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 </style>

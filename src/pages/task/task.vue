@@ -1,10 +1,16 @@
 <script setup lang="ts" name="task">
 import { computed, ref } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useUserStore } from '@/store/user';
 
 /**
  * 事项页面 - 获取业主投诉工单数据
  * 从Directus获取所有type为complaint的投诉工单内容
  */
+
+// 用户状态管理
+const userStore = useUserStore();
+const { isLoggedIn, userInfo, loggedIn } = storeToRefs(userStore);
 
 // 基础配置
 const apiBaseUrl = ref('/api');
@@ -282,8 +288,21 @@ function fallbackCopyTextToClipboard(text: string) {
       <text class="subtitle">获取业主提交的事项数据</text>
     </view>
 
-    <!-- 操作区域 -->
-    <view class="section">
+    <!-- 用户状态显示 -->
+    <view v-if="loggedIn" class="section user-status-section">
+      <view class="status-header">
+        <text class="section-title">👤 用户状态</text>
+        <text class="status-badge logged-in">已登录</text>
+      </view>
+      <view class="user-info">
+        <text class="user-name">{{ userInfo.first_name }} {{ userInfo.last_name }}</text>
+        <text class="user-detail">{{ userInfo.email }}</text>
+        <text v-if="userInfo.community_name" class="user-community">🏠 {{ userInfo.community_name }}</text>
+      </view>
+    </view>
+
+    <!-- 操作区域 - 已登录时隐藏 -->
+    <view v-if="!loggedIn" class="section">
       <view class="account-info">
         <text class="label">预设账户: {{ email }}</text>
         <text class="token-status" :class="{ 'has-token': token }">
@@ -404,6 +423,47 @@ function fallbackCopyTextToClipboard(text: string) {
   min-height: 100vh;
   background-color: #f5f5f5;
   font-size: 14px;
+}
+
+/* 用户状态显示 */
+.user-status-section {
+  border-left: 4px solid #28a745;
+  background: #f0f9f4;
+}
+.status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.status-badge.logged-in {
+  background: #28a745;
+  color: white;
+}
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.user-name {
+  font-weight: 600;
+  font-size: 16px;
+  color: #333;
+}
+.user-detail {
+  font-size: 14px;
+  color: #666;
+}
+.user-community {
+  font-size: 13px;
+  color: #28a745;
+  font-weight: 500;
 }
 
 /* 页面标题 */
