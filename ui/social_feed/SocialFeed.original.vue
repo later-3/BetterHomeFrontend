@@ -1,3 +1,42 @@
+<script setup lang="ts">
+// import { reactive, ref } from 'vue';
+
+// 响应式数据
+// const searchQuery = ref('');
+
+// 模拟数据
+/* const posts = reactive([
+  {
+    id: 1,
+    user: {
+      name: 'Stephen Smith',
+      title: 'Software Developer | Boston University',
+      avatar: '',
+      time: '20 min'
+    },
+    content:
+      '📚 Just conquered algorithms & data structures! 🎉 Time for a breather. Suggestions for a binge-worthy show? 🍿\n\n#StudyBreak #NetflixTime',
+    likes: '1.6k',
+    comments: '200',
+    type: 'text'
+  }
+  // 更多动态数据...
+]); */
+
+// 方法
+/* const handleLike = (postId: number) => {
+  console.log('Like post:', postId);
+};
+
+const handleComment = (postId: number) => {
+  console.log('Comment on post:', postId);
+};
+
+const handleShare = (postId: number) => {
+  console.log('Share post:', postId);
+}; */
+</script>
+
 <template>
   <div class="social-feed">
     <!-- 状态栏 -->
@@ -33,14 +72,17 @@
                 <span class="user-name">Stephen Smith</span>
                 <span class="post-time">• 20 min</span>
               </div>
-              <div class="user-title">Software Developer | Boston University</div>
+              <div class="user-title">
+                Software Developer | Boston University
+              </div>
             </div>
           </div>
           <div class="more-options">⋯</div>
         </div>
         <div class="post-content">
-          📚 Just conquered algorithms & data structures! 🎉 Time for a breather. Suggestions for a binge-worthy show? 🍿
-          <br><br>
+          📚 Just conquered algorithms & data structures! 🎉 Time for a
+          breather. Suggestions for a binge-worthy show? 🍿
+          <br /><br />
           #StudyBreak #NetflixTime
         </div>
         <div class="post-actions">
@@ -71,23 +113,32 @@
                 <span class="user-name">Alexander Cumins</span>
                 <span class="post-time">• 20 min</span>
               </div>
-              <div class="user-title">Bachelor of Computer Science | Web Developer</div>
+              <div class="user-title">
+                Bachelor of Computer Science | Web Developer
+              </div>
             </div>
           </div>
           <div class="more-options">⋯</div>
         </div>
         <div class="post-content">
           💻 Need some desk setup inspo?
-          <br><br>
-          👀 Check out my cozy study corner! Loving the minimalist vibes and natural lighting.
+          <br /><br />
+          👀 Check out my cozy study corner! Loving the minimalist vibes and
+          natural lighting.
         </div>
         <div class="post-images">
           <div class="image-grid">
             <div class="image-item">
-              <img src="../assets/CodeBubbyAssets/61_504/30.png" alt="Desk setup 1" />
+              <img
+                src="../assets/CodeBubbyAssets/61_504/30.png"
+                alt="Desk setup 1"
+              />
             </div>
             <div class="image-item">
-              <img src="../assets/CodeBubbyAssets/61_504/31.png" alt="Desk setup 2" />
+              <img
+                src="../assets/CodeBubbyAssets/61_504/31.png"
+                alt="Desk setup 2"
+              />
             </div>
           </div>
         </div>
@@ -125,8 +176,10 @@
           <div class="more-options">⋯</div>
         </div>
         <div class="post-content">
-          📝 Just wrapped up my final project presentation! 🎓💼 Feeling a mix of relief and excitement for what's next. Cheers to the end of another semester! 🥂
-          <br><br>
+          📝 Just wrapped up my final project presentation! 🎓💼 Feeling a mix
+          of relief and excitement for what's next. Cheers to the end of another
+          semester! 🥂
+          <br /><br />
           #StudentLife #FinalsDone #NextChapter
         </div>
         <div class="post-actions">
@@ -157,19 +210,25 @@
                 <span class="user-name">Ashley Wong</span>
                 <span class="post-time">• 10 min</span>
               </div>
-              <div class="user-title">B.Sc. in CS | Robotics and Control Systems</div>
+              <div class="user-title">
+                B.Sc. in CS | Robotics and Control Systems
+              </div>
             </div>
           </div>
           <div class="more-options">⋯</div>
         </div>
         <div class="post-content">
           🚀 Just wrapped up an exhilarating web development session!
-          <br><br>
-          Delved into the intricacies of front-end frameworks and unleashed some creativity with CSS animations.
+          <br /><br />
+          Delved into the intricacies of front-end frameworks and unleashed some
+          creativity with CSS animations.
         </div>
         <div class="post-video">
           <div class="video-container">
-            <img src="../assets/CodeBubbyAssets/61_504/1.png" alt="Video thumbnail" />
+            <img
+              src="../assets/CodeBubbyAssets/61_504/1.png"
+              alt="Video thumbnail"
+            />
             <div class="video-overlay">
               <div class="play-button">▶️</div>
               <div class="video-duration">00:32</div>
@@ -220,49 +279,11 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, reactive } from 'vue'
-
-// 响应式数据
-const searchQuery = ref('')
-
-// 模拟数据
-const posts = reactive([
-  {
-    id: 1,
-    user: {
-      name: 'Stephen Smith',
-      title: 'Software Developer | Boston University',
-      avatar: '',
-      time: '20 min'
-    },
-    content: '📚 Just conquered algorithms & data structures! 🎉 Time for a breather. Suggestions for a binge-worthy show? 🍿\n\n#StudyBreak #NetflixTime',
-    likes: '1.6k',
-    comments: '200',
-    type: 'text'
-  },
-  // 更多动态数据...
-])
-
-// 方法
-const handleLike = (postId: number) => {
-  console.log('Like post:', postId)
-}
-
-const handleComment = (postId: number) => {
-  console.log('Comment on post:', postId)
-}
-
-const handleShare = (postId: number) => {
-  console.log('Share post:', postId)
-}
-</script>
-
 <style scoped>
 .social-feed {
   width: 375px;
   height: 100vh;
-  background: #F5F5F5;
+  background: #f5f5f5;
   font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
   overflow-y: auto;
   position: relative;
@@ -294,7 +315,9 @@ const handleShare = (postId: number) => {
   align-items: center;
 }
 
-.signal-icon, .wifi-icon, .battery-icon {
+.signal-icon,
+.wifi-icon,
+.battery-icon {
   width: 17px;
   height: 10px;
   background: black;
@@ -319,8 +342,8 @@ const handleShare = (postId: number) => {
 .search-container {
   flex: 1;
   height: 40px;
-  background: #F7F7F7;
-  border: 0.5px solid #CCCDCF;
+  background: #f7f7f7;
+  border: 0.5px solid #cccdcf;
   border-radius: 20px;
   display: flex;
   align-items: center;
@@ -344,8 +367,8 @@ const handleShare = (postId: number) => {
 .profile-avatar {
   width: 40px;
   height: 40px;
-  background: #F7F7F7;
-  border: 0.5px solid #CCCDCF;
+  background: #f7f7f7;
+  border: 0.5px solid #cccdcf;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -355,7 +378,7 @@ const handleShare = (postId: number) => {
 .avatar-placeholder {
   width: 20px;
   height: 20px;
-  background: #CCCDCF;
+  background: #cccdcf;
   border-radius: 50%;
 }
 
@@ -366,7 +389,7 @@ const handleShare = (postId: number) => {
 
 .post-card {
   background: white;
-  border-bottom: 0.5px solid #CCCDCF;
+  border-bottom: 0.5px solid #cccdcf;
   padding: 16px;
   margin-bottom: 0;
 }
@@ -387,7 +410,7 @@ const handleShare = (postId: number) => {
 .avatar {
   width: 40px;
   height: 40px;
-  background: #CCCDCF;
+  background: #cccdcf;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -406,7 +429,7 @@ const handleShare = (postId: number) => {
 .user-name {
   font-size: 16px;
   font-weight: 500;
-  color: #00030F;
+  color: #00030f;
 }
 
 .post-time {
@@ -429,7 +452,7 @@ const handleShare = (postId: number) => {
 
 .post-content {
   font-size: 14px;
-  color: #00030F;
+  color: #00030f;
   line-height: 1.4;
   margin-bottom: 16px;
   white-space: pre-line;
@@ -563,7 +586,8 @@ const handleShare = (postId: number) => {
   gap: 16px;
 }
 
-.share-icon, .bookmark-icon {
+.share-icon,
+.bookmark-icon {
   font-size: 16px;
   cursor: pointer;
 }
@@ -577,7 +601,7 @@ const handleShare = (postId: number) => {
   height: 78px;
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20px);
-  border-top: 0.5px solid #CCCDCF;
+  border-top: 0.5px solid #cccdcf;
   display: flex;
   align-items: flex-start;
   justify-content: space-around;
@@ -594,7 +618,7 @@ const handleShare = (postId: number) => {
 }
 
 .nav-item.active .nav-icon {
-  color: #007AFF;
+  color: #007aff;
 }
 
 .nav-icon {

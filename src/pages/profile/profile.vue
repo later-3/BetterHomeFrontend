@@ -27,11 +27,11 @@ function goToLogin() {
 function showCurrentState() {
   try {
     const stateInfo = {
-      step: "第1步验证 - 基础状态结构",
+      step: '第1步验证 - 基础状态结构',
       storeExists: !!userStore,
       storeType: typeof userStore,
       timestamp: new Date().toISOString(),
-      
+
       // 直接访问响应式状态（通过 storeToRefs 解构的）
       state: {
         isLoggedIn: {
@@ -44,7 +44,7 @@ function showCurrentState() {
           hasId: !!userInfo.value?.id
         }
       },
-      
+
       // 访问 getter
       getters: {
         loggedIn: {
@@ -52,28 +52,27 @@ function showCurrentState() {
           type: typeof loggedIn.value
         }
       },
-      
+
       // Store 实例信息
       storeInstance: {
         hasActions: typeof userStore === 'object' && userStore !== null,
         storeId: userStore.$id || 'unknown'
       }
     };
-    
+
     debugInfo.value = JSON.stringify(stateInfo, null, 2);
     showDebugInfo.value = true;
-    
   } catch (error) {
     const errorInfo = {
-      step: "第1步验证失败",
+      step: '第1步验证失败',
       error: error.message,
       storeExists: !!userStore,
       timestamp: new Date().toISOString()
     };
-    
+
     debugInfo.value = JSON.stringify(errorInfo, null, 2);
     showDebugInfo.value = true;
-    
+
     console.error('❌ 第1步验证失败:', error);
   }
 }
@@ -101,11 +100,11 @@ function testLogin() {
     community_id: 'community_456',
     community_name: 'Test Community'
   };
-  
+
   userStore.login(testUserInfo);
-  
+
   const actionResult = {
-    step: "第2步验证 - Login Action",
+    step: '第2步验证 - Login Action',
     action: 'login',
     timestamp: new Date().toISOString(),
     input: testUserInfo,
@@ -115,22 +114,22 @@ function testLogin() {
       loggedIn: loggedIn.value
     }
   };
-  
+
   debugInfo.value = JSON.stringify(actionResult, null, 2);
   showDebugInfo.value = true;
-  
-  uni.showToast({ 
-    title: '已调用 login action', 
-    icon: 'success' 
+
+  uni.showToast({
+    title: '已调用 login action',
+    icon: 'success'
   });
 }
 
 // 第2步验证：测试 logout action
 function testLogout() {
   userStore.logout();
-  
+
   const actionResult = {
-    step: "第2步验证 - Logout Action",
+    step: '第2步验证 - Logout Action',
     action: 'logout',
     timestamp: new Date().toISOString(),
     newState: {
@@ -139,13 +138,13 @@ function testLogout() {
       loggedIn: loggedIn.value
     }
   };
-  
+
   debugInfo.value = JSON.stringify(actionResult, null, 2);
   showDebugInfo.value = true;
-  
-  uni.showToast({ 
-    title: '已调用 logout action', 
-    icon: 'success' 
+
+  uni.showToast({
+    title: '已调用 logout action',
+    icon: 'success'
   });
 }
 
@@ -153,9 +152,9 @@ function testLogout() {
 function testPersistence() {
   try {
     const debugResults = {
-      step: "第4步验证 - 持久化配置调试",
+      step: '第4步验证 - 持久化配置调试',
       timestamp: new Date().toISOString(),
-      
+
       // 1. 插件基础验证
       pluginCheck: (() => {
         try {
@@ -164,61 +163,66 @@ function testPersistence() {
           return {
             piniaExists: !!piniaInstance,
             pluginCount: plugins.length,
-            hasPeristPlugin: plugins.some(p => p.toString().includes('persist') || p.name?.includes('persist')),
+            hasPeristPlugin: plugins.some(
+              (p) =>
+                p.toString().includes('persist') || p.name?.includes('persist')
+            ),
             storeHasPersist: !!userStore.$persist,
-            storePersistMethods: Object.keys(userStore).filter(key => key.includes('persist'))
+            storePersistMethods: Object.keys(userStore).filter((key) =>
+              key.includes('persist')
+            )
           };
         } catch (e) {
           return { error: e.message };
         }
       })(),
-      
+
       // 2. 存储API验证
       storageApiCheck: (() => {
         const results = {};
-        
+
         // 测试uni存储API
         try {
           uni.setStorageSync('debug-test-uni', 'test-value');
           const retrieved = uni.getStorageSync('debug-test-uni');
           uni.removeStorageSync('debug-test-uni');
-          results.uniStorage = { 
-            available: true, 
-            testPassed: retrieved === 'test-value' 
+          results.uniStorage = {
+            available: true,
+            testPassed: retrieved === 'test-value'
           };
         } catch (e) {
-          results.uniStorage = { 
-            available: false, 
-            error: e.message 
+          results.uniStorage = {
+            available: false,
+            error: e.message
           };
         }
-        
+
         // 测试localStorage
         try {
           localStorage.setItem('debug-test-local', 'test-value');
           const retrieved = localStorage.getItem('debug-test-local');
           localStorage.removeItem('debug-test-local');
-          results.localStorage = { 
-            available: true, 
-            testPassed: retrieved === 'test-value' 
+          results.localStorage = {
+            available: true,
+            testPassed: retrieved === 'test-value'
           };
         } catch (e) {
-          results.localStorage = { 
-            available: false, 
-            error: e.message 
+          results.localStorage = {
+            available: false,
+            error: e.message
           };
         }
-        
+
         return results;
       })(),
-      
+
       // 3. 当前存储状态检查
       storageStateCheck: (() => {
         const results = {
           localStorage: {},
           uniStorage: {}
         };
-        
+
         // 检查localStorage
         try {
           const allLocalKeys = [];
@@ -227,30 +231,37 @@ function testPersistence() {
           }
           results.localStorage = {
             allKeys: allLocalKeys,
-            userRelatedKeys: allLocalKeys.filter(key => 
-              key.includes('user') || key.includes('pinia') || key.includes('store')
+            userRelatedKeys: allLocalKeys.filter(
+              (key) =>
+                key.includes('user') ||
+                key.includes('pinia') ||
+                key.includes('store')
             )
           };
         } catch (e) {
           results.localStorage.error = e.message;
         }
-        
+
         // 检查uni存储
         try {
           const uniKeys = uni.getStorageInfoSync();
           results.uniStorage = {
             info: uniKeys,
-            userRelatedKeys: uniKeys.keys?.filter(key => 
-              key.includes('user') || key.includes('pinia') || key.includes('store')
-            ) || []
+            userRelatedKeys:
+              uniKeys.keys?.filter(
+                (key) =>
+                  key.includes('user') ||
+                  key.includes('pinia') ||
+                  key.includes('store')
+              ) || []
           };
         } catch (e) {
           results.uniStorage.error = e.message;
         }
-        
+
         return results;
       })(),
-      
+
       // 4. Store配置检查 - 修复版本
       storeConfigCheck: (() => {
         const storeInfo = {
@@ -261,10 +272,10 @@ function testPersistence() {
             loggedIn: loggedIn.value
           }
         };
-        
+
         // 尝试多种方式访问持久化配置
         const persistInfo = {};
-        
+
         // 方法1: 检查 $options
         if (userStore.$options) {
           persistInfo.optionsExist = true;
@@ -272,59 +283,61 @@ function testPersistence() {
         } else {
           persistInfo.optionsExist = false;
         }
-        
+
         // 方法2: 检查 $persist 相关属性
-        persistInfo.persistMethods = Object.keys(userStore).filter(key => 
-          key.includes('persist') || key.includes('Persist')
+        persistInfo.persistMethods = Object.keys(userStore).filter(
+          (key) => key.includes('persist') || key.includes('Persist')
         );
-        
+
         // 方法3: 检查 Pinia 实例上的插件信息
         try {
           const pinia = userStore.$pinia;
           if (pinia && pinia._s) {
             const storeInstance = pinia._s.get('user');
             if (storeInstance) {
-              persistInfo.storeInstanceKeys = Object.keys(storeInstance).filter(key => 
-                key.includes('persist') || key.includes('Persist')
+              persistInfo.storeInstanceKeys = Object.keys(storeInstance).filter(
+                (key) => key.includes('persist') || key.includes('Persist')
               );
             }
           }
         } catch (e) {
           persistInfo.piniaAccessError = e.message;
         }
-        
+
         // 方法4: 检查实际存储中是否有数据
         try {
           const storedUser = uni.getStorageSync('user');
-          persistInfo.actualStoredData = storedUser ? {
-            exists: true,
-            data: storedUser
-          } : {
-            exists: false
-          };
+          persistInfo.actualStoredData = storedUser
+            ? {
+                exists: true,
+                data: storedUser
+              }
+            : {
+                exists: false
+              };
         } catch (e) {
           persistInfo.storageAccessError = e.message;
         }
-        
+
         return {
           ...storeInfo,
           persistenceInfo: persistInfo
         };
       })(),
-      
+
       // 5. 手动存储测试
       manualStorageTest: (() => {
         try {
           const testData = { test: true, timestamp: Date.now() };
-          
+
           // 测试手动uni存储
           uni.setStorageSync('manual-test-user', testData);
           const retrieved = uni.getStorageSync('manual-test-user');
-          
+
           return {
             success: true,
             stored: testData,
-            retrieved: retrieved,
+            retrieved,
             matches: JSON.stringify(testData) === JSON.stringify(retrieved)
           };
         } catch (e) {
@@ -334,32 +347,31 @@ function testPersistence() {
           };
         }
       })(),
-      
+
       nextSteps: [
-        "1. 检查插件是否正确加载",
-        "2. 确认存储API可用性",
-        "3. 验证Store配置正确性",
-        "4. 测试手动存储操作",
-        "5. 根据结果调整配置"
+        '1. 检查插件是否正确加载',
+        '2. 确认存储API可用性',
+        '3. 验证Store配置正确性',
+        '4. 测试手动存储操作',
+        '5. 根据结果调整配置'
       ]
     };
-    
+
     debugInfo.value = JSON.stringify(debugResults, null, 2);
     showDebugInfo.value = true;
-    
-    uni.showToast({ 
-      title: '调试信息已生成', 
-      icon: 'success' 
+
+    uni.showToast({
+      title: '调试信息已生成',
+      icon: 'success'
     });
-    
   } catch (error) {
     const errorInfo = {
-      step: "第4步调试失败",
+      step: '第4步调试失败',
       error: error.message,
       stack: error.stack,
       timestamp: new Date().toISOString()
     };
-    
+
     debugInfo.value = JSON.stringify(errorInfo, null, 2);
     showDebugInfo.value = true;
   }
@@ -368,18 +380,19 @@ function testPersistence() {
 
 <template>
   <view class="profile-container">
-    
     <!-- 第3步：已登录状态UI -->
     <view v-if="loggedIn" class="logged-in-view">
       <view class="user-info-section">
         <view class="avatar-display">
           <image class="avatar-img" src="/static/logo.png" />
         </view>
-        
+
         <view class="user-details">
           <view class="detail-item">
             <text class="detail-label">姓名</text>
-            <text class="detail-value">{{ userInfo.first_name }} {{ userInfo.last_name }}</text>
+            <text class="detail-value"
+              >{{ userInfo.first_name }} {{ userInfo.last_name }}</text
+            >
           </view>
           <view class="detail-item">
             <text class="detail-label">邮箱</text>
@@ -387,24 +400,32 @@ function testPersistence() {
           </view>
           <view class="detail-item">
             <text class="detail-label">小区</text>
-            <text class="detail-value">{{ userInfo.community_name || '未设置' }}</text>
+            <text class="detail-value">{{
+              userInfo.community_name || '未设置'
+            }}</text>
           </view>
         </view>
       </view>
 
       <!-- 第2步验证：Action 测试按钮 -->
       <view class="debug-section">
-        <button class="action-test-btn logout-test" @click="testLogout">🔧 第2步验证：测试 Logout Action</button>
+        <button class="action-test-btn logout-test" @click="testLogout">
+          🔧 第2步验证：测试 Logout Action
+        </button>
       </view>
 
       <!-- 第4步验证：持久化测试按钮 -->
       <view class="debug-section">
-        <button class="persistence-test-btn" @click="testPersistence">💾 第4步验证：测试持久化配置</button>
+        <button class="persistence-test-btn" @click="testPersistence">
+          💾 第4步验证：测试持久化配置
+        </button>
       </view>
 
       <!-- 第1步验证：状态调试按钮 -->
       <view class="debug-section">
-        <button class="debug-btn" @click="showCurrentState">🔍 第1步验证：查看状态结构</button>
+        <button class="debug-btn" @click="showCurrentState">
+          🔍 第1步验证：查看状态结构
+        </button>
       </view>
     </view>
 
@@ -424,26 +445,43 @@ function testPersistence() {
 
       <!-- 第2步验证：Action 测试按钮 -->
       <view class="debug-section">
-        <button class="action-test-btn login-test" @click="testLogin">🔧 第2步验证：测试 Login Action</button>
+        <button class="action-test-btn login-test" @click="testLogin">
+          🔧 第2步验证：测试 Login Action
+        </button>
       </view>
 
       <!-- 第4步验证：持久化测试按钮 -->
       <view class="debug-section">
-        <button class="persistence-test-btn" @click="testPersistence">💾 第4步验证：测试持久化配置</button>
+        <button class="persistence-test-btn" @click="testPersistence">
+          💾 第4步验证：测试持久化配置
+        </button>
       </view>
 
       <!-- 第1步验证：状态调试按钮 -->
       <view class="debug-section">
-        <button class="debug-btn" @click="showCurrentState">🔍 第1步验证：查看状态结构</button>
+        <button class="debug-btn" @click="showCurrentState">
+          🔍 第1步验证：查看状态结构
+        </button>
       </view>
     </view>
 
     <!-- 调试信息显示 -->
     <view v-if="showDebugInfo" class="debug-display">
-      <textarea :value="debugInfo" readonly style="width: 100%; height: 300px; font-family: monospace; border: 1px solid #ccc; padding: 10px;"></textarea>
-      <button @click="copyDebugInfo" style="margin-top: 10px;">📋 复制调试信息</button>
+      <textarea
+        :value="debugInfo"
+        readonly
+        style="
+          width: 100%;
+          height: 300px;
+          font-family: monospace;
+          border: 1px solid #ccc;
+          padding: 10px;
+        "
+      ></textarea>
+      <button style="margin-top: 10px" @click="copyDebugInfo">
+        📋 复制调试信息
+      </button>
     </view>
-
   </view>
 </template>
 
@@ -661,5 +699,4 @@ function testPersistence() {
   margin-top: 20rpx;
   padding: 20rpx;
 }
-
 </style>

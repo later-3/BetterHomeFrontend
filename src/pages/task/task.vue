@@ -1,8 +1,8 @@
 <script setup lang="ts" name="task">
 import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useUserStore } from '@/store/user';
 import UserStatusCard from '../../components/UserStatusCard.vue';
+import { useUserStore } from '@/store/user';
 
 /**
  * 事项页面 - 获取业主投诉工单数据
@@ -11,7 +11,7 @@ import UserStatusCard from '../../components/UserStatusCard.vue';
 
 // 用户状态管理
 const userStore = useUserStore();
-const { isLoggedIn, userInfo, loggedIn } = storeToRefs(userStore);
+const { loggedIn } = storeToRefs(userStore);
 
 // 基础配置
 const apiBaseUrl = ref('/api');
@@ -327,7 +327,9 @@ function fallbackCopyTextToClipboard(text: string) {
     <!-- 成功数据展示 - 事项卡片形式展示 -->
     <view v-if="contentData && contentData.success" class="section">
       <view class="result-header">
-        <text class="section-title">📋 投诉工单 ({{ contentData.total }}条)</text>
+        <text class="section-title"
+          >📋 投诉工单 ({{ contentData.total }}条)</text
+        >
         <button size="mini" class="btn-primary" @click="copyContent">
           复制数据
         </button>
@@ -348,8 +350,13 @@ function fallbackCopyTextToClipboard(text: string) {
             <text class="post-content">{{ item.body || '无内容' }}</text>
 
             <!-- 实际图片显示 -->
-            <view v-if="item.attachments && item.attachments.length > 0" class="image-gallery">
-              <text class="gallery-title">📎 附件 ({{ item.attachments.length }})</text>
+            <view
+              v-if="item.attachments && item.attachments.length > 0"
+              class="image-gallery"
+            >
+              <text class="gallery-title"
+                >📎 附件 ({{ item.attachments.length }})</text
+              >
               <view class="image-grid">
                 <view
                   v-for="(attachment, index) in item.attachments.slice(0, 4)"
@@ -361,12 +368,17 @@ function fallbackCopyTextToClipboard(text: string) {
                     :src="getImageUrl(attachment)"
                     class="post-image"
                     mode="aspectFill"
-                    @error="onImageError"
                     :lazy-load="true"
+                    @error="onImageError"
                   />
                   <!-- 如果超过4张图片，显示+N -->
-                  <view v-if="index === 3 && item.attachments.length > 4" class="more-images-overlay">
-                    <text class="more-text">+{{ item.attachments.length - 4 }}</text>
+                  <view
+                    v-if="index === 3 && item.attachments.length > 4"
+                    class="more-images-overlay"
+                  >
+                    <text class="more-text"
+                      >+{{ item.attachments.length - 4 }}</text
+                    >
                   </view>
                 </view>
               </view>
@@ -380,7 +392,9 @@ function fallbackCopyTextToClipboard(text: string) {
     <view v-if="errorInfo" class="section">
       <view class="result-header">
         <text class="section-title">❌ 错误信息</text>
-        <button size="mini" class="btn-warn" @click="copyError">复制错误</button>
+        <button size="mini" class="btn-warn" @click="copyError">
+          复制错误
+        </button>
       </view>
       <scroll-view class="data-box error-box" scroll-y>
         <text selectable>{{ prettyErrorInfo }}</text>
@@ -398,7 +412,11 @@ function fallbackCopyTextToClipboard(text: string) {
     </view>
 
     <!-- 图片预览弹窗 -->
-    <view v-if="showImagePreview" class="image-preview-modal" @click="closeImagePreview">
+    <view
+      v-if="showImagePreview"
+      class="image-preview-modal"
+      @click="closeImagePreview"
+    >
       <image :src="previewImage" class="preview-image" mode="aspectFit" />
       <view class="close-btn" @click="closeImagePreview">
         <text class="close-icon">✕</text>
@@ -415,7 +433,6 @@ function fallbackCopyTextToClipboard(text: string) {
   background-color: #f5f5f5;
   font-size: 14px;
 }
-
 
 /* 页面标题 */
 .header {

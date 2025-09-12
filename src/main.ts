@@ -10,7 +10,7 @@ export function createApp() {
 
   // 1. 创建 Pinia 实例
   const pinia = createPinia();
-  
+
   // 2. 为 Pinia 实例注册持久化插件
   pinia.use(piniaPluginPersistUni);
 

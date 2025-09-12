@@ -25,7 +25,9 @@ async function login() {
       method: 'POST',
       data: {
         email: email.value,
-        password: password.value
+        password: password.value,
+        // 请求较长的token有效期，适用于移动应用
+        mode: 'json' // 使用JSON模式获取较长有效期的token
       },
       header: {
         'Content-Type': 'application/json'
@@ -34,34 +36,40 @@ async function login() {
 
     if (res.statusCode === 200 && res.data?.data?.access_token) {
       token.value = res.data.data.access_token;
-      
+
       // 获取用户信息
       const userRes: any = await uni.request({
         url: `${apiBaseUrl.value}/users/me`,
         method: 'GET',
         header: {
-          'Authorization': `Bearer ${token.value}`,
+          Authorization: `Bearer ${token.value}`,
           'Content-Type': 'application/json'
         }
       });
-      
+
       if (userRes.statusCode >= 200 && userRes.statusCode < 300) {
         const userData = userRes.data?.data || userRes.data;
-        
-        // 保存用户状态
-        userStore.login({
-          id: userData.id,
-          first_name: userData.first_name || 'bob',
-          last_name: userData.last_name || '',
-          email: userData.email || email.value,
-          community_id: userData.community_id || '',
-          community_name: userData.community_name || ''
-        });
+
+        // 保存用户状态，设置2小时过期时间（移动应用标准）
+        userStore.login(
+          {
+            id: userData.id,
+            first_name: userData.first_name || 'bob',
+            last_name: userData.last_name || '',
+            email: userData.email || email.value,
+            community_id: userData.community_id || '',
+            community_name: userData.community_name || ''
+          },
+          token.value,
+          120
+        ); // 2小时 = 120分钟
       }
-      
+
       uni.showToast({ title: '登录成功', icon: 'success' });
     } else {
-      throw new Error(`登录失败: ${res.statusCode} - ${JSON.stringify(res.data)}`);
+      throw new Error(
+        `登录失败: ${res.statusCode} - ${JSON.stringify(res.data)}`
+      );
     }
   } catch (error: any) {
     uni.showToast({ title: '登录失败', icon: 'error' });
@@ -95,9 +103,7 @@ async function login() {
         />
       </view>
       <view class="row gap">
-        <button type="primary" :disabled="loading" @tap="login">
-          登录
-        </button>
+        <button type="primary" :disabled="loading" @tap="login">登录</button>
         <text v-if="token" class="token">已登录</text>
       </view>
     </view>

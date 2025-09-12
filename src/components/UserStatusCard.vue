@@ -16,24 +16,39 @@ const { loggedIn, userInfo } = storeToRefs(userStore);
 
 // 主题颜色配置
 const themeColors = {
-  wechat: '#07c160',  // 微信绿 - neighbor页面
-  green: '#28a745',   // Bootstrap绿 - task页面  
-  blue: '#007aff'     // 蓝色 - create页面
+  wechat: '#07c160', // 微信绿 - neighbor页面
+  green: '#28a745', // Bootstrap绿 - task页面
+  blue: '#007aff' // 蓝色 - create页面
 };
 
 const currentColor = themeColors[props.theme];
 </script>
 
 <template>
-  <view v-if="loggedIn" class="section user-status-section" :style="{ borderLeftColor: currentColor }">
+  <view
+    v-if="loggedIn"
+    class="section user-status-section"
+    :style="{ borderLeftColor: currentColor }"
+  >
     <view class="status-header">
       <text class="section-title">👤 用户状态</text>
-      <text class="status-badge logged-in" :style="{ backgroundColor: currentColor }">已登录</text>
+      <text
+        class="status-badge logged-in"
+        :style="{ backgroundColor: currentColor }"
+        >已登录</text
+      >
     </view>
     <view class="user-info">
-      <text class="user-name">{{ userInfo.first_name }} {{ userInfo.last_name }}</text>
+      <text class="user-name"
+        >{{ userInfo.first_name }} {{ userInfo.last_name }}</text
+      >
       <text class="user-detail">{{ userInfo.email }}</text>
-      <text v-if="userInfo.community_name" class="user-community" :style="{ color: currentColor }">🏠 {{ userInfo.community_name }}</text>
+      <text
+        v-if="userInfo.community_name"
+        class="user-community"
+        :style="{ color: currentColor }"
+        >🏠 {{ userInfo.community_name }}</text
+      >
     </view>
   </view>
 </template>

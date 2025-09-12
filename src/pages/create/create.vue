@@ -1,12 +1,12 @@
 <script setup lang="ts" name="create">
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useUserStore } from '@/store/user';
 import UserStatusCard from '../../components/UserStatusCard.vue';
+import { useUserStore } from '@/store/user';
 
 // 用户状态管理
 const userStore = useUserStore();
-const { loggedIn, userInfo } = storeToRefs(userStore);
+const { loggedIn } = storeToRefs(userStore);
 
 // --- 登录与通用状态 ---
 const apiBaseUrl = ref('/api');
@@ -58,7 +58,9 @@ async function login() {
       token.value = res.data.data.access_token;
       uni.showToast({ title: '登录成功', icon: 'success' });
     } else {
-      throw new Error(`登录失败: ${res.statusCode} - ${JSON.stringify(res.data)}`);
+      throw new Error(
+        `登录失败: ${res.statusCode} - ${JSON.stringify(res.data)}`
+      );
     }
   } catch (error: any) {
     uni.showToast({ title: '登录失败', icon: 'error' });
@@ -104,7 +106,7 @@ async function uploadToDirectus() {
       filePath: imagePath.value,
       name: 'file',
       header: {
-        'Authorization': `Bearer ${token.value}`
+        Authorization: `Bearer ${token.value}`
       }
     });
 
@@ -161,7 +163,7 @@ async function handleUpload() {
       postData.attachments = [
         {
           directus_files_id: uploadedFileId.value,
-          contents_id: "+",
+          contents_id: '+'
         }
       ];
     }
@@ -172,13 +174,13 @@ async function handleUpload() {
       data: postData,
       header: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token.value}`
+        Authorization: `Bearer ${token.value}`
       }
     });
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
       uni.showToast({ title: '发布成功！', icon: 'success' });
-      
+
       // 清空表单
       postTitle.value = '';
       postDescription.value = '';
@@ -186,7 +188,9 @@ async function handleUpload() {
       imagePath.value = '';
       uploadedFileId.value = '';
     } else {
-      throw new Error(`发布失败: ${res.statusCode} - ${JSON.stringify(res.data)}`);
+      throw new Error(
+        `发布失败: ${res.statusCode} - ${JSON.stringify(res.data)}`
+      );
     }
   } catch (error: any) {
     uni.showToast({ title: '发布失败', icon: 'error' });
@@ -233,9 +237,7 @@ function clearForm() {
         />
       </view>
       <view class="row gap">
-        <button type="primary" :disabled="loading" @tap="login">
-          登录
-        </button>
+        <button type="primary" :disabled="loading" @tap="login">登录</button>
         <text v-if="token" class="token">已登录</text>
       </view>
     </view>
@@ -247,16 +249,13 @@ function clearForm() {
       <!-- 内容类型选择 -->
       <view class="row">
         <text class="label">类型 *</text>
-        <radio-group @change="onTypeChange" class="radio-group">
-          <label 
-            v-for="option in typeOptions" 
+        <radio-group class="radio-group" @change="onTypeChange">
+          <label
+            v-for="option in typeOptions"
             :key="option.value"
             class="radio-item"
           >
-            <radio 
-              :value="option.value" 
-              :checked="postType === option.value"
-            />
+            <radio :value="option.value" :checked="postType === option.value" />
             <text class="radio-label">{{ option.label }}</text>
           </label>
         </radio-group>
@@ -322,7 +321,7 @@ function clearForm() {
           type="primary"
           :disabled="!postTitle.trim() || !postDescription.trim() || loading"
           :loading="loading"
-          style="width: 100%;"
+          style="width: 100%"
           @click="handleUpload"
         >
           {{ loading ? '发布中...' : '发布内容' }}
@@ -334,14 +333,13 @@ function clearForm() {
         <button
           type="default"
           :disabled="loading"
-          style="width: 100%;"
+          style="width: 100%"
           @click="clearForm"
         >
           清空表单
         </button>
       </view>
     </view>
-
   </view>
 </template>
 

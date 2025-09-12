@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createPinia, setActivePinia } from "pinia";
-import { useNavigationStore } from "@/store/navigation";
-import { useNavigation } from "@/hooks/useNavigation";
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
+import { useNavigationStore } from '@/store/navigation';
+import { useNavigation } from '@/hooks/useNavigation';
 
 // Mock uni-app APIs with performance tracking
 const createPerformanceMock = () => {
   const performanceData = {
     navigationTimes: [] as number[],
     memoryUsage: [] as number[],
-    renderTimes: [] as number[],
+    renderTimes: [] as number[]
   };
 
   const mockUni = {
@@ -21,8 +21,8 @@ const createPerformanceMock = () => {
     removeStorageSync: vi.fn(),
     clearStorageSync: vi.fn(),
     getPerformance: vi.fn(() => ({
-      now: () => Date.now(),
-    })),
+      now: () => Date.now()
+    }))
   };
 
   // Track navigation performance
@@ -40,16 +40,16 @@ const createPerformanceMock = () => {
 };
 
 // Mock error handler
-vi.mock("@/utils/errorHandler", () => ({
+vi.mock('@/utils/errorHandler', () => ({
   errorHandler: {
     handleNavigationError: vi.fn(),
-    handlePageError: vi.fn(),
-  },
+    handlePageError: vi.fn()
+  }
 }));
 
-describe("Navigation Performance Tests", () => {
+describe('Navigation Performance Tests', () => {
   let navigationStore: ReturnType<typeof useNavigationStore>;
-  let performanceData: any;
+  // let performanceData: any;
 
   beforeEach(() => {
     const pinia = createPinia();
@@ -64,13 +64,13 @@ describe("Navigation Performance Tests", () => {
     vi.resetAllMocks();
   });
 
-  describe("Page Load Performance", () => {
-    it("should load pages within acceptable time limits", async () => {
+  describe('Page Load Performance', () => {
+    it('should load pages within acceptable time limits', async () => {
       const navigation = useNavigation();
       const loadTimes = [];
 
       // Test loading time for each page
-      const pages = ["home", "create", "profile"];
+      const pages = ['home', 'create', 'profile'];
 
       for (const page of pages) {
         const startTime = Date.now();
@@ -90,7 +90,7 @@ describe("Navigation Performance Tests", () => {
       expect(averageTime).toBeLessThan(50);
     });
 
-    it("should handle rapid navigation without performance degradation", async () => {
+    it('should handle rapid navigation without performance degradation', async () => {
       const navigation = useNavigation();
       const rapidNavigationTimes = [];
 
@@ -115,7 +115,7 @@ describe("Navigation Performance Tests", () => {
       expect(secondHalfAvg).toBeLessThan(firstHalfAvg * 1.5);
     });
 
-    it("should maintain consistent performance under load", async () => {
+    it('should maintain consistent performance under load', async () => {
       const navigation = useNavigation();
       const loadTestResults = [];
 
@@ -130,7 +130,7 @@ describe("Navigation Performance Tests", () => {
       const results = await Promise.allSettled(concurrentRequests);
 
       results.forEach((result) => {
-        if (result.status === "fulfilled") {
+        if (result.status === 'fulfilled') {
           loadTestResults.push(result.value);
           // Each request should complete within reasonable time
           expect(result.value).toBeLessThan(200);
@@ -143,8 +143,8 @@ describe("Navigation Performance Tests", () => {
     });
   });
 
-  describe("Memory Usage Optimization", () => {
-    it("should not cause memory leaks during navigation", async () => {
+  describe('Memory Usage Optimization', () => {
+    it('should not cause memory leaks during navigation', async () => {
       const navigation = useNavigation();
 
       // Simulate memory tracking
@@ -167,7 +167,7 @@ describe("Navigation Performance Tests", () => {
       expect(memoryIncrease).toBeLessThan(10 * 1024 * 1024);
     });
 
-    it("should clean up event listeners and observers", async () => {
+    it('should clean up event listeners and observers', async () => {
       const navigation = useNavigation();
 
       // Track listener count (simulated)
@@ -184,9 +184,9 @@ describe("Navigation Performance Tests", () => {
       });
 
       // Perform navigation operations
-      await navigation.navigateToTab("create");
-      await navigation.navigateToTab("profile");
-      await navigation.navigateToTab("home");
+      await navigation.navigateToTab('create');
+      await navigation.navigateToTab('profile');
+      await navigation.navigateToTab('home');
 
       // Cleanup should balance out listeners
       expect(listenerCount).toBeLessThanOrEqual(3); // One per tab at most
@@ -196,11 +196,11 @@ describe("Navigation Performance Tests", () => {
       (global as any).removeEventListener = originalRemoveEventListener;
     });
 
-    it("should optimize store state size", () => {
+    it('should optimize store state size', () => {
       // Check that store state is minimal and efficient
       const storeState = {
         tabs: navigationStore.tabs,
-        currentTab: navigationStore.currentTab,
+        currentTab: navigationStore.currentTab
       };
 
       // Serialize state to check size
@@ -212,12 +212,12 @@ describe("Navigation Performance Tests", () => {
 
       // Should not contain unnecessary data
       expect(storeState.tabs).toHaveLength(3);
-      expect(typeof storeState.currentTab).toBe("number");
+      expect(typeof storeState.currentTab).toBe('number');
     });
   });
 
-  describe("Navigation Smoothness", () => {
-    it("should provide smooth transitions between tabs", async () => {
+  describe('Navigation Smoothness', () => {
+    it('should provide smooth transitions between tabs', async () => {
       const navigation = useNavigation();
       const transitionTimes = [];
 
@@ -238,30 +238,30 @@ describe("Navigation Performance Tests", () => {
       const average =
         transitionTimes.reduce((a, b) => a + b, 0) / transitionTimes.length;
       const variance =
-        transitionTimes.reduce(
-          (sum, time) => sum + Math.pow(time - average, 2),
-          0
-        ) / transitionTimes.length;
+        transitionTimes.reduce((sum, time) => sum + (time - average) ** 2, 0) /
+        transitionTimes.length;
       const standardDeviation = Math.sqrt(variance);
 
       // Standard deviation should be low for consistent performance
       expect(standardDeviation).toBeLessThan(10);
     });
 
-    it("should handle animation frames efficiently", async () => {
+    it('should handle animation frames efficiently', async () => {
       const navigation = useNavigation();
       let frameCount = 0;
 
       // Mock requestAnimationFrame
       const originalRAF = (global as any).requestAnimationFrame;
-      (global as any).requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
-        frameCount++;
-        return setTimeout(callback, 16) as any; // 60fps
-      });
+      (global as any).requestAnimationFrame = vi.fn(
+        (callback: FrameRequestCallback) => {
+          frameCount++;
+          return setTimeout(callback, 16) as any; // 60fps
+        }
+      );
 
       // Perform navigation with animation
-      await navigation.navigateToTab("create");
-      await navigation.navigateToTab("profile");
+      await navigation.navigateToTab('create');
+      await navigation.navigateToTab('profile');
 
       // Should not request excessive animation frames
       expect(frameCount).toBeLessThan(10);
@@ -270,7 +270,7 @@ describe("Navigation Performance Tests", () => {
       (global as any).requestAnimationFrame = originalRAF;
     });
 
-    it("should optimize for different device performance levels", async () => {
+    it('should optimize for different device performance levels', async () => {
       const navigation = useNavigation();
 
       // Test on simulated low-end device
@@ -293,8 +293,8 @@ describe("Navigation Performance Tests", () => {
     });
   });
 
-  describe("Resource Optimization", () => {
-    it("should minimize DOM manipulations during navigation", async () => {
+  describe('Resource Optimization', () => {
+    it('should minimize DOM manipulations during navigation', async () => {
       const navigation = useNavigation();
       let domOperations = 0;
 
@@ -313,8 +313,8 @@ describe("Navigation Performance Tests", () => {
       });
 
       // Perform navigation
-      await navigation.navigateToTab("create");
-      await navigation.navigateToTab("profile");
+      await navigation.navigateToTab('create');
+      await navigation.navigateToTab('profile');
 
       // Should minimize DOM queries
       expect(domOperations).toBeLessThan(10);
@@ -324,7 +324,7 @@ describe("Navigation Performance Tests", () => {
       document.getElementById = originalGetElementById;
     });
 
-    it("should cache navigation data efficiently", async () => {
+    it('should cache navigation data efficiently', async () => {
       const navigation = useNavigation();
 
       // Test multiple navigations to ensure caching works
@@ -332,7 +332,7 @@ describe("Navigation Performance Tests", () => {
 
       for (let i = 0; i < 5; i++) {
         const startTime = Date.now();
-        await navigation.navigateToTab("create");
+        await navigation.navigateToTab('create');
         times.push(Date.now() - startTime);
       }
 
@@ -346,7 +346,7 @@ describe("Navigation Performance Tests", () => {
       expect(avgTime).toBeLessThan(50);
     });
 
-    it("should optimize storage operations", async () => {
+    it('should optimize storage operations', async () => {
       const navigation = useNavigation();
       let storageOperations = 0;
 
@@ -361,7 +361,7 @@ describe("Navigation Performance Tests", () => {
         }),
         removeItem: vi.fn(() => {
           storageOperations++;
-        }),
+        })
       };
 
       (global as any).uni.getStorageSync = mockStorage.getItem;
@@ -369,22 +369,22 @@ describe("Navigation Performance Tests", () => {
       (global as any).uni.removeStorageSync = mockStorage.removeItem;
 
       // Perform navigation operations
-      await navigation.navigateToTab("create");
-      await navigation.navigateToTab("profile");
-      await navigation.navigateToTab("home");
+      await navigation.navigateToTab('create');
+      await navigation.navigateToTab('profile');
+      await navigation.navigateToTab('home');
 
       // Should minimize storage operations
       expect(storageOperations).toBeLessThan(10);
     });
   });
 
-  describe("Performance Monitoring", () => {
-    it("should track navigation performance metrics", async () => {
+  describe('Performance Monitoring', () => {
+    it('should track navigation performance metrics', async () => {
       const navigation = useNavigation();
       const metrics = {
         navigationCount: 0,
         totalTime: 0,
-        errors: 0,
+        errors: 0
       };
 
       // Track metrics during navigation
@@ -407,38 +407,38 @@ describe("Navigation Performance Tests", () => {
       expect(metrics.totalTime / metrics.navigationCount).toBeLessThan(50); // Average under 50ms
     });
 
-    it("should identify performance bottlenecks", async () => {
+    it('should identify performance bottlenecks', async () => {
       const navigation = useNavigation();
       const bottlenecks = [];
 
       // Test different navigation patterns
       const patterns = [
         {
-          name: "sequential",
+          name: 'sequential',
           fn: async () => {
             for (let i = 0; i < 3; i++) {
               await navigation.navigateToTabByIndex(i);
             }
-          },
+          }
         },
         {
-          name: "random",
+          name: 'random',
           fn: async () => {
             for (let i = 0; i < 3; i++) {
               await navigation.navigateToTabByIndex(
                 Math.floor(Math.random() * 3)
               );
             }
-          },
+          }
         },
         {
-          name: "back-forth",
+          name: 'back-forth',
           fn: async () => {
             await navigation.navigateToTabByIndex(0);
             await navigation.navigateToTabByIndex(2);
             await navigation.navigateToTabByIndex(0);
-          },
-        },
+          }
+        }
       ];
 
       for (const pattern of patterns) {
@@ -456,13 +456,13 @@ describe("Navigation Performance Tests", () => {
       expect(bottlenecks.length).toBe(0);
     });
 
-    it("should provide performance recommendations", () => {
+    it('should provide performance recommendations', () => {
       const recommendations = [];
 
       // Analyze current navigation setup
       const tabCount = navigationStore.tabs.length;
       const hasComplexPaths = navigationStore.tabs.some(
-        (tab) => tab.path.split("/").length > 4
+        (tab) => tab.path.split('/').length > 4
       );
       const hasBadges = navigationStore.tabs.some(
         (tab) => tab.badge !== undefined
@@ -471,25 +471,25 @@ describe("Navigation Performance Tests", () => {
       // Generate recommendations based on analysis
       if (tabCount > 5) {
         recommendations.push(
-          "Consider reducing number of tabs for better performance"
+          'Consider reducing number of tabs for better performance'
         );
       }
 
       if (hasComplexPaths) {
         recommendations.push(
-          "Simplify navigation paths to improve routing performance"
+          'Simplify navigation paths to improve routing performance'
         );
       }
 
       if (!hasBadges) {
         recommendations.push(
-          "Badge system is optimized - no badges currently active"
+          'Badge system is optimized - no badges currently active'
         );
       }
 
       // Should provide actionable recommendations
       expect(recommendations.length).toBeGreaterThan(0);
-      expect(recommendations.every((rec) => typeof rec === "string")).toBe(
+      expect(recommendations.every((rec) => typeof rec === 'string')).toBe(
         true
       );
     });

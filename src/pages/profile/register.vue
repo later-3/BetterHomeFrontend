@@ -50,8 +50,13 @@ async function getCommunityInfo() {
     });
 
     if (res.statusCode === 200 && res.data?.data) {
-      communities.value = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
-      uni.showToast({ title: `获取成功，共${communities.value.length}个小区`, icon: 'success' });
+      communities.value = Array.isArray(res.data.data)
+        ? res.data.data
+        : [res.data.data];
+      uni.showToast({
+        title: `获取成功，共${communities.value.length}个小区`,
+        icon: 'success'
+      });
     } else {
       throw new Error(`获取失败: ${res.statusCode}`);
     }
@@ -66,7 +71,10 @@ async function getCommunityInfo() {
 // 选择小区
 function selectCommunity(index: number) {
   selectedCommunityIndex.value = index;
-  uni.showToast({ title: `已选择: ${communities.value[index].name}`, icon: 'success' });
+  uni.showToast({
+    title: `已选择: ${communities.value[index].name}`,
+    icon: 'success'
+  });
 }
 
 // 注册功能 - 第5步：集成用户状态管理
@@ -75,32 +83,32 @@ async function handleRegister() {
     uni.showToast({ title: '请输入昵称', icon: 'none' });
     return;
   }
-  
+
   if (selectedCommunityIndex.value === -1) {
     uni.showToast({ title: '请选择小区', icon: 'none' });
     return;
   }
 
   registerLoading.value = true;
-  
+
   try {
     const selectedCommunity = communities.value[selectedCommunityIndex.value];
-    
+
     // 调试信息
     const debugResult = {
-      step: "第5步验证 - 注册页面状态集成",
+      step: '第5步验证 - 注册页面状态集成',
       timestamp: new Date().toISOString(),
-      action: "register",
+      action: 'register',
       input: {
         nickname: nickname.value,
         selectedCommunity: selectedCommunity.name
       },
-      status: "attempting",
+      status: 'attempting',
       steps: []
     };
 
     // 第一步：获取 resident 角色ID
-    debugResult.steps.push("1. 获取 resident 角色ID");
+    debugResult.steps.push('1. 获取 resident 角色ID');
     const rolesRes: any = await uni.request({
       url: '/api/roles',
       method: 'GET',
@@ -114,8 +122,8 @@ async function handleRegister() {
     }
 
     const roles = rolesRes.data?.data || [];
-    const residentRole = roles.find((role: any) => 
-      role.name === 'resident' || role.name === 'Resident'
+    const residentRole = roles.find(
+      (role: any) => role.name === 'resident' || role.name === 'Resident'
     );
 
     if (!residentRole) {
@@ -127,14 +135,16 @@ async function handleRegister() {
     // 第二步：头像上传调试系统
     let avatarFileId = null;
     if (avatarPath.value && avatarPath.value !== '/static/logo.png') {
-      debugResult.steps.push("2. 开始头像上传调试流程");
-      
+      debugResult.steps.push('2. 开始头像上传调试流程');
+
       // 调试步骤1: 检查文件信息
       debugResult.steps.push(`2.1 文件路径: ${avatarPath.value}`);
-      
+
       // 调试步骤2: 使用已验证成功的上传方式
-      debugResult.steps.push(`2.2 使用成功的上传方式: 基础上传 - 移除Content-Type`);
-      
+      debugResult.steps.push(
+        `2.2 使用成功的上传方式: 基础上传 - 移除Content-Type`
+      );
+
       try {
         const uploadRes: any = await uni.uploadFile({
           url: '/api/files',
@@ -145,7 +155,7 @@ async function handleRegister() {
 
         debugResult.steps.push(`   状态码: ${uploadRes.statusCode}`);
         debugResult.steps.push(`   响应数据: ${uploadRes.data}`);
-        
+
         if (uploadRes.statusCode === 200 || uploadRes.statusCode === 201) {
           const uploadData = JSON.parse(uploadRes.data);
           avatarFileId = uploadData.data?.id;
@@ -157,12 +167,12 @@ async function handleRegister() {
         debugResult.steps.push(`   ❌ 上传异常: ${uploadError.message}`);
         debugResult.steps.push(`   错误详情: ${JSON.stringify(uploadError)}`);
       }
-      
+
       if (!avatarFileId) {
-        debugResult.steps.push("2.X 所有上传测试都失败，将跳过头像");
+        debugResult.steps.push('2.X 所有上传测试都失败，将跳过头像');
       }
     } else {
-      debugResult.steps.push("2. 用户未选择头像，跳过上传");
+      debugResult.steps.push('2. 用户未选择头像，跳过上传');
     }
 
     // 第三步：准备用户注册数据（使用标准字段）
@@ -176,11 +186,11 @@ async function handleRegister() {
       ...(avatarFileId && { avatar: avatarFileId }) // 如果有头像文件ID则添加
     };
 
-    debugResult.steps.push("3. 准备用户数据");
+    debugResult.steps.push('3. 准备用户数据');
     debugResult.userData = userData;
 
     // 第四步：注册用户
-    debugResult.steps.push("4. 发送注册请求");
+    debugResult.steps.push('4. 发送注册请求');
     const registerRes: any = await uni.request({
       url: '/api/users',
       method: 'POST',
@@ -191,7 +201,11 @@ async function handleRegister() {
     });
 
     if (registerRes.statusCode !== 200 && registerRes.statusCode !== 201) {
-      throw new Error(`用户注册失败: ${registerRes.statusCode} - ${registerRes.data?.message || '未知错误'}`);
+      throw new Error(
+        `用户注册失败: ${registerRes.statusCode} - ${
+          registerRes.data?.message || '未知错误'
+        }`
+      );
     }
 
     const newUser = registerRes.data?.data || registerRes.data;
@@ -211,28 +225,27 @@ async function handleRegister() {
     userStore.login(userInfo);
 
     // 更新调试信息
-    debugResult.status = "success";
+    debugResult.status = 'success';
     debugResult.userInfo = userInfo;
-    debugResult.steps.push("✅ 用户状态已更新");
-    
+    debugResult.steps.push('✅ 用户状态已更新');
+
     debugInfo.value = JSON.stringify(debugResult, null, 2);
-    
-    uni.showToast({ 
-      title: '注册成功！', 
+
+    uni.showToast({
+      title: '注册成功！',
       icon: 'success',
       duration: 3000
     });
-    
+
     // 注册成功，不自动跳转，让用户手动操作
-    debugResult.steps.push("✅ 注册完成，请手动返回");
-    
+    debugResult.steps.push('✅ 注册完成，请手动返回');
   } catch (error: any) {
     // 注册失败
     const errorResult = {
-      step: "第5步验证 - 注册页面状态集成",
+      step: '第5步验证 - 注册页面状态集成',
       timestamp: new Date().toISOString(),
-      action: "register",
-      status: "failed",
+      action: 'register',
+      status: 'failed',
       error: {
         message: error.message,
         details: error.response?.data || error.data || '无详细信息'
@@ -242,10 +255,10 @@ async function handleRegister() {
         selectedCommunity: communities.value[selectedCommunityIndex.value]?.name
       }
     };
-    
+
     debugInfo.value = JSON.stringify(errorResult, null, 2);
     showDebugInfo.value = true;
-    
+
     uni.showToast({ title: '注册失败，请查看调试信息', icon: 'error' });
     console.error('注册失败:', error);
   } finally {
@@ -304,7 +317,7 @@ function goBack() {
     <!-- 小区选择 -->
     <view class="community-section">
       <view class="section-title">选择小区</view>
-      
+
       <!-- 获取小区按钮 -->
       <button
         v-if="communities.length === 0"
@@ -321,12 +334,16 @@ function goBack() {
           v-for="(community, index) in communities"
           :key="community.id || index"
           class="community-item"
-          :class="{ 'selected': selectedCommunityIndex === index }"
+          :class="{ selected: selectedCommunityIndex === index }"
           @click="selectCommunity(index)"
         >
           <view class="community-info">
-            <text class="community-name">{{ community.name || '未知小区' }}</text>
-            <text class="community-address">{{ community.address || '地址未知' }}</text>
+            <text class="community-name">{{
+              community.name || '未知小区'
+            }}</text>
+            <text class="community-address">{{
+              community.address || '地址未知'
+            }}</text>
           </view>
           <view v-if="selectedCommunityIndex === index" class="selected-mark">
             <text class="check-icon">✓</text>
@@ -337,9 +354,9 @@ function goBack() {
 
     <!-- 注册按钮 -->
     <view class="register-section">
-      <button 
-        class="register-btn" 
-        :disabled="registerLoading" 
+      <button
+        class="register-btn"
+        :disabled="registerLoading"
         @click="handleRegister"
       >
         {{ registerLoading ? '注册中...' : '注册' }}
@@ -349,12 +366,8 @@ function goBack() {
     <!-- 第5步调试信息显示 -->
     <view v-if="showDebugInfo" class="debug-display">
       <view class="debug-title">🔧 第5步调试信息</view>
-      <textarea 
-        :value="debugInfo" 
-        readonly 
-        class="debug-textarea"
-      ></textarea>
-      <button @click="copyDebugInfo" class="copy-btn">📋 复制调试信息</button>
+      <textarea :value="debugInfo" readonly class="debug-textarea"></textarea>
+      <button class="copy-btn" @click="copyDebugInfo">📋 复制调试信息</button>
     </view>
   </view>
 </template>
@@ -426,7 +439,7 @@ function goBack() {
     border-radius: 80rpx;
     cursor: pointer;
     transition: opacity 0.3s ease;
-    
+
     &:active {
       opacity: 0.8;
     }

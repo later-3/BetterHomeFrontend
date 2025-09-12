@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createPinia, setActivePinia } from "pinia";
-import { useNavigationStore } from "@/store/navigation";
-import { useNavigation } from "@/hooks/useNavigation";
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
+import { useNavigationStore } from '@/store/navigation';
+import { useNavigation } from '@/hooks/useNavigation';
 
 // Mock performance APIs
 const mockPerformance = {
@@ -9,7 +9,7 @@ const mockPerformance = {
   mark: vi.fn(),
   measure: vi.fn(),
   getEntriesByType: vi.fn(() => []),
-  getEntriesByName: vi.fn(() => []),
+  getEntriesByName: vi.fn(() => [])
 };
 
 global.performance = mockPerformance as any;
@@ -22,7 +22,7 @@ const mockRequestAnimationFrame = vi.fn((callback) => {
   return animationFrameId;
 });
 
-const mockCancelAnimationFrame = vi.fn((id) => {
+const mockCancelAnimationFrame = vi.fn((_id) => {
   // Mock implementation
 });
 
@@ -39,7 +39,7 @@ const createSmoothnessMock = () => {
     getStorageSync: vi.fn(),
     setStorageSync: vi.fn(),
     removeStorageSync: vi.fn(),
-    clearStorageSync: vi.fn(),
+    clearStorageSync: vi.fn()
   };
 
   // Simulate smooth navigation with realistic timing
@@ -56,11 +56,11 @@ const createSmoothnessMock = () => {
 };
 
 // Mock error handler，避免导入实模块
-vi.mock("@/utils/errorHandler", () => ({
+vi.mock('@/utils/errorHandler', () => ({
   errorHandler: {
     handleNavigationError: vi.fn(),
-    handlePageError: vi.fn(),
-  },
+    handlePageError: vi.fn()
+  }
 }));
 
 // 测试前置/后置：初始化 Pinia 与 uni mock
@@ -79,8 +79,8 @@ afterEach(() => {
   vi.resetAllMocks();
 });
 
-describe("Navigation Smoothness", () => {
-  it("should maintain 60fps-level smoothness during tab transitions", async () => {
+describe('Navigation Smoothness', () => {
+  it('should maintain 60fps-level smoothness during tab transitions', async () => {
     const navigation = useNavigation();
     const frameTimings: number[] = [];
     let lastFrameTime = performance.now();
@@ -95,9 +95,9 @@ describe("Navigation Smoothness", () => {
     });
 
     // Perform navigation with animation
-    await navigation.navigateToTab("create");
-    await navigation.navigateToTab("profile");
-    await navigation.navigateToTab("home");
+    await navigation.navigateToTab('create');
+    await navigation.navigateToTab('profile');
+    await navigation.navigateToTab('home');
 
     // Check frame timing consistency
     if (frameTimings.length > 0) {
@@ -111,7 +111,7 @@ describe("Navigation Smoothness", () => {
     }
   });
 
-  it("should handle rapid navigation without jank", async () => {
+  it('should handle rapid navigation without jank', async () => {
     const navigation = useNavigation();
     const transitionTimes: number[] = [];
 
@@ -132,16 +132,14 @@ describe("Navigation Smoothness", () => {
     const average =
       transitionTimes.reduce((a, b) => a + b, 0) / transitionTimes.length;
     const variance =
-      transitionTimes.reduce(
-        (sum, time) => sum + Math.pow(time - average, 2),
-        0
-      ) / transitionTimes.length;
+      transitionTimes.reduce((sum, time) => sum + (time - average) ** 2, 0) /
+      transitionTimes.length;
     const standardDeviation = Math.sqrt(variance);
 
     expect(standardDeviation).toBeLessThan(15); // Low variance indicates smooth transitions
   });
 
-  it("should optimize animation performance", async () => {
+  it('should optimize animation performance', async () => {
     const navigation = useNavigation();
     let totalAnimationFrames = 0;
 
@@ -153,8 +151,8 @@ describe("Navigation Smoothness", () => {
     });
 
     // Perform navigation operations
-    await navigation.navigateToTab("create");
-    await navigation.navigateToTab("profile");
+    await navigation.navigateToTab('create');
+    await navigation.navigateToTab('profile');
 
     // Should not use excessive animation frames
     expect(totalAnimationFrames).toBeLessThan(20); // Reasonable limit for smooth transitions
@@ -164,9 +162,9 @@ describe("Navigation Smoothness", () => {
   });
 });
 
-describe("Visual Feedback Responsiveness", () => {
-  it("should provide immediate visual feedback on tab selection", async () => {
-    const navigation = useNavigation();
+describe('Visual Feedback Responsiveness', () => {
+  it('should provide immediate visual feedback on tab selection', async () => {
+    // const navigation = useNavigation();
     const feedbackTimes: number[] = [];
 
     // Test immediate state updates
@@ -189,22 +187,22 @@ describe("Visual Feedback Responsiveness", () => {
     });
   });
 
-  it("should handle touch feedback smoothly", async () => {
+  it('should handle touch feedback smoothly', async () => {
     const navigation = useNavigation();
 
     // Simulate touch events with timing
     const touchEvents = [
-      { type: "touchstart", timestamp: 0 },
-      { type: "touchend", timestamp: 100 },
-      { type: "click", timestamp: 120 },
+      { type: 'touchstart', timestamp: 0 },
+      { type: 'touchend', timestamp: 100 },
+      { type: 'click', timestamp: 120 }
     ];
 
     let responseTime = 0;
 
     // Mock touch event handling
-    const handleTouch = async (event: any) => {
+    const handleTouch = async (_event: any) => {
       const startTime = performance.now();
-      await navigation.navigateToTab("create");
+      await navigation.navigateToTab('create');
       const endTime = performance.now();
       responseTime = endTime - startTime;
     };
@@ -215,7 +213,7 @@ describe("Visual Feedback Responsiveness", () => {
     expect(responseTime).toBeLessThan(30);
   });
 
-  it("should maintain smooth scrolling during navigation", async () => {
+  it('should maintain smooth scrolling during navigation', async () => {
     const navigation = useNavigation();
     let scrollEvents = 0;
     let scrollJank = 0;
@@ -235,7 +233,7 @@ describe("Visual Feedback Responsiveness", () => {
     // Simulate scroll events during navigation
     const scrollInterval = setInterval(mockScrollHandler, 16); // 60fps scroll events
 
-    await navigation.navigateToTab("create");
+    await navigation.navigateToTab('create');
     await new Promise((resolve) => setTimeout(resolve, 100)); // Let scroll events fire
 
     clearInterval(scrollInterval);
@@ -247,8 +245,8 @@ describe("Visual Feedback Responsiveness", () => {
   });
 });
 
-describe("Memory and CPU Optimization", () => {
-  it("should not cause memory leaks during smooth navigation", async () => {
+describe('Memory and CPU Optimization', () => {
+  it('should not cause memory leaks during smooth navigation', async () => {
     const navigation = useNavigation();
 
     // Track object creation (simulated)
@@ -272,7 +270,7 @@ describe("Memory and CPU Optimization", () => {
     document.createElement = originalCreateElement;
   });
 
-  it("should optimize CPU usage during transitions", async () => {
+  it('should optimize CPU usage during transitions', async () => {
     const navigation = useNavigation();
     let cpuIntensiveOperations = 0;
 
@@ -293,14 +291,14 @@ describe("Memory and CPU Optimization", () => {
     });
 
     // Perform navigation
-    await navigation.navigateToTab("create");
-    await navigation.navigateToTab("profile");
+    await navigation.navigateToTab('create');
+    await navigation.navigateToTab('profile');
 
     // Should minimize CPU-intensive operations
     expect(cpuIntensiveOperations).toBeLessThan(5);
   });
 
-  it("should handle concurrent animations efficiently", async () => {
+  it('should handle concurrent animations efficiently', async () => {
     const navigation = useNavigation();
     const concurrentAnimations: Promise<unknown>[] = [];
 
@@ -321,15 +319,15 @@ describe("Memory and CPU Optimization", () => {
   });
 });
 
-describe("Device-Specific Smoothness", () => {
-  it("should adapt to device performance capabilities", async () => {
+describe('Device-Specific Smoothness', () => {
+  it('should adapt to device performance capabilities', async () => {
     const navigation = useNavigation();
 
     // Simulate different device performance levels
     const deviceProfiles = [
-      { name: "high-end", delay: 5, expectedSmoothness: 95 },
-      { name: "mid-range", delay: 15, expectedSmoothness: 85 },
-      { name: "low-end", delay: 30, expectedSmoothness: 70 },
+      { name: 'high-end', delay: 5, expectedSmoothness: 95 },
+      { name: 'mid-range', delay: 15, expectedSmoothness: 85 },
+      { name: 'low-end', delay: 30, expectedSmoothness: 70 }
     ];
 
     for (const profile of deviceProfiles) {
@@ -358,7 +356,7 @@ describe("Device-Specific Smoothness", () => {
     }
   });
 
-  it("should handle different screen refresh rates", async () => {
+  it('should handle different screen refresh rates', async () => {
     const navigation = useNavigation();
     const refreshRates = [60, 90, 120]; // Common mobile refresh rates
 
@@ -374,7 +372,7 @@ describe("Device-Specific Smoothness", () => {
       });
 
       // Perform navigation
-      await navigation.navigateToTab("create");
+      await navigation.navigateToTab('create');
 
       // Should adapt to refresh rate
       if (frameTimes.length > 0) {
@@ -385,7 +383,7 @@ describe("Device-Specific Smoothness", () => {
     }
   });
 
-  it("should maintain smoothness under memory pressure", async () => {
+  it('should maintain smoothness under memory pressure', async () => {
     const navigation = useNavigation();
 
     // Simulate memory pressure
@@ -418,13 +416,13 @@ describe("Device-Specific Smoothness", () => {
   });
 });
 
-describe("User Experience Metrics", () => {
-  it("should meet Core Web Vitals standards", async () => {
+describe('User Experience Metrics', () => {
+  it('should meet Core Web Vitals standards', async () => {
     const navigation = useNavigation();
     const metrics = {
       LCP: [] as number[], // Largest Contentful Paint
       FID: [] as number[], // First Input Delay
-      CLS: [] as number[], // Cumulative Layout Shift
+      CLS: [] as number[] // Cumulative Layout Shift
     };
 
     // Simulate Core Web Vitals measurement
@@ -453,9 +451,9 @@ describe("User Experience Metrics", () => {
     expect(avgCLS).toBeLessThan(0.1); // Minimal layout shift
   });
 
-  it("should provide consistent user experience across interactions", async () => {
+  it('should provide consistent user experience across interactions', async () => {
     const navigation = useNavigation();
-    const interactionTypes = ["tap", "swipe", "keyboard"];
+    const interactionTypes = ['tap', 'swipe', 'keyboard'];
     const results: Record<string, number> = {};
 
     for (const interactionType of interactionTypes) {
@@ -467,15 +465,15 @@ describe("User Experience Metrics", () => {
 
         // Different interaction simulation
         switch (interactionType) {
-          case "tap":
+          case 'tap':
             await navigation.navigateToTabByIndex(i);
             break;
-          case "swipe":
+          case 'swipe':
             // Simulate swipe gesture
             await new Promise((resolve) => setTimeout(resolve, 10));
             await navigation.navigateToTabByIndex(i);
             break;
-          case "keyboard":
+          case 'keyboard':
             // Simulate keyboard navigation
             await new Promise((resolve) => setTimeout(resolve, 5));
             await navigation.navigateToTabByIndex(i);
