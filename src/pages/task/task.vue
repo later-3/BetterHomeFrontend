@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useUserStore } from '@/store/user';
 import UserStatusCard from '../../components/UserStatusCard.vue';
+import TaskList from '../../../ui/complaint/complaint_page/TaskList.vue';
 
 /**
  * 事项页面 - 获取业主投诉工单数据
@@ -279,6 +280,15 @@ function fallbackCopyTextToClipboard(text: string) {
 
   document.body.removeChild(textArea);
 }
+
+// TaskList组件事件处理
+function handleTaskClick(task: any) {
+  console.log('点击了任务:', task);
+  uni.showToast({
+    title: `查看任务: ${task.title}`,
+    icon: 'none'
+  });
+}
 </script>
 
 <template>
@@ -397,6 +407,9 @@ function fallbackCopyTextToClipboard(text: string) {
       </view>
     </view>
 
+    <!-- TaskList组件区域 -->
+    <TaskList @task-click="handleTaskClick" />
+
     <!-- 图片预览弹窗 -->
     <view v-if="showImagePreview" class="image-preview-modal" @click="closeImagePreview">
       <image :src="previewImage" class="preview-image" mode="aspectFit" />
@@ -438,7 +451,7 @@ function fallbackCopyTextToClipboard(text: string) {
 /* 通用区块 */
 .section {
   margin-bottom: 16px;
-  padding: 16px;
+  padding: 0;
   border-radius: 8px;
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -514,6 +527,12 @@ function fallbackCopyTextToClipboard(text: string) {
   font-weight: bold;
   font-size: 16px;
   color: #333;
+}
+
+.section-subtitle {
+  font-size: 12px;
+  color: #666;
+  margin-left: 8px;
 }
 
 /* 内容卡片列表 */
