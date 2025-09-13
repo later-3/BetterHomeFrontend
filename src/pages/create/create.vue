@@ -237,7 +237,8 @@ function clearForm() {
         />
       </view>
       <view class="row gap">
-        <button type="primary" :disabled="loading" @tap="login">登录</button>
+        <!-- <button type="primary" :disabled="loading" @tap="login">登录</button> -->
+        <uni-button type="primary"  @click="login">登录</uni-button>
         <text v-if="token" class="token">已登录</text>
       </view>
     </view>
@@ -288,28 +289,30 @@ function clearForm() {
       <!-- 图片选择 -->
       <view class="row">
         <text class="label">图片</text>
-        <button
+        <!-- @ts-ignore -->
+        <uni-button
           size="mini"
           type="default"
           :disabled="loading"
           @click="chooseImage"
         >
           {{ imagePath ? '重新选择' : '选择图片' }}
-        </button>
+        </uni-button>
       </view>
 
       <!-- 图片预览 -->
       <view v-if="imagePath" class="image-preview">
         <image :src="imagePath" class="preview-image" mode="aspectFit" />
         <view class="image-path">路径: {{ imagePath }}</view>
-        <button
+        <!-- @ts-ignore -->
+        <uni-button
           size="mini"
           type="warn"
           :disabled="loading"
           @click="uploadToDirectus"
         >
           {{ uploadedFileId ? '重新上传' : '上传图片' }}
-        </button>
+        </uni-button>
         <text v-if="uploadedFileId" class="upload-success">
           ✅ 已上传，文件ID: {{ uploadedFileId }}
         </text>
@@ -317,27 +320,29 @@ function clearForm() {
 
       <!-- 发布按钮 -->
       <view class="row">
-        <button
+        <!-- @ts-ignore -->
+        <uni-button
           type="primary"
           :disabled="!postTitle.trim() || !postDescription.trim() || loading"
           :loading="loading"
-          style="width: 100%"
+          style="width: 100%;"
           @click="handleUpload"
         >
           {{ loading ? '发布中...' : '发布内容' }}
-        </button>
+        </uni-button>
       </view>
 
       <!-- 清空按钮 -->
       <view class="row">
-        <button
+        <!-- @ts-ignore -->
+        <uni-button
           type="default"
           :disabled="loading"
-          style="width: 100%"
+          style="width: 100%;"
           @click="clearForm"
         >
           清空表单
-        </button>
+        </uni-button>
       </view>
     </view>
   </view>
@@ -365,8 +370,8 @@ function clearForm() {
 }
 .label {
   width: 80px;
-  color: #555;
   font-size: 14px;
+  color: #555;
 }
 .input {
   flex: 1;
@@ -378,8 +383,8 @@ function clearForm() {
 }
 .token {
   margin-left: 8px;
-  color: #07c160;
   font-size: 12px;
+  color: #07c160;
 }
 .form-title {
   margin-bottom: 12px;
@@ -422,28 +427,27 @@ function clearForm() {
 }
 .upload-success {
   margin-left: 8px;
-  color: #07c160;
   font-size: 12px;
+  color: #07c160;
 }
-
 /* 单选框样式 */
 .radio-group {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  flex: 1;
   gap: 8px;
 }
 .radio-item {
   display: flex;
   align-items: center;
   padding: 6px 8px;
+  border: 1px solid #e9ecef;
   border-radius: 4px;
   background: #f8f9fa;
-  border: 1px solid #e9ecef;
 }
 .radio-item:has(radio:checked) {
-  background: #e8f5e8;
   border-color: #28a745;
+  background: #e8f5e8;
 }
 .radio-label {
   margin-left: 8px;

@@ -446,7 +446,6 @@ function handleTaskClick(task: any) {
   background-color: #f5f5f5;
   font-size: 14px;
 }
-
 /* 页面标题 */
 .header {
   margin-bottom: 20px;
@@ -464,7 +463,6 @@ function handleTaskClick(task: any) {
   font-size: 14px;
   color: #666;
 }
-
 /* 通用区块 */
 .section {
   margin-bottom: 16px;
@@ -473,7 +471,6 @@ function handleTaskClick(task: any) {
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
-
 /* 账户信息 */
 .account-info {
   display: flex;
@@ -499,7 +496,6 @@ function handleTaskClick(task: any) {
   background: #e8f5e8;
   color: #07c160;
 }
-
 /* 按钮区域 */
 .buttons {
   display: flex;
@@ -509,7 +505,6 @@ function handleTaskClick(task: any) {
 .buttons button {
   flex: 1;
 }
-
 /* 按钮样式 */
 .btn-primary {
   padding: 8px 16px;
@@ -532,7 +527,6 @@ function handleTaskClick(task: any) {
   background-color: #dc3545;
   color: white;
 }
-
 /* 结果区域标题 */
 .result-header {
   display: flex;
@@ -545,13 +539,11 @@ function handleTaskClick(task: any) {
   font-size: 16px;
   color: #333;
 }
-
 .section-subtitle {
+  margin-left: 8px;
   font-size: 12px;
   color: #666;
-  margin-left: 8px;
 }
-
 /* 内容卡片列表 */
 .content-list {
   margin-top: 16px;
@@ -589,7 +581,6 @@ function handleTaskClick(task: any) {
   font-size: 14px;
   color: #666;
 }
-
 /* 数据展示框 */
 .data-box {
   padding: 12px;
@@ -606,7 +597,6 @@ function handleTaskClick(task: any) {
   background: #fef2f2;
   color: #dc2626;
 }
-
 /* 图片展示 */
 .image-gallery {
   margin-top: 12px;
@@ -617,7 +607,6 @@ function handleTaskClick(task: any) {
   font-size: 14px;
   color: #666;
 }
-
 .image-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -656,7 +645,6 @@ function handleTaskClick(task: any) {
   font-size: 16px;
   color: white;
 }
-
 /* 图片预览弹窗 */
 .image-preview-modal {
   display: flex;
@@ -692,7 +680,6 @@ function handleTaskClick(task: any) {
   font-size: 18px;
   color: white;
 }
-
 /* 占位内容 */
 .placeholder {
   padding: 40px 20px;

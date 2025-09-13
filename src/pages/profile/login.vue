@@ -60,7 +60,7 @@ async function login() {
             community_id: userData.community_id || '',
             community_name: userData.community_name || ''
           },
-          token.value,
+          token.value || undefined,
           120
         ); // 2小时 = 120分钟
       }
@@ -103,7 +103,7 @@ async function login() {
         />
       </view>
       <view class="row gap">
-        <button type="primary" :disabled="loading" @tap="login">登录</button>
+        <uni-button type="primary"  @click="login">登录</uni-button>
         <text v-if="token" class="token">已登录</text>
       </view>
     </view>
@@ -116,7 +116,6 @@ async function login() {
   min-height: 100vh;
   background-color: #f5f5f5;
 }
-
 .section {
   margin-bottom: 20px;
   padding: 16px;
@@ -124,23 +123,19 @@ async function login() {
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
-
 .row {
   display: flex;
   align-items: center;
   margin-bottom: 8px;
 }
-
 .gap button {
   margin-right: 8px;
 }
-
 .label {
   width: 80px;
-  color: #555;
   font-size: 14px;
+  color: #555;
 }
-
 .input {
   flex: 1;
   padding: 6px 8px;
@@ -149,13 +144,11 @@ async function login() {
   height: 36px;
   background: #fafafa;
 }
-
 .token {
   margin-left: 8px;
-  color: #07c160;
   font-size: 12px;
+  color: #07c160;
 }
-
 .form-title {
   margin-bottom: 12px;
   font-weight: bold;

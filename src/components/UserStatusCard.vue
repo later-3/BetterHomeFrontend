@@ -61,55 +61,46 @@ const currentColor = themeColors[props.theme];
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
-
 .user-status-section {
   border-left: 4px solid;
   background: #f0f9f4;
 }
-
 .status-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
 }
-
 .section-title {
   font-weight: bold;
   font-size: 16px;
   color: #333;
 }
-
 .status-badge {
   padding: 4px 12px;
   border-radius: 16px;
-  font-size: 12px;
   font-weight: 500;
+  font-size: 12px;
 }
-
 .status-badge.logged-in {
   color: white;
 }
-
 .user-info {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-
 .user-name {
   font-weight: 600;
   font-size: 16px;
   color: #333;
 }
-
 .user-detail {
   font-size: 14px;
   color: #666;
 }
-
 .user-community {
-  font-size: 13px;
   font-weight: 500;
+  font-size: 13px;
 }
 </style>

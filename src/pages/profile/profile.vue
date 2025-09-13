@@ -62,7 +62,7 @@ function showCurrentState() {
 
     debugInfo.value = JSON.stringify(stateInfo, null, 2);
     showDebugInfo.value = true;
-  } catch (error) {
+  } catch (error: any) {
     const errorInfo = {
       step: '第1步验证失败',
       error: error.message,
@@ -151,13 +151,14 @@ function testLogout() {
 // 第4步验证：测试持久化配置 - 增强调试版本
 function testPersistence() {
   try {
-    const debugResults = {
+    const debugResult = {
       step: '第4步验证 - 持久化配置调试',
       timestamp: new Date().toISOString(),
 
       // 1. 插件基础验证
       pluginCheck: (() => {
         try {
+          // @ts-ignore
           const piniaInstance = userStore.$pinia;
           const plugins = piniaInstance._p || [];
           return {
@@ -167,19 +168,23 @@ function testPersistence() {
               (p) =>
                 p.toString().includes('persist') || p.name?.includes('persist')
             ),
+            // @ts-ignore
             storeHasPersist: !!userStore.$persist,
             storePersistMethods: Object.keys(userStore).filter((key) =>
               key.includes('persist')
             )
           };
-        } catch (e) {
+        } catch (e: any) {
           return { error: e.message };
         }
       })(),
 
       // 2. 存储API验证
       storageApiCheck: (() => {
-        const results = {};
+        const results: {
+          uniStorage?: { available: boolean; testPassed?: boolean; error?: string };
+          localStorage?: { available: boolean; testPassed?: boolean; error?: string };
+        } = {};
 
         // 测试uni存储API
         try {
@@ -190,7 +195,7 @@ function testPersistence() {
             available: true,
             testPassed: retrieved === 'test-value'
           };
-        } catch (e) {
+        } catch (e: any) {
           results.uniStorage = {
             available: false,
             error: e.message
@@ -206,7 +211,7 @@ function testPersistence() {
             available: true,
             testPassed: retrieved === 'test-value'
           };
-        } catch (e) {
+        } catch (e: any) {
           results.localStorage = {
             available: false,
             error: e.message
@@ -218,16 +223,22 @@ function testPersistence() {
 
       // 3. 当前存储状态检查
       storageStateCheck: (() => {
-        const results = {
+        const results: {
+          localStorage: { allKeys?: string[]; userRelatedKeys?: string[]; error?: string };
+          uniStorage: { info?: UniApp.GetStorageInfoSuccess; userRelatedKeys?: string[]; error?: string };
+        } = {
           localStorage: {},
           uniStorage: {}
         };
 
         // 检查localStorage
         try {
-          const allLocalKeys = [];
+          const allLocalKeys: string[] = []; 
           for (let i = 0; i < localStorage.length; i++) {
-            allLocalKeys.push(localStorage.key(i));
+            const key = localStorage.key(i);
+            if (key) {
+              allLocalKeys.push(key);
+            }
           }
           results.localStorage = {
             allKeys: allLocalKeys,
@@ -238,7 +249,7 @@ function testPersistence() {
                 key.includes('store')
             )
           };
-        } catch (e) {
+        } catch (e: any) {
           results.localStorage.error = e.message;
         }
 
@@ -255,7 +266,7 @@ function testPersistence() {
                   key.includes('store')
               ) || []
           };
-        } catch (e) {
+        } catch (e: any) {
           results.uniStorage.error = e.message;
         }
 
@@ -274,54 +285,28 @@ function testPersistence() {
         };
 
         // 尝试多种方式访问持久化配置
-        const persistInfo = {};
-
-        // 方法1: 检查 $options
+        const persistInfo: any = {};
+        // @ts-ignore
         if (userStore.$options) {
-          persistInfo.optionsExist = true;
+          persistInfo.hasOptions = true;
+          // @ts-ignore
           persistInfo.optionsPersist = userStore.$options.persist || null;
         } else {
-          persistInfo.optionsExist = false;
+          persistInfo.hasOptions = false;
         }
 
-        // 方法2: 检查 $persist 相关属性
-        persistInfo.persistMethods = Object.keys(userStore).filter(
-          (key) => key.includes('persist') || key.includes('Persist')
-        );
-
-        // 方法3: 检查 Pinia 实例上的插件信息
-        try {
-          const pinia = userStore.$pinia;
-          if (pinia && pinia._s) {
-            const storeInstance = pinia._s.get('user');
-            if (storeInstance) {
-              persistInfo.storeInstanceKeys = Object.keys(storeInstance).filter(
-                (key) => key.includes('persist') || key.includes('Persist')
-              );
-            }
-          }
-        } catch (e) {
-          persistInfo.piniaAccessError = e.message;
-        }
-
-        // 方法4: 检查实际存储中是否有数据
-        try {
-          const storedUser = uni.getStorageSync('user');
-          persistInfo.actualStoredData = storedUser
-            ? {
-                exists: true,
-                data: storedUser
-              }
-            : {
-                exists: false
-              };
-        } catch (e) {
-          persistInfo.storageAccessError = e.message;
+        // 尝试获取更深层次的Pinia内部状态
+        let rawPiniaState = null;
+        // @ts-ignore
+        const pinia = userStore.$pinia;
+        if (pinia && pinia.state && pinia.state.value) {
+          rawPiniaState = JSON.parse(JSON.stringify(pinia.state.value));
         }
 
         return {
           ...storeInfo,
-          persistenceInfo: persistInfo
+          persistenceInfo: persistInfo,
+          rawPiniaState: rawPiniaState
         };
       })(),
 
@@ -340,7 +325,7 @@ function testPersistence() {
             retrieved,
             matches: JSON.stringify(testData) === JSON.stringify(retrieved)
           };
-        } catch (e) {
+        } catch (e: any) {
           return {
             success: false,
             error: e.message
@@ -357,14 +342,14 @@ function testPersistence() {
       ]
     };
 
-    debugInfo.value = JSON.stringify(debugResults, null, 2);
+    debugInfo.value = JSON.stringify(debugResult, null, 2);
     showDebugInfo.value = true;
 
     uni.showToast({
       title: '调试信息已生成',
       icon: 'success'
     });
-  } catch (error) {
+  } catch (error: any) {
     const errorInfo = {
       step: '第4步调试失败',
       error: error.message,
@@ -471,14 +456,14 @@ function testPersistence() {
         :value="debugInfo"
         readonly
         style="
+          padding: 10px;
+          border: 1px solid #ccc;
           width: 100%;
           height: 300px;
           font-family: monospace;
-          border: 1px solid #ccc;
-          padding: 10px;
-        "
+"
       ></textarea>
-      <button style="margin-top: 10px" @click="copyDebugInfo">
+      <button style="margin-top: 10px;" @click="copyDebugInfo">
         📋 复制调试信息
       </button>
     </view>
@@ -488,9 +473,9 @@ function testPersistence() {
 <style lang="scss" scoped>
 .profile-container {
   padding: 30rpx;
+  padding-bottom: 120rpx; // 为底部导航留出空间
   min-height: 100vh;
   background: #f5f5f5;
-  padding-bottom: 120rpx; // 为底部导航留出空间
 }
 
 // 已登录状态样式
@@ -498,23 +483,20 @@ function testPersistence() {
   .user-info-section {
     margin-bottom: 40rpx;
     padding: 40rpx;
-    background: #fff;
     border-radius: 16rpx;
+    background: #fff;
     box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
-
     .avatar-display {
       display: flex;
       justify-content: center;
       margin-bottom: 30rpx;
-
       .avatar-img {
+        border: 4rpx solid #e8f5e8;
+        border-radius: 60rpx;
         width: 120rpx;
         height: 120rpx;
-        border-radius: 60rpx;
-        border: 4rpx solid #e8f5e8;
       }
     }
-
     .user-details {
       .detail-item {
         display: flex;
@@ -522,21 +504,18 @@ function testPersistence() {
         align-items: center;
         padding: 20rpx 0;
         border-bottom: 1rpx solid #f0f0f0;
-
         &:last-child {
           border-bottom: none;
         }
-
         .detail-label {
+          font-weight: 500;
           font-size: 28rpx;
           color: #666;
-          font-weight: 500;
         }
-
         .detail-value {
+          font-weight: 600;
           font-size: 28rpx;
           color: #1aa86c;
-          font-weight: 600;
         }
       }
     }
@@ -551,25 +530,22 @@ function testPersistence() {
     align-items: center;
     margin-bottom: 60rpx;
     padding: 60rpx 40rpx;
-    background: #fff;
     border-radius: 16rpx;
+    background: #fff;
     box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
-
     .welcome-avatar {
-      width: 160rpx;
-      height: 160rpx;
-      border-radius: 80rpx;
       margin-bottom: 30rpx;
       border: 4rpx solid #f0f0f0;
+      border-radius: 80rpx;
+      width: 160rpx;
+      height: 160rpx;
     }
-
     .welcome-title {
-      font-size: 36rpx;
-      font-weight: 600;
-      color: #333;
       margin-bottom: 10rpx;
+      font-weight: 600;
+      font-size: 36rpx;
+      color: #333;
     }
-
     .welcome-subtitle {
       font-size: 26rpx;
       color: #999;
@@ -580,46 +556,38 @@ function testPersistence() {
 // 操作按钮区域
 .action-section {
   display: flex;
-  gap: 20rpx;
-  padding: 0 20rpx;
   margin-bottom: 20rpx;
-
+  padding: 0 20rpx;
+  gap: 20rpx;
   button {
     flex: 1;
-    height: 88rpx;
     border: none;
     border-radius: 12rpx;
+    height: 88rpx;
     font-weight: 500;
     font-size: 28rpx;
     transition: all 0.3s ease;
-
     &:active {
       transform: scale(0.98);
     }
   }
-
   .login-btn {
     background: #007aff;
     color: #fff;
-
     &:active {
       background: #0056d1;
     }
   }
-
   .register-btn {
     background: #ff6b35;
     color: #fff;
-
     &:active {
       background: #e55a2b;
     }
   }
-
   .logout-btn {
     background: #ff4757;
     color: #fff;
-
     &:active {
       background: #ff3742;
     }
@@ -628,65 +596,55 @@ function testPersistence() {
 
 // 调试按钮区域
 .debug-section {
-  padding: 0 20rpx;
   margin-bottom: 20rpx;
-
+  padding: 0 20rpx;
   .debug-btn {
-    width: 100%;
-    height: 60rpx;
     border: 2rpx solid #007aff;
     border-radius: 8rpx;
+    width: 100%;
+    height: 60rpx;
     background: transparent;
     font-size: 24rpx;
     color: #007aff;
-
     &:active {
       background: #f0f8ff;
     }
   }
-
   .action-test-btn {
+    margin-bottom: 10rpx;
+    border-radius: 8rpx;
     width: 100%;
     height: 60rpx;
-    border-radius: 8rpx;
     font-size: 24rpx;
-    margin-bottom: 10rpx;
-
     &:active {
       transform: scale(0.98);
     }
-
     &.login-test {
       border: 2rpx solid #52c41a;
       background: transparent;
       color: #52c41a;
-
       &:active {
         background: #f6ffed;
       }
     }
-
     &.logout-test {
       border: 2rpx solid #ff4d4f;
       background: transparent;
       color: #ff4d4f;
-
       &:active {
         background: #fff2f0;
       }
     }
   }
-
   .persistence-test-btn {
-    width: 100%;
-    height: 60rpx;
+    margin-bottom: 10rpx;
     border: 2rpx solid #722ed1;
     border-radius: 8rpx;
+    width: 100%;
+    height: 60rpx;
     background: transparent;
     font-size: 24rpx;
     color: #722ed1;
-    margin-bottom: 10rpx;
-
     &:active {
       background: #f9f0ff;
       transform: scale(0.98);

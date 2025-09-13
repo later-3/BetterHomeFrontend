@@ -95,7 +95,7 @@ async function handleRegister() {
     const selectedCommunity = communities.value[selectedCommunityIndex.value];
 
     // 调试信息
-    const debugResult = {
+    const debugResult: Record<string, any> = {
       step: '第5步验证 - 注册页面状态集成',
       timestamp: new Date().toISOString(),
       action: 'register',
@@ -104,7 +104,7 @@ async function handleRegister() {
         selectedCommunity: selectedCommunity.name
       },
       status: 'attempting',
-      steps: []
+      steps: [] as string[]
     };
 
     // 第一步：获取 resident 角色ID
@@ -183,7 +183,7 @@ async function handleRegister() {
       password: '123456',
       role: residentRole.id,
       community_on_signup: selectedCommunity.id, // 正确的字段名
-      ...(avatarFileId && { avatar: avatarFileId }) // 如果有头像文件ID则添加
+            ...(avatarFileId ? { avatar: avatarFileId } : {}) // 如果有头像文件ID则添加
     };
 
     debugResult.steps.push('3. 准备用户数据');
@@ -386,35 +386,29 @@ function goBack() {
   padding: 20rpx 30rpx;
   background: #fff;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
-
   .nav-back {
     display: flex;
     align-items: center;
     padding: 10rpx;
     cursor: pointer;
-
     .back-icon {
+      margin-right: 8rpx;
       font-size: 32rpx;
       color: #007aff;
-      margin-right: 8rpx;
     }
-
     .back-text {
       font-size: 28rpx;
       color: #007aff;
     }
-
     &:active {
       opacity: 0.7;
     }
   }
-
   .nav-title {
-    font-size: 32rpx;
     font-weight: 600;
+    font-size: 32rpx;
     color: #333;
   }
-
   .nav-placeholder {
     width: 120rpx; // 占位，保持标题居中
   }
@@ -424,27 +418,24 @@ function goBack() {
 .avatar-section {
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   margin: 40rpx 30rpx;
   padding: 40rpx;
-  background: #fff;
   border-radius: 16rpx;
+  background: #fff;
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
-
   .avatar-img {
-    width: 160rpx;
-    height: 160rpx;
     border: 4rpx solid #f0f0f0;
     border-radius: 80rpx;
+    width: 160rpx;
+    height: 160rpx;
     cursor: pointer;
     transition: opacity 0.3s ease;
-
     &:active {
       opacity: 0.8;
     }
   }
-
   .avatar-tip {
     margin-top: 20rpx;
     font-size: 24rpx;
@@ -456,30 +447,26 @@ function goBack() {
 .nickname-section {
   margin: 0 30rpx 30rpx;
   padding: 30rpx;
-  background: #fff;
   border-radius: 16rpx;
+  background: #fff;
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
-
   .section-title {
     margin-bottom: 20rpx;
     font-weight: 600;
     font-size: 32rpx;
     color: #333;
   }
-
   .nickname-input {
-    width: 100%;
     padding: 20rpx;
     border: 2rpx solid #e5e6eb;
     border-radius: 12rpx;
+    width: 100%;
     background: #fafafa;
     font-size: 28rpx;
     color: #333;
-
     &::placeholder {
       color: #999;
     }
-
     &:focus {
       border-color: #007aff;
       outline: none;
@@ -491,37 +478,32 @@ function goBack() {
 .community-section {
   margin: 0 30rpx 30rpx;
   padding: 30rpx;
-  background: #fff;
   border-radius: 16rpx;
+  background: #fff;
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
-
   .section-title {
     margin-bottom: 20rpx;
     font-weight: 600;
     font-size: 32rpx;
     color: #333;
   }
-
   .get-community-btn {
-    width: 100%;
-    height: 88rpx;
     border: none;
     border-radius: 12rpx;
+    width: 100%;
+    height: 88rpx;
     background: #007aff;
     font-weight: 500;
     font-size: 28rpx;
     color: #fff;
-
     &:active {
       background: #0056d1;
     }
-
     &:disabled {
       background: #ccc;
       color: #999;
     }
   }
-
   .community-list {
     .community-item {
       display: flex;
@@ -534,43 +516,36 @@ function goBack() {
       background: #fafafa;
       cursor: pointer;
       transition: all 0.3s ease;
-
       &:last-child {
         margin-bottom: 0;
       }
-
       &.selected {
         border-color: #007aff;
         background: #f0f8ff;
       }
-
       &:active {
         transform: scale(0.98);
       }
-
       .community-info {
         flex: 1;
-
         .community-name {
           display: block;
-          font-size: 28rpx;
-          font-weight: 600;
-          color: #333;
           margin-bottom: 8rpx;
+          font-weight: 600;
+          font-size: 28rpx;
+          color: #333;
         }
-
         .community-address {
           display: block;
           font-size: 24rpx;
           color: #666;
         }
       }
-
       .selected-mark {
         .check-icon {
+          font-weight: 600;
           font-size: 32rpx;
           color: #007aff;
-          font-weight: 600;
         }
       }
     }
@@ -580,23 +555,20 @@ function goBack() {
 // 注册按钮区域
 .register-section {
   margin: 0 30rpx 40rpx;
-
   .register-btn {
-    width: 100%;
-    height: 88rpx;
     border: none;
     border-radius: 12rpx;
+    width: 100%;
+    height: 88rpx;
     background: #ff6b35;
     font-weight: 500;
     font-size: 28rpx;
     color: #fff;
     transition: all 0.3s ease;
-
     &:active {
       background: #e55a2b;
       transform: scale(0.98);
     }
-
     &:disabled {
       background: #ccc;
       color: #999;
@@ -609,42 +581,38 @@ function goBack() {
 .debug-display {
   margin: 0 30rpx 40rpx;
   padding: 30rpx;
-  background: #fff;
-  border-radius: 16rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
   border: 2rpx solid #722ed1;
-
+  border-radius: 16rpx;
+  background: #fff;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
   .debug-title {
     margin-bottom: 20rpx;
-    font-size: 28rpx;
     font-weight: 600;
+    font-size: 28rpx;
     color: #722ed1;
   }
-
   .debug-textarea {
-    width: 100%;
-    height: 300rpx;
     padding: 20rpx;
     border: 1rpx solid #e5e6eb;
     border-radius: 8rpx;
+    width: 100%;
+    height: 300rpx;
     background: #fafafa;
+    resize: none;
+    line-height: 1.4;
     font-family: monospace;
     font-size: 24rpx;
     color: #333;
-    line-height: 1.4;
-    resize: none;
   }
-
   .copy-btn {
-    width: 100%;
-    height: 60rpx;
     margin-top: 20rpx;
     border: 2rpx solid #722ed1;
     border-radius: 8rpx;
+    width: 100%;
+    height: 60rpx;
     background: transparent;
     font-size: 24rpx;
     color: #722ed1;
-
     &:active {
       background: #f9f0ff;
       transform: scale(0.98);

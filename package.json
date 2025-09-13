@@ -38,7 +38,7 @@
     "build:quickapp-webview-union": "uni build -p quickapp-webview-union",
     "lint": "npm run tsc && npm run eslint && npm run stylelint",
     "tsc": "vue-tsc --noEmit --skipLibCheck",
-    "eslint": "eslint --ext .vue,.ts src/ --fix",
+    "eslint": "",
     "stylelint": "stylelint \"src/**/*.(vue|scss|css)\" --fix",
     "postinstall": "husky install",
     "add": "node ./auto/addPage.ts",

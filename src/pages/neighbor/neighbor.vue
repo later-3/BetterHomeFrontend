@@ -1659,9 +1659,9 @@ function testPropsIntegration() {
   color: #333;
 }
 .section-desc {
+  margin-left: 8px;
   font-size: 12px;
   color: #999;
-  margin-left: 8px;
 }
 /* 内容卡片列表 */
 .content-list {
@@ -1868,7 +1868,6 @@ function testPropsIntegration() {
   font-size: 14px;
   color: #999;
 }
-
 /* 临时测试区域 */
 .temp-test-section {
   margin-top: 16px;
@@ -1877,7 +1876,6 @@ function testPropsIntegration() {
   border-radius: 6px;
   background-color: #fff7e6;
 }
-
 .temp-title {
   display: block;
   margin-bottom: 8px;
@@ -1885,86 +1883,75 @@ function testPropsIntegration() {
   font-size: 13px;
   color: #ff9500;
 }
-
 .temp-input-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
 .temp-label {
   font-size: 12px;
   color: #666;
   white-space: nowrap;
 }
-
 .temp-input {
   flex: 1;
   padding: 6px 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 12px;
   height: 32px;
+  font-size: 12px;
 }
-
 .btn-temp {
   padding: 6px 12px;
   border: none;
   border-radius: 4px;
   background-color: #ff9500;
-  color: white;
   font-size: 12px;
+  color: white;
   white-space: nowrap;
 }
-
 .btn-temp:disabled {
   background-color: #ccc;
   color: #999;
 }
-
 /* 调试区域样式 */
 .debug-log-box {
+  margin-bottom: 12px;
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 6px;
   height: 200px;
   background: #f8f8f8;
+  line-height: 1.4;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 11px;
-  line-height: 1.4;
   white-space: pre-wrap;
-  margin-bottom: 12px;
 }
-
 .debug-buttons {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
-
 .btn-debug {
+  flex: 1;
   padding: 6px 8px;
   border: 1px solid #007aff;
   border-radius: 4px;
-  background-color: #f0f8ff;
-  color: #007aff;
-  font-size: 11px;
-  flex: 1;
   min-width: 80px;
+  background-color: #f0f8ff;
+  font-size: 11px;
+  color: #007aff;
 }
-
 .btn-debug:active {
   background-color: #007aff;
   color: white;
 }
-
 /* 测试按钮区域 */
 .test-buttons-section {
   margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid #e5e6eb;
 }
-
 .test-title {
   display: block;
   margin-bottom: 12px;
@@ -1972,28 +1959,24 @@ function testPropsIntegration() {
   font-size: 14px;
   color: #666;
 }
-
 .test-buttons {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
-
 .btn-test {
   padding: 8px 12px;
   border: 1px solid #007aff;
   border-radius: 6px;
   background-color: #f8f9ff;
-  color: #007aff;
   font-size: 12px;
+  color: #007aff;
   transition: all 0.2s ease;
 }
-
 .btn-test:active {
   background-color: #007aff;
   color: white;
 }
-
 /* 加载动画 */
 @keyframes pulse {
   0%,
