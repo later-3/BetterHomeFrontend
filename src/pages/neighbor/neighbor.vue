@@ -29,6 +29,10 @@ const tempCommunityId = ref(''); // 临时小区ID用于测试
 const debugLog = ref('=== 社交动态Props集成调试日志 ===\n');
 const socialFeedPosts = ref<any[]>([]); // 传递给SocialFeedContent的数据
 
+// 测试原始数据显示
+const rawDataDisplay = ref<any>(null); // 用于显示原始API返回数据
+const showRawData = ref(false); // 控制是否显示原始数据区域
+
 // 格式化显示内容
 const prettyContentData = computed(() => {
   try {
@@ -1032,11 +1036,13 @@ function transformContentToSocialPosts(rawContentData: any) {
         addDebugLog(`处理图片附件: ${item.attachments.length}张图片`);
         images = item.attachments
           .map((att: any, imgIndex: number) => {
-            const url = getImageUrl(att);
+            // 根据实际数据结构，使用directus_files_id
+            const fileId = att.directus_files_id || att.id || att;
+            const url = getImageUrl(fileId);
             addDebugLog(
               `图片${imgIndex + 1}: ${
                 url ? 'URL生成成功' : '无法生成URL'
-              } - ${JSON.stringify(att)}`
+              } - fileId: ${fileId} - 原始数据: ${JSON.stringify(att)}`
             );
             return url;
           })
@@ -1054,8 +1060,18 @@ function transformContentToSocialPosts(rawContentData: any) {
 
         // 最优先：使用关联查询的author_id信息
         if (item.author_id && typeof item.author_id === 'object') {
-          const authorName =
-            item.author_id.first_name || item.author_id.last_name || '业主用户';
+          // 优化用户名组合：优先使用first_name，如果有last_name则组合
+          let authorName = '';
+          if (item.author_id.first_name && item.author_id.last_name) {
+            authorName = `${item.author_id.first_name} ${item.author_id.last_name}`;
+          } else if (item.author_id.first_name) {
+            authorName = item.author_id.first_name;
+          } else if (item.author_id.last_name) {
+            authorName = item.author_id.last_name;
+          } else {
+            authorName = '业主用户';
+          }
+          
           // 处理头像URL，如果avatar是文件ID则转换为完整URL
           let authorAvatar = '';
           if (item.author_id.avatar) {
@@ -1261,6 +1277,186 @@ function testPropsIntegration() {
   addDebugLog('Props集成测试完成！请查看下方社交动态区域');
 
   uni.showToast({ title: '测试数据已设置', icon: 'success' });
+}
+
+// 测试原始数据获取 - 专门用于查看API返回的完整数据结构
+async function testRawDataFetch() {
+  if (!token.value) {
+    uni.showToast({ title: '请先获取Token', icon: 'none' });
+    return;
+  }
+
+  loading.value = true;
+  errorInfo.value = null;
+  rawDataDisplay.value = null;
+
+  try {
+    addDebugLog('开始获取原始API数据...');
+    
+    // 测试1: 获取邻居类型数据（包含关联查询）
+    const neighborRes: any = await uni.request({
+      url: `/api/items/contents`,
+      method: 'GET', 
+      data: {
+        limit: 3,
+        fields: 'id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created',
+        filter: {
+          type: { _eq: 'neighbor' }
+        }
+      },
+      header: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token.value}`
+      }
+    });
+
+    // 测试2: 获取post类型数据
+    const postRes: any = await uni.request({
+      url: `/api/items/contents`,
+      method: 'GET',
+      data: {
+        limit: 3,
+        fields: 'id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created',
+        filter: {
+          type: { _eq: 'post' }
+        }
+      },
+      header: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token.value}`
+      }
+    });
+
+    // 测试3: 获取所有数据（无过滤）
+    const allRes: any = await uni.request({
+      url: `/api/items/contents`,
+      method: 'GET',
+      data: {
+        limit: 5,
+        fields: 'id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created'
+      },
+      header: {
+        'Content-Type': 'application/json', 
+        Authorization: `Bearer ${token.value}`
+      }
+    });
+
+    rawDataDisplay.value = {
+      timestamp: new Date().toISOString(),
+      tests: {
+        neighborData: {
+          status: neighborRes.statusCode,
+          data: neighborRes.data,
+          count: neighborRes.data?.data?.length || 0
+        },
+        postData: {
+          status: postRes.statusCode,
+          data: postRes.data,
+          count: postRes.data?.data?.length || 0
+        },
+        allData: {
+          status: allRes.statusCode,
+          data: allRes.data,
+          count: allRes.data?.data?.length || 0
+        }
+      },
+      summary: {
+        totalNeighbor: neighborRes.data?.data?.length || 0,
+        totalPost: postRes.data?.data?.length || 0,
+        totalAll: allRes.data?.data?.length || 0
+      }
+    };
+    
+    showRawData.value = true;
+    addDebugLog(`✅ 原始数据获取完成：邻居${rawDataDisplay.value.summary.totalNeighbor}条，帖子${rawDataDisplay.value.summary.totalPost}条，全部${rawDataDisplay.value.summary.totalAll}条`);
+    
+    uni.showToast({ 
+      title: '原始数据获取成功！请查看原始数据区域', 
+      icon: 'success' 
+    });
+
+  } catch (e: any) {
+    errorInfo.value = {
+      action: 'testRawDataFetch',
+      success: false,
+      error: e?.message || String(e),
+      details: e
+    };
+    addDebugLog(`❌ 原始数据获取失败: ${e?.message || String(e)}`);
+    uni.showToast({ title: '获取原始数据失败', icon: 'error' });
+  } finally {
+    loading.value = false;
+  }
+}
+
+// 复制原始数据
+function copyRawData() {
+  if (!rawDataDisplay.value) {
+    uni.showToast({ title: '没有原始数据可复制', icon: 'none' });
+    return;
+  }
+
+  const text = JSON.stringify(rawDataDisplay.value, null, 2);
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard
+        .writeText(text)
+        .then(() => {
+          uni.showToast({ title: '原始数据已复制', icon: 'success' });
+        })
+        .catch(() => {
+          fallbackCopyTextToClipboard(text);
+        });
+    } else {
+      fallbackCopyTextToClipboard(text);
+    }
+  } catch {
+    uni.showToast({ title: '复制失败', icon: 'error' });
+  }
+}
+
+// 测试post数据转换（基于已获取的原始数据）
+function testPostDataTransform() {
+  addDebugLog('开始测试post数据转换...');
+  
+  if (!rawDataDisplay.value || !rawDataDisplay.value.tests.postData.data.data) {
+    addDebugLog('❌ 没有可用的post原始数据，请先点击"获取原始数据"');
+    uni.showToast({ title: '请先获取原始数据', icon: 'none' });
+    return;
+  }
+  
+  try {
+    // 使用post数据进行转换
+    const postData = {
+      success: true,
+      data: rawDataDisplay.value.tests.postData.data.data
+    };
+    
+    const transformedPosts = transformContentToSocialPosts(postData);
+    
+    if (transformedPosts.length === 0) {
+      addDebugLog('⚠️ post数据转换结果为空');
+      uni.showToast({ title: 'post数据转换结果为空', icon: 'none' });
+      return;
+    }
+    
+    // 设置转换后的数据
+    socialFeedPosts.value = transformedPosts;
+    addDebugLog(`✅ post数据转换完成，已设置${transformedPosts.length}条社交动态`);
+    addDebugLog('转换结果预览:');
+    transformedPosts.forEach((post, index) => {
+      addDebugLog(`${index + 1}. ${post.user.name} - ${post.type}类型 - 图片${post.images?.length || 0}张`);
+    });
+    
+    uni.showToast({ 
+      title: `post数据转换成功！${transformedPosts.length}条动态`, 
+      icon: 'success' 
+    });
+    
+  } catch (error) {
+    addDebugLog(`❌ post数据转换发生错误: ${error}`);
+    uni.showToast({ title: 'post数据转换失败', icon: 'error' });
+  }
 }
 
 // 移除页面加载时的自动状态检查逻辑
@@ -1542,7 +1738,45 @@ function testPropsIntegration() {
         <button class="btn-debug" @click="testRealDataTransform">
           转换真实数据
         </button>
+        <button class="btn-debug" @click="testRawDataFetch">
+          获取原始数据
+        </button>
+        <button class="btn-debug" @click="testPostDataTransform">
+          转换POST数据
+        </button>
         <button class="btn-debug" @click="clearDebugLog">清空日志</button>
+      </view>
+    </view>
+
+    <!-- 原始数据测试区域 -->
+    <view v-if="showRawData && rawDataDisplay" class="section">
+      <view class="result-header">
+        <text class="section-title">📋 原始API数据测试</text>
+        <button size="mini" class="btn-primary" @click="copyRawData">
+          复制原始数据
+        </button>
+      </view>
+      
+      <view class="raw-data-summary">
+        <text class="summary-text">
+          📊 数据统计: 邻居类型{{ rawDataDisplay.summary.totalNeighbor }}条 | 
+          帖子类型{{ rawDataDisplay.summary.totalPost }}条 | 
+          全部{{ rawDataDisplay.summary.totalAll }}条
+        </text>
+        <text class="summary-time">获取时间: {{ new Date(rawDataDisplay.timestamp).toLocaleString() }}</text>
+      </view>
+      
+      <scroll-view class="raw-data-box" scroll-y>
+        <text selectable>{{ JSON.stringify(rawDataDisplay, null, 2) }}</text>
+      </scroll-view>
+      
+      <view class="raw-data-actions">
+        <button class="btn-debug" @click="showRawData = false">
+          隐藏原始数据
+        </button>
+        <button class="btn-debug" @click="testRawDataFetch">
+          重新获取
+        </button>
       </view>
     </view>
 
@@ -1928,19 +2162,19 @@ function testPropsIntegration() {
   white-space: pre-wrap;
 }
 .debug-buttons {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 6px;
-  flex-wrap: wrap;
 }
 .btn-debug {
-  flex: 1;
-  padding: 6px 8px;
+  padding: 8px 6px;
   border: 1px solid #007aff;
   border-radius: 4px;
-  min-width: 80px;
   background-color: #f0f8ff;
-  font-size: 11px;
+  font-size: 10px;
   color: #007aff;
+  text-align: center;
+  white-space: nowrap;
 }
 .btn-debug:active {
   background-color: #007aff;
@@ -1977,6 +2211,47 @@ function testPropsIntegration() {
   background-color: #007aff;
   color: white;
 }
+/* 原始数据测试区域 */
+.raw-data-summary {
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid #e5e6eb;
+  border-radius: 6px;
+  background: #f8f9fa;
+}
+
+.summary-text {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.summary-time {
+  display: block;
+  font-size: 12px;
+  color: #666;
+}
+
+.raw-data-box {
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  height: 300px;
+  background: #fafafa;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.raw-data-actions {
+  display: flex;
+  gap: 8px;
+}
+
 /* 加载动画 */
 @keyframes pulse {
   0%,
