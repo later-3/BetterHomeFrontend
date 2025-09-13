@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createPinia, setActivePinia } from "pinia";
-import { useNavigationStore } from "@/store/navigation";
-import { useNavigation } from "@/hooks/useNavigation";
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
+import { useNavigationStore } from '@/store/navigation';
+import { useNavigation } from '@/hooks/useNavigation';
 
 // Mock performance monitoring
 const createPerformanceMonitor = () => {
@@ -10,7 +10,7 @@ const createPerformanceMonitor = () => {
     totalFrames: 0,
     navigationTimes: [] as number[],
     memoryUsage: [] as number[],
-    cpuUsage: [] as number[],
+    cpuUsage: [] as number[]
   };
 
   const mockPerformance = {
@@ -18,7 +18,7 @@ const createPerformanceMonitor = () => {
     mark: vi.fn(),
     measure: vi.fn(),
     getEntriesByType: vi.fn(() => []),
-    getEntriesByName: vi.fn(() => []),
+    getEntriesByName: vi.fn(() => [])
   };
 
   global.performance = mockPerformance as any;
@@ -36,7 +36,7 @@ const createUniMock = () => {
     getStorageSync: vi.fn(),
     setStorageSync: vi.fn(),
     removeStorageSync: vi.fn(),
-    clearStorageSync: vi.fn(),
+    clearStorageSync: vi.fn()
   };
 
   // Simulate realistic navigation timing
@@ -53,16 +53,16 @@ const createUniMock = () => {
 };
 
 // Mock error handler
-vi.mock("@/utils/errorHandler", () => ({
+vi.mock('@/utils/errorHandler', () => ({
   errorHandler: {
     handleNavigationError: vi.fn(),
-    handlePageError: vi.fn(),
-  },
+    handlePageError: vi.fn()
+  }
 }));
 
-describe("Comprehensive Navigation Smoothness Tests", () => {
+describe('Comprehensive Navigation Smoothness Tests', () => {
   let navigationStore: ReturnType<typeof useNavigationStore>;
-  let performanceMonitor: any;
+  // let performanceMonitor: any;
   let mockUni: any;
 
   beforeEach(() => {
@@ -78,11 +78,11 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
     vi.resetAllMocks();
   });
 
-  describe("Navigation Transition Smoothness", () => {
-    it("should ensure smooth transitions meet 60fps target", async () => {
+  describe('Navigation Transition Smoothness', () => {
+    it('should ensure smooth transitions meet 60fps target', async () => {
       const navigation = useNavigation();
       const frameTimings = [];
-      const targetFrameTime = 16.67; // 60fps target
+      // const targetFrameTime = 16.67; // 60fps target
 
       // Mock frame timing measurement
       let frameCount = 0;
@@ -97,9 +97,9 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
       global.requestAnimationFrame = mockRAF;
 
       // Perform navigation with frame monitoring
-      await navigation.navigateToTab("create");
-      await navigation.navigateToTab("profile");
-      await navigation.navigateToTab("home");
+      await navigation.navigateToTab('create');
+      await navigation.navigateToTab('profile');
+      await navigation.navigateToTab('home');
 
       // Analyze frame performance
       const averageFrameTime =
@@ -114,7 +114,7 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
       expect(frameDropRate).toBeLessThan(0.05); // Less than 5% dropped frames
     });
 
-    it("should maintain consistent timing across multiple navigations", async () => {
+    it('should maintain consistent timing across multiple navigations', async () => {
       const navigation = useNavigation();
       const navigationTimes = [];
 
@@ -122,9 +122,9 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
       for (let cycle = 0; cycle < 5; cycle++) {
         const cycleStart = performance.now();
 
-        await navigation.navigateToTab("create");
-        await navigation.navigateToTab("profile");
-        await navigation.navigateToTab("home");
+        await navigation.navigateToTab('create');
+        await navigation.navigateToTab('profile');
+        await navigation.navigateToTab('home');
 
         const cycleEnd = performance.now();
         navigationTimes.push(cycleEnd - cycleStart);
@@ -134,10 +134,8 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
       const average =
         navigationTimes.reduce((a, b) => a + b, 0) / navigationTimes.length;
       const variance =
-        navigationTimes.reduce(
-          (sum, time) => sum + Math.pow(time - average, 2),
-          0
-        ) / navigationTimes.length;
+        navigationTimes.reduce((sum, time) => sum + (time - average) ** 2, 0) /
+        navigationTimes.length;
       const standardDeviation = Math.sqrt(variance);
       const coefficientOfVariation = standardDeviation / average;
 
@@ -145,18 +143,18 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
       expect(coefficientOfVariation).toBeLessThan(0.2); // Less than 20% variation
     });
 
-    it("should handle rapid user interactions smoothly", async () => {
+    it('should handle rapid user interactions smoothly', async () => {
       const navigation = useNavigation();
       const rapidInteractions = [];
 
       // Simulate rapid user taps
       const rapidTapSequence = async () => {
         const interactions = [
-          () => navigation.navigateToTab("create"),
-          () => navigation.navigateToTab("profile"),
-          () => navigation.navigateToTab("home"),
-          () => navigation.navigateToTab("create"),
-          () => navigation.navigateToTab("profile"),
+          () => navigation.navigateToTab('create'),
+          () => navigation.navigateToTab('profile'),
+          () => navigation.navigateToTab('home'),
+          () => navigation.navigateToTab('create'),
+          () => navigation.navigateToTab('profile')
         ];
 
         for (const interaction of interactions) {
@@ -194,8 +192,8 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
     });
   });
 
-  describe("Resource Usage Optimization", () => {
-    it("should minimize memory allocation during navigation", async () => {
+  describe('Resource Usage Optimization', () => {
+    it('should minimize memory allocation during navigation', async () => {
       const navigation = useNavigation();
 
       // Mock memory tracking
@@ -219,7 +217,7 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
       document.createElement = originalCreateElement;
     });
 
-    it("should optimize CPU usage during transitions", async () => {
+    it('should optimize CPU usage during transitions', async () => {
       const navigation = useNavigation();
       let computationTime = 0;
 
@@ -235,22 +233,22 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
       });
 
       // Override navigation to include CPU monitoring
-      const originalNavigate = mockUni.switchTab;
+      // const originalNavigate = mockUni.switchTab;
       mockUni.switchTab.mockImplementation((options) => {
         mockHeavyComputation();
         setTimeout(() => options.success(), 10);
       });
 
       // Perform navigation operations
-      await navigation.navigateToTab("create");
-      await navigation.navigateToTab("profile");
-      await navigation.navigateToTab("home");
+      await navigation.navigateToTab('create');
+      await navigation.navigateToTab('profile');
+      await navigation.navigateToTab('home');
 
       // CPU usage should be minimal
       expect(computationTime).toBeLessThan(50); // Less than 50ms total computation
     });
 
-    it("should handle concurrent operations efficiently", async () => {
+    it('should handle concurrent operations efficiently', async () => {
       const navigation = useNavigation();
       const concurrentOperations = [];
 
@@ -267,7 +265,7 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
 
       const results = await Promise.allSettled(concurrentOperations);
       const successfulResults = results
-        .filter((result) => result.status === "fulfilled")
+        .filter((result) => result.status === 'fulfilled')
         .map((result) => (result as PromiseFulfilledResult<number>).value);
 
       // Most operations should succeed
@@ -280,16 +278,16 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
     });
   });
 
-  describe("User Experience Metrics", () => {
-    it("should meet responsive design standards", async () => {
+  describe('User Experience Metrics', () => {
+    it('should meet responsive design standards', async () => {
       const navigation = useNavigation();
       const responseTimes = [];
 
       // Test response times for different interaction types
       const interactionTypes = [
-        { name: "tap", delay: 0 },
-        { name: "swipe", delay: 10 },
-        { name: "keyboard", delay: 5 },
+        { name: 'tap', delay: 0 },
+        { name: 'swipe', delay: 10 },
+        { name: 'keyboard', delay: 5 }
       ];
 
       for (const interaction of interactionTypes) {
@@ -297,12 +295,12 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
         await new Promise((resolve) => setTimeout(resolve, interaction.delay));
 
         const start = performance.now();
-        await navigation.navigateToTab("create");
+        await navigation.navigateToTab('create');
         const end = performance.now();
 
         responseTimes.push({
           type: interaction.name,
-          time: end - start,
+          time: end - start
         });
       }
 
@@ -312,8 +310,8 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
       });
     });
 
-    it("should provide consistent visual feedback", async () => {
-      const navigation = useNavigation();
+    it('should provide consistent visual feedback', async () => {
+      // const navigation = useNavigation();
       const feedbackTimes = [];
 
       // Test visual state update timing
@@ -336,7 +334,7 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
       });
     });
 
-    it("should handle error states gracefully without performance impact", async () => {
+    it('should handle error states gracefully without performance impact', async () => {
       const navigation = useNavigation();
 
       // Use fake timers for deterministic timing in this test
@@ -345,25 +343,31 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
 
       // Mock navigation failure
       mockUni.switchTab.mockImplementationOnce((options) => {
-        options.fail({ errMsg: "Navigation failed" });
+        options.fail({ errMsg: 'Navigation failed' });
       });
 
-      const errorHandlingTimes = [];
+      const errorHandlingTimes: number[] = [];
 
       // Test error handling performance deterministically
       const start = performance.now();
-      await expect(navigation.navigateToTab("create")).rejects.toBeDefined();
+      await expect(navigation.navigateToTab('create')).rejects.toBeDefined();
       const end = performance.now();
       errorHandlingTimes.push(end - start);
 
       // Reset mock for successful navigation
-      mockUni.switchTab.mockImplementation((options) => {
-        setTimeout(() => options.success(), 10);
-      });
+      mockUni.switchTab.mockImplementation(
+        (options: { success?: () => void }) => {
+          setTimeout(() => {
+            if (options.success) {
+              options.success();
+            }
+          }, 10);
+        }
+      );
 
       // Test recovery performance with controlled timers
       const recoveryStart = performance.now();
-      const recoveryPromise = navigation.navigateToTab("profile");
+      const recoveryPromise = navigation.navigateToTab('profile');
       await vi.advanceTimersByTimeAsync(11); // advance beyond the 10ms success
       await recoveryPromise;
       const recoveryEnd = performance.now();
@@ -380,10 +384,10 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
     });
   });
 
-  describe("Performance Under Load", () => {
-    it("should maintain performance under heavy navigation load", async () => {
+  describe('Performance Under Load', () => {
+    it('should maintain performance under heavy navigation load', async () => {
       const navigation = useNavigation();
-      const loadTestResults = [];
+      // const loadTestResults = [];
 
       // Simulate heavy load
       const heavyLoadTest = async () => {
@@ -402,7 +406,7 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
 
         const results = await Promise.allSettled(promises);
         return results
-          .filter((result) => result.status === "fulfilled")
+          .filter((result) => result.status === 'fulfilled')
           .map((result) => (result as PromiseFulfilledResult<number>).value);
       };
 
@@ -420,7 +424,7 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
       expect(maxTime).toBeLessThan(500); // No request over 500ms
     });
 
-    it("should recover quickly from performance bottlenecks", async () => {
+    it('should recover quickly from performance bottlenecks', async () => {
       const navigation = useNavigation();
 
       // Simulate performance bottleneck
@@ -429,7 +433,7 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
       });
 
       const bottleneckStart = performance.now();
-      await navigation.navigateToTab("create");
+      await navigation.navigateToTab('create');
       const bottleneckEnd = performance.now();
 
       const bottleneckTime = bottleneckEnd - bottleneckStart;
@@ -455,13 +459,13 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
       expect(bottleneckTime).toBeGreaterThan(150); // Confirm bottleneck was detected
     });
 
-    it("should maintain smoothness across different device performance profiles", async () => {
+    it('should maintain smoothness across different device performance profiles', async () => {
       const navigation = useNavigation();
 
       const deviceProfiles = [
-        { name: "high-end", cpuMultiplier: 0.5, memoryLimit: 1000 },
-        { name: "mid-range", cpuMultiplier: 1.0, memoryLimit: 500 },
-        { name: "low-end", cpuMultiplier: 2.0, memoryLimit: 200 },
+        { name: 'high-end', cpuMultiplier: 0.5, memoryLimit: 1000 },
+        { name: 'mid-range', cpuMultiplier: 1.0, memoryLimit: 500 },
+        { name: 'low-end', cpuMultiplier: 2.0, memoryLimit: 200 }
       ];
 
       const profileResults = {};
@@ -488,9 +492,9 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
         profileResults[profile.name] = averageTime;
 
         // Each profile should meet minimum performance standards
-        if (profile.name === "high-end") {
+        if (profile.name === 'high-end') {
           expect(averageTime).toBeLessThan(30);
-        } else if (profile.name === "mid-range") {
+        } else if (profile.name === 'mid-range') {
           expect(averageTime).toBeLessThan(50);
         } else {
           // low-end
@@ -499,11 +503,11 @@ describe("Comprehensive Navigation Smoothness Tests", () => {
       }
 
       // Performance should scale appropriately with device capabilities
-      expect(profileResults["high-end"]).toBeLessThan(
-        profileResults["mid-range"]
+      expect(profileResults['high-end']).toBeLessThan(
+        profileResults['mid-range']
       );
-      expect(profileResults["mid-range"]).toBeLessThan(
-        profileResults["low-end"]
+      expect(profileResults['mid-range']).toBeLessThan(
+        profileResults['low-end']
       );
     });
   });

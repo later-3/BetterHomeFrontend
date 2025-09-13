@@ -5,22 +5,22 @@
  * 用于检查和优化导航栏图标资源的大小和性能
  */
 
-const fs = require("fs");
-const path = require("path");
+const fs = require('node:fs');
+const path = require('node:path');
 
 // 配置
 const CONFIG = {
   iconPaths: [
-    "src/static/icons/home.png",
-    "src/static/icons/home-active.png",
-    "src/static/icons/add.png",
-    "src/static/icons/add-active.png",
-    "src/static/icons/profile.png",
-    "src/static/icons/profile-active.png",
+    'src/static/icons/home.png',
+    'src/static/icons/home-active.png',
+    'src/static/icons/add.png',
+    'src/static/icons/add-active.png',
+    'src/static/icons/profile.png',
+    'src/static/icons/profile-active.png'
   ],
   maxFileSize: 50 * 1024, // 50KB
   recommendedSize: 20 * 1024, // 20KB
-  targetDimensions: { width: 44, height: 44 }, // 推荐尺寸
+  targetDimensions: { width: 44, height: 44 } // 推荐尺寸
 };
 
 class IconOptimizer {
@@ -31,7 +31,7 @@ class IconOptimizer {
       totalSizeBefore: 0,
       totalSizeAfter: 0,
       issues: [],
-      recommendations: [],
+      recommendations: []
     };
   }
 
@@ -63,10 +63,10 @@ class IconOptimizer {
       path: iconPath,
       exists: false,
       size: 0,
-      sizeFormatted: "0 B",
+      sizeFormatted: '0 B',
       isOptimal: false,
       issues: [],
-      recommendations: [],
+      recommendations: []
     };
 
     // 检查文件是否存在
@@ -86,7 +86,7 @@ class IconOptimizer {
           CONFIG.maxFileSize
         )})`
       );
-      analysis.recommendations.push("考虑压缩图片或使用更高效的格式");
+      analysis.recommendations.push('考虑压缩图片或使用更高效的格式');
     } else if (analysis.size > CONFIG.recommendedSize) {
       analysis.recommendations.push(
         `文件较大: ${analysis.sizeFormatted} (建议: ${this.formatFileSize(
@@ -99,12 +99,12 @@ class IconOptimizer {
 
     // 检查文件格式
     const ext = path.extname(iconPath).toLowerCase();
-    if (ext === ".png") {
+    if (ext === '.png') {
       analysis.recommendations.push(
-        "PNG格式适合图标，但考虑使用WebP格式以获得更好的压缩率"
+        'PNG格式适合图标，但考虑使用WebP格式以获得更好的压缩率'
       );
-    } else if (ext === ".jpg" || ext === ".jpeg") {
-      analysis.issues.push("JPEG格式不适合图标，建议使用PNG或WebP");
+    } else if (ext === '.jpg' || ext === '.jpeg') {
+      analysis.issues.push('JPEG格式不适合图标，建议使用PNG或WebP');
     }
 
     return analysis;
@@ -114,11 +114,11 @@ class IconOptimizer {
    * 格式化文件大小
    */
   formatFileSize(bytes) {
-    if (bytes === 0) return "0 B";
+    if (bytes === 0) return '0 B';
     const k = 1024;
-    const sizes = ["B", "KB", "MB"];
+    const sizes = ['B', 'KB', 'MB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
   }
 
   /**
@@ -127,32 +127,32 @@ class IconOptimizer {
   generateOptimizationSuggestions() {
     const suggestions = [
       {
-        category: "文件大小优化",
+        category: '文件大小优化',
         items: [
-          "使用图片压缩工具（如TinyPNG）减小文件大小",
-          "考虑使用WebP格式替代PNG",
-          "确保图标尺寸不超过实际显示需求",
-          "移除图片中的元数据和不必要的颜色配置文件",
-        ],
+          '使用图片压缩工具（如TinyPNG）减小文件大小',
+          '考虑使用WebP格式替代PNG',
+          '确保图标尺寸不超过实际显示需求',
+          '移除图片中的元数据和不必要的颜色配置文件'
+        ]
       },
       {
-        category: "性能优化",
+        category: '性能优化',
         items: [
-          "使用CSS Sprites技术合并小图标",
-          "实现图标懒加载",
-          "考虑使用SVG格式的矢量图标",
-          "启用图片缓存策略",
-        ],
+          '使用CSS Sprites技术合并小图标',
+          '实现图标懒加载',
+          '考虑使用SVG格式的矢量图标',
+          '启用图片缓存策略'
+        ]
       },
       {
-        category: "用户体验",
+        category: '用户体验',
         items: [
-          "确保图标在不同设备上清晰显示",
-          "提供高分辨率版本适配Retina屏幕",
-          "保持图标风格一致性",
-          "确保图标在深色模式下的可见性",
-        ],
-      },
+          '确保图标在不同设备上清晰显示',
+          '提供高分辨率版本适配Retina屏幕',
+          '保持图标风格一致性',
+          '确保图标在深色模式下的可见性'
+        ]
+      }
     ];
 
     return suggestions;
@@ -166,9 +166,9 @@ class IconOptimizer {
 
     try {
       // 检查pages.json中的tabBar配置
-      const pagesJsonPath = path.resolve("src/pages.json");
+      const pagesJsonPath = path.resolve('src/pages.json');
       if (fs.existsSync(pagesJsonPath)) {
-        const pagesJson = JSON.parse(fs.readFileSync(pagesJsonPath, "utf8"));
+        const pagesJson = JSON.parse(fs.readFileSync(pagesJsonPath, 'utf8'));
 
         if (pagesJson.tabBar && pagesJson.tabBar.list) {
           pagesJson.tabBar.list.forEach((tab, index) => {
@@ -181,7 +181,7 @@ class IconOptimizer {
 
             // 检查路径是否匹配实际文件 (uni-app中static目录映射到src/static)
             if (tab.iconPath) {
-              const actualPath = tab.iconPath.replace("static/", "src/static/");
+              const actualPath = tab.iconPath.replace('static/', 'src/static/');
               if (!this.checkIconExists(actualPath)) {
                 configIssues.push(
                   `标签页 ${index + 1} 的iconPath指向不存在的文件: ${
@@ -192,8 +192,8 @@ class IconOptimizer {
             }
             if (tab.selectedIconPath) {
               const actualPath = tab.selectedIconPath.replace(
-                "static/",
-                "src/static/"
+                'static/',
+                'src/static/'
               );
               if (!this.checkIconExists(actualPath)) {
                 configIssues.push(
@@ -217,7 +217,7 @@ class IconOptimizer {
    * 运行完整的图标优化分析
    */
   async runOptimization() {
-    console.log("🔍 开始图标资源优化分析...\n");
+    console.log('🔍 开始图标资源优化分析...\n');
 
     // 分析每个图标文件
     const iconAnalyses = [];
@@ -244,13 +244,13 @@ class IconOptimizer {
    * 生成优化报告
    */
   generateReport(iconAnalyses, configIssues) {
-    console.log("📊 图标资源分析报告");
-    console.log("=".repeat(50));
+    console.log('📊 图标资源分析报告');
+    console.log('='.repeat(50));
 
     // 文件存在性检查
-    console.log("\n📁 文件存在性检查:");
+    console.log('\n📁 文件存在性检查:');
     iconAnalyses.forEach((analysis) => {
-      const status = analysis.exists ? "✅" : "❌";
+      const status = analysis.exists ? '✅' : '❌';
       console.log(`  ${status} ${analysis.path}`);
       if (!analysis.exists) {
         console.log(`     ⚠️  文件不存在`);
@@ -258,14 +258,14 @@ class IconOptimizer {
     });
 
     // 文件大小分析
-    console.log("\n📏 文件大小分析:");
+    console.log('\n📏 文件大小分析:');
     iconAnalyses.forEach((analysis) => {
       if (analysis.exists) {
         const status = analysis.isOptimal
-          ? "✅"
+          ? '✅'
           : analysis.issues.length > 0
-          ? "❌"
-          : "⚠️";
+          ? '❌'
+          : '⚠️';
         console.log(`  ${status} ${analysis.path}: ${analysis.sizeFormatted}`);
 
         analysis.issues.forEach((issue) => {
@@ -280,12 +280,12 @@ class IconOptimizer {
 
     // 配置检查
     if (configIssues.length > 0) {
-      console.log("\n⚙️  配置问题:");
+      console.log('\n⚙️  配置问题:');
       configIssues.forEach((issue) => {
         console.log(`  ❌ ${issue}`);
       });
     } else {
-      console.log("\n⚙️  配置检查: ✅ 无问题");
+      console.log('\n⚙️  配置检查: ✅ 无问题');
     }
 
     // 总体统计
@@ -294,14 +294,14 @@ class IconOptimizer {
     const averageSize =
       existingFiles.length > 0 ? totalSize / existingFiles.length : 0;
 
-    console.log("\n📈 总体统计:");
+    console.log('\n📈 总体统计:');
     console.log(`  总文件数: ${iconAnalyses.length}`);
     console.log(`  存在文件数: ${existingFiles.length}`);
     console.log(`  总大小: ${this.formatFileSize(totalSize)}`);
     console.log(`  平均大小: ${this.formatFileSize(averageSize)}`);
 
     // 优化建议
-    console.log("\n💡 优化建议:");
+    console.log('\n💡 优化建议:');
     const suggestions = this.generateOptimizationSuggestions();
     suggestions.forEach((category) => {
       console.log(`\n  ${category.category}:`);
@@ -311,17 +311,17 @@ class IconOptimizer {
     });
 
     // 性能影响评估
-    console.log("\n⚡ 性能影响评估:");
+    console.log('\n⚡ 性能影响评估:');
     if (totalSize > CONFIG.maxFileSize * iconAnalyses.length) {
-      console.log("  ❌ 图标总大小过大，可能影响应用启动速度");
+      console.log('  ❌ 图标总大小过大，可能影响应用启动速度');
     } else if (totalSize > CONFIG.recommendedSize * iconAnalyses.length) {
-      console.log("  ⚠️  图标大小适中，但仍有优化空间");
+      console.log('  ⚠️  图标大小适中，但仍有优化空间');
     } else {
-      console.log("  ✅ 图标大小已优化，对性能影响最小");
+      console.log('  ✅ 图标大小已优化，对性能影响最小');
     }
 
-    console.log("\n" + "=".repeat(50));
-    console.log("✨ 分析完成！");
+    console.log(`\n${'='.repeat(50)}`);
+    console.log('✨ 分析完成！');
   }
 }
 

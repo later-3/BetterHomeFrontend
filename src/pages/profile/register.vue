@@ -50,8 +50,13 @@ async function getCommunityInfo() {
     });
 
     if (res.statusCode === 200 && res.data?.data) {
-      communities.value = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
-      uni.showToast({ title: `获取成功，共${communities.value.length}个小区`, icon: 'success' });
+      communities.value = Array.isArray(res.data.data)
+        ? res.data.data
+        : [res.data.data];
+      uni.showToast({
+        title: `获取成功，共${communities.value.length}个小区`,
+        icon: 'success'
+      });
     } else {
       throw new Error(`获取失败: ${res.statusCode}`);
     }
@@ -66,7 +71,10 @@ async function getCommunityInfo() {
 // 选择小区
 function selectCommunity(index: number) {
   selectedCommunityIndex.value = index;
-  uni.showToast({ title: `已选择: ${communities.value[index].name}`, icon: 'success' });
+  uni.showToast({
+    title: `已选择: ${communities.value[index].name}`,
+    icon: 'success'
+  });
 }
 
 // 注册功能 - 第5步：集成用户状态管理
@@ -75,32 +83,32 @@ async function handleRegister() {
     uni.showToast({ title: '请输入昵称', icon: 'none' });
     return;
   }
-  
+
   if (selectedCommunityIndex.value === -1) {
     uni.showToast({ title: '请选择小区', icon: 'none' });
     return;
   }
 
   registerLoading.value = true;
-  
+
   try {
     const selectedCommunity = communities.value[selectedCommunityIndex.value];
-    
+
     // 调试信息
-    const debugResult = {
-      step: "第5步验证 - 注册页面状态集成",
+    const debugResult: Record<string, any> = {
+      step: '第5步验证 - 注册页面状态集成',
       timestamp: new Date().toISOString(),
-      action: "register",
+      action: 'register',
       input: {
         nickname: nickname.value,
         selectedCommunity: selectedCommunity.name
       },
-      status: "attempting",
-      steps: []
+      status: 'attempting',
+      steps: [] as string[]
     };
 
     // 第一步：获取 resident 角色ID
-    debugResult.steps.push("1. 获取 resident 角色ID");
+    debugResult.steps.push('1. 获取 resident 角色ID');
     const rolesRes: any = await uni.request({
       url: '/api/roles',
       method: 'GET',
@@ -114,8 +122,8 @@ async function handleRegister() {
     }
 
     const roles = rolesRes.data?.data || [];
-    const residentRole = roles.find((role: any) => 
-      role.name === 'resident' || role.name === 'Resident'
+    const residentRole = roles.find(
+      (role: any) => role.name === 'resident' || role.name === 'Resident'
     );
 
     if (!residentRole) {
@@ -127,14 +135,16 @@ async function handleRegister() {
     // 第二步：头像上传调试系统
     let avatarFileId = null;
     if (avatarPath.value && avatarPath.value !== '/static/logo.png') {
-      debugResult.steps.push("2. 开始头像上传调试流程");
-      
+      debugResult.steps.push('2. 开始头像上传调试流程');
+
       // 调试步骤1: 检查文件信息
       debugResult.steps.push(`2.1 文件路径: ${avatarPath.value}`);
-      
+
       // 调试步骤2: 使用已验证成功的上传方式
-      debugResult.steps.push(`2.2 使用成功的上传方式: 基础上传 - 移除Content-Type`);
-      
+      debugResult.steps.push(
+        `2.2 使用成功的上传方式: 基础上传 - 移除Content-Type`
+      );
+
       try {
         const uploadRes: any = await uni.uploadFile({
           url: '/api/files',
@@ -145,7 +155,7 @@ async function handleRegister() {
 
         debugResult.steps.push(`   状态码: ${uploadRes.statusCode}`);
         debugResult.steps.push(`   响应数据: ${uploadRes.data}`);
-        
+
         if (uploadRes.statusCode === 200 || uploadRes.statusCode === 201) {
           const uploadData = JSON.parse(uploadRes.data);
           avatarFileId = uploadData.data?.id;
@@ -157,12 +167,12 @@ async function handleRegister() {
         debugResult.steps.push(`   ❌ 上传异常: ${uploadError.message}`);
         debugResult.steps.push(`   错误详情: ${JSON.stringify(uploadError)}`);
       }
-      
+
       if (!avatarFileId) {
-        debugResult.steps.push("2.X 所有上传测试都失败，将跳过头像");
+        debugResult.steps.push('2.X 所有上传测试都失败，将跳过头像');
       }
     } else {
-      debugResult.steps.push("2. 用户未选择头像，跳过上传");
+      debugResult.steps.push('2. 用户未选择头像，跳过上传');
     }
 
     // 第三步：准备用户注册数据（使用标准字段）
@@ -173,14 +183,14 @@ async function handleRegister() {
       password: '123456',
       role: residentRole.id,
       community_on_signup: selectedCommunity.id, // 正确的字段名
-      ...(avatarFileId && { avatar: avatarFileId }) // 如果有头像文件ID则添加
+            ...(avatarFileId ? { avatar: avatarFileId } : {}) // 如果有头像文件ID则添加
     };
 
-    debugResult.steps.push("3. 准备用户数据");
+    debugResult.steps.push('3. 准备用户数据');
     debugResult.userData = userData;
 
     // 第四步：注册用户
-    debugResult.steps.push("4. 发送注册请求");
+    debugResult.steps.push('4. 发送注册请求');
     const registerRes: any = await uni.request({
       url: '/api/users',
       method: 'POST',
@@ -191,7 +201,11 @@ async function handleRegister() {
     });
 
     if (registerRes.statusCode !== 200 && registerRes.statusCode !== 201) {
-      throw new Error(`用户注册失败: ${registerRes.statusCode} - ${registerRes.data?.message || '未知错误'}`);
+      throw new Error(
+        `用户注册失败: ${registerRes.statusCode} - ${
+          registerRes.data?.message || '未知错误'
+        }`
+      );
     }
 
     const newUser = registerRes.data?.data || registerRes.data;
@@ -211,28 +225,27 @@ async function handleRegister() {
     userStore.login(userInfo);
 
     // 更新调试信息
-    debugResult.status = "success";
+    debugResult.status = 'success';
     debugResult.userInfo = userInfo;
-    debugResult.steps.push("✅ 用户状态已更新");
-    
+    debugResult.steps.push('✅ 用户状态已更新');
+
     debugInfo.value = JSON.stringify(debugResult, null, 2);
-    
-    uni.showToast({ 
-      title: '注册成功！', 
+
+    uni.showToast({
+      title: '注册成功！',
       icon: 'success',
       duration: 3000
     });
-    
+
     // 注册成功，不自动跳转，让用户手动操作
-    debugResult.steps.push("✅ 注册完成，请手动返回");
-    
+    debugResult.steps.push('✅ 注册完成，请手动返回');
   } catch (error: any) {
     // 注册失败
     const errorResult = {
-      step: "第5步验证 - 注册页面状态集成",
+      step: '第5步验证 - 注册页面状态集成',
       timestamp: new Date().toISOString(),
-      action: "register",
-      status: "failed",
+      action: 'register',
+      status: 'failed',
       error: {
         message: error.message,
         details: error.response?.data || error.data || '无详细信息'
@@ -242,10 +255,10 @@ async function handleRegister() {
         selectedCommunity: communities.value[selectedCommunityIndex.value]?.name
       }
     };
-    
+
     debugInfo.value = JSON.stringify(errorResult, null, 2);
     showDebugInfo.value = true;
-    
+
     uni.showToast({ title: '注册失败，请查看调试信息', icon: 'error' });
     console.error('注册失败:', error);
   } finally {
@@ -304,7 +317,7 @@ function goBack() {
     <!-- 小区选择 -->
     <view class="community-section">
       <view class="section-title">选择小区</view>
-      
+
       <!-- 获取小区按钮 -->
       <button
         v-if="communities.length === 0"
@@ -321,12 +334,16 @@ function goBack() {
           v-for="(community, index) in communities"
           :key="community.id || index"
           class="community-item"
-          :class="{ 'selected': selectedCommunityIndex === index }"
+          :class="{ selected: selectedCommunityIndex === index }"
           @click="selectCommunity(index)"
         >
           <view class="community-info">
-            <text class="community-name">{{ community.name || '未知小区' }}</text>
-            <text class="community-address">{{ community.address || '地址未知' }}</text>
+            <text class="community-name">{{
+              community.name || '未知小区'
+            }}</text>
+            <text class="community-address">{{
+              community.address || '地址未知'
+            }}</text>
           </view>
           <view v-if="selectedCommunityIndex === index" class="selected-mark">
             <text class="check-icon">✓</text>
@@ -337,9 +354,9 @@ function goBack() {
 
     <!-- 注册按钮 -->
     <view class="register-section">
-      <button 
-        class="register-btn" 
-        :disabled="registerLoading" 
+      <button
+        class="register-btn"
+        :disabled="registerLoading"
         @click="handleRegister"
       >
         {{ registerLoading ? '注册中...' : '注册' }}
@@ -349,12 +366,8 @@ function goBack() {
     <!-- 第5步调试信息显示 -->
     <view v-if="showDebugInfo" class="debug-display">
       <view class="debug-title">🔧 第5步调试信息</view>
-      <textarea 
-        :value="debugInfo" 
-        readonly 
-        class="debug-textarea"
-      ></textarea>
-      <button @click="copyDebugInfo" class="copy-btn">📋 复制调试信息</button>
+      <textarea :value="debugInfo" readonly class="debug-textarea"></textarea>
+      <button class="copy-btn" @click="copyDebugInfo">📋 复制调试信息</button>
     </view>
   </view>
 </template>
@@ -373,35 +386,29 @@ function goBack() {
   padding: 20rpx 30rpx;
   background: #fff;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
-
   .nav-back {
     display: flex;
     align-items: center;
     padding: 10rpx;
     cursor: pointer;
-
     .back-icon {
+      margin-right: 8rpx;
       font-size: 32rpx;
       color: #007aff;
-      margin-right: 8rpx;
     }
-
     .back-text {
       font-size: 28rpx;
       color: #007aff;
     }
-
     &:active {
       opacity: 0.7;
     }
   }
-
   .nav-title {
-    font-size: 32rpx;
     font-weight: 600;
+    font-size: 32rpx;
     color: #333;
   }
-
   .nav-placeholder {
     width: 120rpx; // 占位，保持标题居中
   }
@@ -411,27 +418,24 @@ function goBack() {
 .avatar-section {
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   margin: 40rpx 30rpx;
   padding: 40rpx;
-  background: #fff;
   border-radius: 16rpx;
+  background: #fff;
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
-
   .avatar-img {
-    width: 160rpx;
-    height: 160rpx;
     border: 4rpx solid #f0f0f0;
     border-radius: 80rpx;
+    width: 160rpx;
+    height: 160rpx;
     cursor: pointer;
     transition: opacity 0.3s ease;
-    
     &:active {
       opacity: 0.8;
     }
   }
-
   .avatar-tip {
     margin-top: 20rpx;
     font-size: 24rpx;
@@ -443,30 +447,26 @@ function goBack() {
 .nickname-section {
   margin: 0 30rpx 30rpx;
   padding: 30rpx;
-  background: #fff;
   border-radius: 16rpx;
+  background: #fff;
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
-
   .section-title {
     margin-bottom: 20rpx;
     font-weight: 600;
     font-size: 32rpx;
     color: #333;
   }
-
   .nickname-input {
-    width: 100%;
     padding: 20rpx;
     border: 2rpx solid #e5e6eb;
     border-radius: 12rpx;
+    width: 100%;
     background: #fafafa;
     font-size: 28rpx;
     color: #333;
-
     &::placeholder {
       color: #999;
     }
-
     &:focus {
       border-color: #007aff;
       outline: none;
@@ -478,37 +478,32 @@ function goBack() {
 .community-section {
   margin: 0 30rpx 30rpx;
   padding: 30rpx;
-  background: #fff;
   border-radius: 16rpx;
+  background: #fff;
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
-
   .section-title {
     margin-bottom: 20rpx;
     font-weight: 600;
     font-size: 32rpx;
     color: #333;
   }
-
   .get-community-btn {
-    width: 100%;
-    height: 88rpx;
     border: none;
     border-radius: 12rpx;
+    width: 100%;
+    height: 88rpx;
     background: #007aff;
     font-weight: 500;
     font-size: 28rpx;
     color: #fff;
-
     &:active {
       background: #0056d1;
     }
-
     &:disabled {
       background: #ccc;
       color: #999;
     }
   }
-
   .community-list {
     .community-item {
       display: flex;
@@ -521,43 +516,36 @@ function goBack() {
       background: #fafafa;
       cursor: pointer;
       transition: all 0.3s ease;
-
       &:last-child {
         margin-bottom: 0;
       }
-
       &.selected {
         border-color: #007aff;
         background: #f0f8ff;
       }
-
       &:active {
         transform: scale(0.98);
       }
-
       .community-info {
         flex: 1;
-
         .community-name {
           display: block;
-          font-size: 28rpx;
-          font-weight: 600;
-          color: #333;
           margin-bottom: 8rpx;
+          font-weight: 600;
+          font-size: 28rpx;
+          color: #333;
         }
-
         .community-address {
           display: block;
           font-size: 24rpx;
           color: #666;
         }
       }
-
       .selected-mark {
         .check-icon {
+          font-weight: 600;
           font-size: 32rpx;
           color: #007aff;
-          font-weight: 600;
         }
       }
     }
@@ -567,23 +555,20 @@ function goBack() {
 // 注册按钮区域
 .register-section {
   margin: 0 30rpx 40rpx;
-
   .register-btn {
-    width: 100%;
-    height: 88rpx;
     border: none;
     border-radius: 12rpx;
+    width: 100%;
+    height: 88rpx;
     background: #ff6b35;
     font-weight: 500;
     font-size: 28rpx;
     color: #fff;
     transition: all 0.3s ease;
-
     &:active {
       background: #e55a2b;
       transform: scale(0.98);
     }
-
     &:disabled {
       background: #ccc;
       color: #999;
@@ -596,42 +581,38 @@ function goBack() {
 .debug-display {
   margin: 0 30rpx 40rpx;
   padding: 30rpx;
-  background: #fff;
-  border-radius: 16rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
   border: 2rpx solid #722ed1;
-
+  border-radius: 16rpx;
+  background: #fff;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
   .debug-title {
     margin-bottom: 20rpx;
-    font-size: 28rpx;
     font-weight: 600;
+    font-size: 28rpx;
     color: #722ed1;
   }
-
   .debug-textarea {
-    width: 100%;
-    height: 300rpx;
     padding: 20rpx;
     border: 1rpx solid #e5e6eb;
     border-radius: 8rpx;
+    width: 100%;
+    height: 300rpx;
     background: #fafafa;
+    resize: none;
+    line-height: 1.4;
     font-family: monospace;
     font-size: 24rpx;
     color: #333;
-    line-height: 1.4;
-    resize: none;
   }
-
   .copy-btn {
-    width: 100%;
-    height: 60rpx;
     margin-top: 20rpx;
     border: 2rpx solid #722ed1;
     border-radius: 8rpx;
+    width: 100%;
+    height: 60rpx;
     background: transparent;
     font-size: 24rpx;
     color: #722ed1;
-
     &:active {
       background: #f9f0ff;
       transform: scale(0.98);

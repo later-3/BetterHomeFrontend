@@ -1,12 +1,12 @@
 <script setup lang="ts" name="create">
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useUserStore } from '@/store/user';
 import UserStatusCard from '../../components/UserStatusCard.vue';
+import { useUserStore } from '@/store/user';
 
 // 用户状态管理
 const userStore = useUserStore();
-const { loggedIn, userInfo } = storeToRefs(userStore);
+const { loggedIn } = storeToRefs(userStore);
 
 // --- 登录与通用状态 ---
 const apiBaseUrl = ref('/api');
@@ -58,7 +58,9 @@ async function login() {
       token.value = res.data.data.access_token;
       uni.showToast({ title: '登录成功', icon: 'success' });
     } else {
-      throw new Error(`登录失败: ${res.statusCode} - ${JSON.stringify(res.data)}`);
+      throw new Error(
+        `登录失败: ${res.statusCode} - ${JSON.stringify(res.data)}`
+      );
     }
   } catch (error: any) {
     uni.showToast({ title: '登录失败', icon: 'error' });
@@ -104,7 +106,7 @@ async function uploadToDirectus() {
       filePath: imagePath.value,
       name: 'file',
       header: {
-        'Authorization': `Bearer ${token.value}`
+        Authorization: `Bearer ${token.value}`
       }
     });
 
@@ -161,7 +163,7 @@ async function handleUpload() {
       postData.attachments = [
         {
           directus_files_id: uploadedFileId.value,
-          contents_id: "+",
+          contents_id: '+'
         }
       ];
     }
@@ -172,13 +174,13 @@ async function handleUpload() {
       data: postData,
       header: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token.value}`
+        Authorization: `Bearer ${token.value}`
       }
     });
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
       uni.showToast({ title: '发布成功！', icon: 'success' });
-      
+
       // 清空表单
       postTitle.value = '';
       postDescription.value = '';
@@ -186,7 +188,9 @@ async function handleUpload() {
       imagePath.value = '';
       uploadedFileId.value = '';
     } else {
-      throw new Error(`发布失败: ${res.statusCode} - ${JSON.stringify(res.data)}`);
+      throw new Error(
+        `发布失败: ${res.statusCode} - ${JSON.stringify(res.data)}`
+      );
     }
   } catch (error: any) {
     uni.showToast({ title: '发布失败', icon: 'error' });
@@ -233,9 +237,8 @@ function clearForm() {
         />
       </view>
       <view class="row gap">
-        <button type="primary" :disabled="loading" @tap="login">
-          登录
-        </button>
+        <!-- <button type="primary" :disabled="loading" @tap="login">登录</button> -->
+        <uni-button type="primary"  @click="login">登录</uni-button>
         <text v-if="token" class="token">已登录</text>
       </view>
     </view>
@@ -247,16 +250,13 @@ function clearForm() {
       <!-- 内容类型选择 -->
       <view class="row">
         <text class="label">类型 *</text>
-        <radio-group @change="onTypeChange" class="radio-group">
-          <label 
-            v-for="option in typeOptions" 
+        <radio-group class="radio-group" @change="onTypeChange">
+          <label
+            v-for="option in typeOptions"
             :key="option.value"
             class="radio-item"
           >
-            <radio 
-              :value="option.value" 
-              :checked="postType === option.value"
-            />
+            <radio :value="option.value" :checked="postType === option.value" />
             <text class="radio-label">{{ option.label }}</text>
           </label>
         </radio-group>
@@ -289,28 +289,30 @@ function clearForm() {
       <!-- 图片选择 -->
       <view class="row">
         <text class="label">图片</text>
-        <button
+        <!-- @ts-ignore -->
+        <uni-button
           size="mini"
           type="default"
           :disabled="loading"
           @click="chooseImage"
         >
           {{ imagePath ? '重新选择' : '选择图片' }}
-        </button>
+        </uni-button>
       </view>
 
       <!-- 图片预览 -->
       <view v-if="imagePath" class="image-preview">
         <image :src="imagePath" class="preview-image" mode="aspectFit" />
         <view class="image-path">路径: {{ imagePath }}</view>
-        <button
+        <!-- @ts-ignore -->
+        <uni-button
           size="mini"
           type="warn"
           :disabled="loading"
           @click="uploadToDirectus"
         >
           {{ uploadedFileId ? '重新上传' : '上传图片' }}
-        </button>
+        </uni-button>
         <text v-if="uploadedFileId" class="upload-success">
           ✅ 已上传，文件ID: {{ uploadedFileId }}
         </text>
@@ -318,7 +320,8 @@ function clearForm() {
 
       <!-- 发布按钮 -->
       <view class="row">
-        <button
+        <!-- @ts-ignore -->
+        <uni-button
           type="primary"
           :disabled="!postTitle.trim() || !postDescription.trim() || loading"
           :loading="loading"
@@ -326,22 +329,22 @@ function clearForm() {
           @click="handleUpload"
         >
           {{ loading ? '发布中...' : '发布内容' }}
-        </button>
+        </uni-button>
       </view>
 
       <!-- 清空按钮 -->
       <view class="row">
-        <button
+        <!-- @ts-ignore -->
+        <uni-button
           type="default"
           :disabled="loading"
           style="width: 100%;"
           @click="clearForm"
         >
           清空表单
-        </button>
+        </uni-button>
       </view>
     </view>
-
   </view>
 </template>
 
@@ -367,8 +370,8 @@ function clearForm() {
 }
 .label {
   width: 80px;
-  color: #555;
   font-size: 14px;
+  color: #555;
 }
 .input {
   flex: 1;
@@ -380,8 +383,8 @@ function clearForm() {
 }
 .token {
   margin-left: 8px;
-  color: #07c160;
   font-size: 12px;
+  color: #07c160;
 }
 .form-title {
   margin-bottom: 12px;
@@ -424,28 +427,27 @@ function clearForm() {
 }
 .upload-success {
   margin-left: 8px;
-  color: #07c160;
   font-size: 12px;
+  color: #07c160;
 }
-
 /* 单选框样式 */
 .radio-group {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  flex: 1;
   gap: 8px;
 }
 .radio-item {
   display: flex;
   align-items: center;
   padding: 6px 8px;
+  border: 1px solid #e9ecef;
   border-radius: 4px;
   background: #f8f9fa;
-  border: 1px solid #e9ecef;
 }
 .radio-item:has(radio:checked) {
-  background: #e8f5e8;
   border-color: #28a745;
+  background: #e8f5e8;
 }
 .radio-label {
   margin-left: 8px;

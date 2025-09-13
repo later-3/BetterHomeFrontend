@@ -1,16 +1,18 @@
-import { vi } from "vitest";
+import { vi } from 'vitest';
 import {
-  ref,
-  reactive,
   computed,
+  nextTick,
   onMounted,
   onUnmounted,
-  watch,
-  watchEffect,
-  nextTick,
+  reactive,
   readonly,
-  onLoad,
-} from "vue";
+  ref,
+  watch,
+  watchEffect
+} from 'vue';
+
+// Mock Pinia
+import { defineStore } from 'pinia';
 
 // Mock uni-app APIs
 global.uni = {
@@ -22,13 +24,13 @@ global.uni = {
   reLaunch: vi.fn(),
   navigateBack: vi.fn(),
   getSystemInfo: vi.fn(() => ({
-    model: "iPhone",
-    system: "iOS 15.0",
+    model: 'iPhone',
+    system: 'iOS 15.0'
   })),
   getStorageSync: vi.fn(),
   setStorageSync: vi.fn(),
   removeStorageSync: vi.fn(),
-  clearStorageSync: vi.fn(),
+  clearStorageSync: vi.fn()
 };
 
 // Make Vue composition API available globally
@@ -45,19 +47,16 @@ global.readonly = readonly;
 // Mock uni-app specific lifecycle hooks
 global.onLoad = vi.fn();
 global.onTabItemTap = vi.fn();
-global.getCurrentPages = vi.fn(() => [{ route: "pages/index/index" }]);
-
-// Mock Pinia
-import { defineStore } from "pinia";
+global.getCurrentPages = vi.fn(() => [{ route: 'pages/index/index' }]);
 global.defineStore = defineStore;
 
 // Mock Pinia store
 global.useStore = vi.fn(() => ({
-  userInfo: { name: "Test User" },
+  userInfo: { name: 'Test User' },
   logged: true,
-  userId: "12345",
+  userId: '12345',
   getSystemInfo: () => ({
-    model: "iPhone",
-    system: "iOS 15.0",
-  }),
+    model: 'iPhone',
+    system: 'iOS 15.0'
+  })
 }));

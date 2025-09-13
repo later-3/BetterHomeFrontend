@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createPinia, setActivePinia } from "pinia";
-import { useNavigationStore } from "@/store/navigation";
-import { useNavigation } from "@/hooks/useNavigation";
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
+import { useNavigationStore } from '@/store/navigation';
+import { useNavigation } from '@/hooks/useNavigation';
 
 // Mock different device environments
-const createDeviceMock = (deviceType: "mobile" | "tablet" | "desktop") => {
+const createDeviceMock = (deviceType: 'mobile' | 'tablet' | 'desktop') => {
   const mockUni = {
     switchTab: vi.fn(),
     reLaunch: vi.fn(),
@@ -16,32 +16,32 @@ const createDeviceMock = (deviceType: "mobile" | "tablet" | "desktop") => {
     clearStorageSync: vi.fn(),
     getSystemInfo: vi.fn(() => {
       switch (deviceType) {
-        case "mobile":
+        case 'mobile':
           return {
-            platform: "ios",
-            model: "iPhone 12",
+            platform: 'ios',
+            model: 'iPhone 12',
             screenWidth: 375,
             screenHeight: 812,
-            pixelRatio: 3,
+            pixelRatio: 3
           };
-        case "tablet":
+        case 'tablet':
           return {
-            platform: "ios",
-            model: "iPad Pro",
+            platform: 'ios',
+            model: 'iPad Pro',
             screenWidth: 1024,
             screenHeight: 1366,
-            pixelRatio: 2,
+            pixelRatio: 2
           };
-        case "desktop":
+        case 'desktop':
           return {
-            platform: "h5",
-            model: "Chrome",
+            platform: 'h5',
+            model: 'Chrome',
             screenWidth: 1920,
             screenHeight: 1080,
-            pixelRatio: 1,
+            pixelRatio: 1
           };
       }
-    }),
+    })
   };
 
   global.uni = mockUni as any;
@@ -49,14 +49,14 @@ const createDeviceMock = (deviceType: "mobile" | "tablet" | "desktop") => {
 };
 
 // Mock error handler
-vi.mock("@/utils/errorHandler", () => ({
+vi.mock('@/utils/errorHandler', () => ({
   errorHandler: {
     handleNavigationError: vi.fn(),
-    handlePageError: vi.fn(),
-  },
+    handlePageError: vi.fn()
+  }
 }));
 
-describe("Device Compatibility Tests", () => {
+describe('Device Compatibility Tests', () => {
   let navigationStore: ReturnType<typeof useNavigationStore>;
 
   beforeEach(() => {
@@ -70,33 +70,33 @@ describe("Device Compatibility Tests", () => {
     vi.resetAllMocks();
   });
 
-  describe("Mobile Device Navigation", () => {
-    it("should work correctly on iPhone", async () => {
-      const mockUni = createDeviceMock("mobile");
+  describe('Mobile Device Navigation', () => {
+    it('should work correctly on iPhone', async () => {
+      const mockUni = createDeviceMock('mobile');
       mockUni.switchTab.mockImplementation((options) => {
         options.success();
       });
 
-      global.getCurrentPages = vi.fn(() => [{ route: "pages/index/index" }]);
+      global.getCurrentPages = vi.fn(() => [{ route: 'pages/index/index' }]);
 
       const navigation = useNavigation();
 
       // Test navigation on mobile device
-      await navigation.navigateToTab("create");
+      await navigation.navigateToTab('create');
       expect(navigationStore.currentTab).toBe(1);
 
-      await navigation.navigateToTab("profile");
+      await navigation.navigateToTab('profile');
       expect(navigationStore.currentTab).toBe(2);
 
       // Verify system info is correctly detected
       const systemInfo = mockUni.getSystemInfo();
-      expect(systemInfo.platform).toBe("ios");
-      expect(systemInfo.model).toBe("iPhone 12");
+      expect(systemInfo.platform).toBe('ios');
+      expect(systemInfo.model).toBe('iPhone 12');
       expect(systemInfo.screenWidth).toBe(375);
     });
 
-    it("should handle small screen navigation efficiently", async () => {
-      const mockUni = createDeviceMock("mobile");
+    it('should handle small screen navigation efficiently', async () => {
+      const mockUni = createDeviceMock('mobile');
       mockUni.switchTab.mockImplementation((options) => {
         // Simulate faster navigation on mobile
         setTimeout(() => options.success(), 5);
@@ -106,9 +106,9 @@ describe("Device Compatibility Tests", () => {
       const startTime = Date.now();
 
       // Perform navigation cycle
-      await navigation.navigateToTab("create");
-      await navigation.navigateToTab("profile");
-      await navigation.navigateToTab("home");
+      await navigation.navigateToTab('create');
+      await navigation.navigateToTab('profile');
+      await navigation.navigateToTab('home');
 
       const endTime = Date.now();
       const navigationTime = endTime - startTime;
@@ -118,8 +118,8 @@ describe("Device Compatibility Tests", () => {
       expect(navigationStore.currentTab).toBe(0);
     });
 
-    it("should handle touch interactions correctly", async () => {
-      const mockUni = createDeviceMock("mobile");
+    it('should handle touch interactions correctly', async () => {
+      const mockUni = createDeviceMock('mobile');
       mockUni.switchTab.mockImplementation((options) => {
         options.success();
       });
@@ -128,9 +128,9 @@ describe("Device Compatibility Tests", () => {
 
       // Simulate rapid touch navigation (common on mobile)
       const rapidNavigations = [
-        navigation.navigateToTab("create"),
-        navigation.navigateToTab("profile"),
-        navigation.navigateToTab("home"),
+        navigation.navigateToTab('create'),
+        navigation.navigateToTab('profile'),
+        navigation.navigateToTab('home')
       ];
 
       await Promise.allSettled(rapidNavigations);
@@ -141,32 +141,32 @@ describe("Device Compatibility Tests", () => {
     });
   });
 
-  describe("Tablet Device Navigation", () => {
-    it("should work correctly on iPad", async () => {
-      const mockUni = createDeviceMock("tablet");
+  describe('Tablet Device Navigation', () => {
+    it('should work correctly on iPad', async () => {
+      const mockUni = createDeviceMock('tablet');
       mockUni.switchTab.mockImplementation((options) => {
         options.success();
       });
 
-      global.getCurrentPages = vi.fn(() => [{ route: "pages/index/index" }]);
+      global.getCurrentPages = vi.fn(() => [{ route: 'pages/index/index' }]);
 
       const navigation = useNavigation();
 
       // Test navigation on tablet
-      await navigation.navigateToTab("create");
+      await navigation.navigateToTab('create');
       expect(navigationStore.currentTab).toBe(1);
 
-      await navigation.navigateToTab("profile");
+      await navigation.navigateToTab('profile');
       expect(navigationStore.currentTab).toBe(2);
 
       // Verify system info for tablet
       const systemInfo = mockUni.getSystemInfo();
-      expect(systemInfo.model).toBe("iPad Pro");
+      expect(systemInfo.model).toBe('iPad Pro');
       expect(systemInfo.screenWidth).toBe(1024);
     });
 
-    it("should handle larger screen real estate efficiently", async () => {
-      const mockUni = createDeviceMock("tablet");
+    it('should handle larger screen real estate efficiently', async () => {
+      const mockUni = createDeviceMock('tablet');
       mockUni.switchTab.mockImplementation((options) => {
         options.success();
       });
@@ -175,21 +175,21 @@ describe("Device Compatibility Tests", () => {
 
       // Test multiple simultaneous operations (possible on larger screens)
       const operations = [
-        navigation.navigateToTab("create"),
-        navigation.setTabBadge("profile", 5),
-        navigation.navigateToTab("profile"),
-        navigation.clearTabBadge("profile"),
+        navigation.navigateToTab('create'),
+        navigation.setTabBadge('profile', 5),
+        navigation.navigateToTab('profile'),
+        navigation.clearTabBadge('profile')
       ];
 
       await Promise.allSettled(operations);
 
       expect(navigationStore.currentTab).toBe(2);
-      const profileTab = navigationStore.getTabById("profile");
+      const profileTab = navigationStore.getTabById('profile');
       expect(profileTab?.badge).toBeUndefined();
     });
 
-    it("should support landscape and portrait orientations", async () => {
-      const mockUni = createDeviceMock("tablet");
+    it('should support landscape and portrait orientations', async () => {
+      const mockUni = createDeviceMock('tablet');
       mockUni.switchTab.mockImplementation((options) => {
         options.success();
       });
@@ -197,11 +197,11 @@ describe("Device Compatibility Tests", () => {
       const navigation = useNavigation();
 
       // Simulate portrait mode
-      await navigation.navigateToTab("create");
+      await navigation.navigateToTab('create');
       expect(navigationStore.currentTab).toBe(1);
 
       // Simulate orientation change (navigation should still work)
-      await navigation.navigateToTab("profile");
+      await navigation.navigateToTab('profile');
       expect(navigationStore.currentTab).toBe(2);
 
       // Navigation should be consistent across orientations
@@ -209,32 +209,32 @@ describe("Device Compatibility Tests", () => {
     });
   });
 
-  describe("Desktop/H5 Navigation", () => {
-    it("should work correctly in browser environment", async () => {
-      const mockUni = createDeviceMock("desktop");
+  describe('Desktop/H5 Navigation', () => {
+    it('should work correctly in browser environment', async () => {
+      const mockUni = createDeviceMock('desktop');
       mockUni.switchTab.mockImplementation((options) => {
         options.success();
       });
 
-      global.getCurrentPages = vi.fn(() => [{ route: "pages/index/index" }]);
+      global.getCurrentPages = vi.fn(() => [{ route: 'pages/index/index' }]);
 
       const navigation = useNavigation();
 
       // Test navigation in browser
-      await navigation.navigateToTab("create");
+      await navigation.navigateToTab('create');
       expect(navigationStore.currentTab).toBe(1);
 
-      await navigation.navigateToTab("profile");
+      await navigation.navigateToTab('profile');
       expect(navigationStore.currentTab).toBe(2);
 
       // Verify H5 platform detection
       const systemInfo = mockUni.getSystemInfo();
-      expect(systemInfo.platform).toBe("h5");
-      expect(systemInfo.model).toBe("Chrome");
+      expect(systemInfo.platform).toBe('h5');
+      expect(systemInfo.model).toBe('Chrome');
     });
 
-    it("should handle keyboard navigation", async () => {
-      const mockUni = createDeviceMock("desktop");
+    it('should handle keyboard navigation', async () => {
+      const mockUni = createDeviceMock('desktop');
       mockUni.switchTab.mockImplementation((options) => {
         options.success();
       });
@@ -252,8 +252,8 @@ describe("Device Compatibility Tests", () => {
       expect(navigationStore.currentTab).toBe(0);
     });
 
-    it("should handle browser back/forward buttons", async () => {
-      const mockUni = createDeviceMock("desktop");
+    it('should handle browser back/forward buttons', async () => {
+      const mockUni = createDeviceMock('desktop');
       mockUni.switchTab.mockImplementation((options) => {
         options.success();
       });
@@ -264,11 +264,11 @@ describe("Device Compatibility Tests", () => {
       const navigationHistory = [];
 
       // Navigate forward
-      await navigation.navigateToTab("create");
+      await navigation.navigateToTab('create');
       navigationHistory.push(1);
       expect(navigationStore.currentTab).toBe(1);
 
-      await navigation.navigateToTab("profile");
+      await navigation.navigateToTab('profile');
       navigationHistory.push(2);
       expect(navigationStore.currentTab).toBe(2);
 
@@ -279,9 +279,9 @@ describe("Device Compatibility Tests", () => {
     });
   });
 
-  describe("Cross-Platform Consistency", () => {
-    it("should maintain consistent behavior across all platforms", async () => {
-      const platforms = ["mobile", "tablet", "desktop"] as const;
+  describe('Cross-Platform Consistency', () => {
+    it('should maintain consistent behavior across all platforms', async () => {
+      const platforms = ['mobile', 'tablet', 'desktop'] as const;
       const results = [];
 
       for (const platform of platforms) {
@@ -297,15 +297,15 @@ describe("Device Compatibility Tests", () => {
         const navigation = useNavigation();
 
         // Perform same navigation sequence on each platform
-        await navigation.navigateToTab("create");
-        await navigation.navigateToTab("profile");
-        await navigation.navigateToTab("home");
+        await navigation.navigateToTab('create');
+        await navigation.navigateToTab('profile');
+        await navigation.navigateToTab('home');
 
         results.push({
           platform,
           finalTab: store.currentTab,
           tabItem: store.currentTabItem.id,
-          path: store.currentPath,
+          path: store.currentPath
         });
       }
 
@@ -318,8 +318,8 @@ describe("Device Compatibility Tests", () => {
       });
     });
 
-    it("should handle platform-specific errors gracefully", async () => {
-      const platforms = ["mobile", "tablet", "desktop"] as const;
+    it('should handle platform-specific errors gracefully', async () => {
+      const platforms = ['mobile', 'tablet', 'desktop'] as const;
 
       for (const platform of platforms) {
         const mockUni = createDeviceMock(platform);
@@ -342,10 +342,10 @@ describe("Device Compatibility Tests", () => {
 
         // Test error recovery on each platform
         try {
-          await navigation.navigateToTab("create");
+          await navigation.navigateToTab('create');
         } catch (error) {
           // Navigation should fail as expected
-          expect(error.message).toContain("导航到创建失败");
+          expect(error.message).toContain('导航到创建失败');
         }
 
         // Test fallback navigation
@@ -360,9 +360,9 @@ describe("Device Compatibility Tests", () => {
     });
   });
 
-  describe("Performance Across Devices", () => {
-    it("should perform efficiently on low-end mobile devices", async () => {
-      const mockUni = createDeviceMock("mobile");
+  describe('Performance Across Devices', () => {
+    it('should perform efficiently on low-end mobile devices', async () => {
+      const mockUni = createDeviceMock('mobile');
 
       // Simulate slower device with delayed responses
       mockUni.switchTab.mockImplementation((options) => {
@@ -373,8 +373,8 @@ describe("Device Compatibility Tests", () => {
       const startTime = Date.now();
 
       // Perform navigation operations
-      await navigation.navigateToTab("create");
-      await navigation.navigateToTab("profile");
+      await navigation.navigateToTab('create');
+      await navigation.navigateToTab('profile');
 
       const endTime = Date.now();
       const totalTime = endTime - startTime;
@@ -384,8 +384,8 @@ describe("Device Compatibility Tests", () => {
       expect(navigationStore.currentTab).toBe(2);
     });
 
-    it("should optimize for high-end devices", async () => {
-      const mockUni = createDeviceMock("tablet");
+    it('should optimize for high-end devices', async () => {
+      const mockUni = createDeviceMock('tablet');
 
       // Simulate fast device with quick responses
       mockUni.switchTab.mockImplementation((options) => {
@@ -410,8 +410,8 @@ describe("Device Compatibility Tests", () => {
       expect(totalTime).toBeLessThan(50);
     });
 
-    it("should handle memory constraints on resource-limited devices", async () => {
-      const mockUni = createDeviceMock("mobile");
+    it('should handle memory constraints on resource-limited devices', async () => {
+      const mockUni = createDeviceMock('mobile');
       mockUni.switchTab.mockImplementation((options) => {
         options.success();
       });
@@ -433,9 +433,9 @@ describe("Device Compatibility Tests", () => {
     });
   });
 
-  describe("Accessibility Across Devices", () => {
-    it("should support screen readers on all platforms", async () => {
-      const platforms = ["mobile", "tablet", "desktop"] as const;
+  describe('Accessibility Across Devices', () => {
+    it('should support screen readers on all platforms', async () => {
+      const platforms = ['mobile', 'tablet', 'desktop'] as const;
 
       for (const platform of platforms) {
         const mockUni = createDeviceMock(platform);
@@ -456,8 +456,8 @@ describe("Device Compatibility Tests", () => {
       }
     });
 
-    it("should support keyboard navigation on desktop", async () => {
-      const mockUni = createDeviceMock("desktop");
+    it('should support keyboard navigation on desktop', async () => {
+      const mockUni = createDeviceMock('desktop');
       mockUni.switchTab.mockImplementation((options) => {
         options.success();
       });
@@ -469,7 +469,7 @@ describe("Device Compatibility Tests", () => {
         () => navigation.navigateToTabByIndex(0), // Home
         () => navigation.navigateToTabByIndex(1), // Tab to Create
         () => navigation.navigateToTabByIndex(2), // Tab to Profile
-        () => navigation.navigateToTabByIndex(0), // Tab back to Home
+        () => navigation.navigateToTabByIndex(0) // Tab back to Home
       ];
 
       for (const action of keyboardSequence) {
@@ -482,8 +482,8 @@ describe("Device Compatibility Tests", () => {
       }
     });
 
-    it("should provide appropriate feedback for assistive technologies", async () => {
-      const mockUni = createDeviceMock("mobile");
+    it('should provide appropriate feedback for assistive technologies', async () => {
+      const mockUni = createDeviceMock('mobile');
       mockUni.switchTab.mockImplementation((options) => {
         options.success();
       });
@@ -493,15 +493,15 @@ describe("Device Compatibility Tests", () => {
       const navigation = useNavigation();
 
       // Navigation should provide feedback that can be announced
-      await navigation.navigateToTab("create");
+      await navigation.navigateToTab('create');
 
       // Verify current tab information is available for screen readers
       const currentTab = navigationStore.currentTabItem;
-      expect(currentTab.text).toBe("创建");
-      expect(currentTab.id).toBe("create");
+      expect(currentTab.text).toBe('创建');
+      expect(currentTab.id).toBe('create');
 
       // This information should be available to assistive technologies
-      expect(typeof currentTab.text).toBe("string");
+      expect(typeof currentTab.text).toBe('string');
       expect(currentTab.text.length).toBeGreaterThan(0);
     });
   });
