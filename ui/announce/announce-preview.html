@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Announce Page Preview</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .preview-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .preview-title {
+            text-align: center;
+            margin: 20px 0;
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .device-frame {
+            width: 375px;
+            max-width: 100%;
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+            margin: 0 auto;
+        }
+
+        /* Component styles embedded */
+        .announce-page {
+            width: 100%;
+            background: #FAFAFA;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .page-header {
+            padding: 60px 24px 24px;
+            background: white;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1A1A1A;
+            margin: 0;
+        }
+
+        .events-container {
+            padding: 0 24px 24px;
+        }
+
+        .event-card {
+            display: flex;
+            align-items: flex-start;
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .event-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .event-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .event-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .event-icon img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+
+        .event-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .event-datetime {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .event-day {
+            font-size: 13px;
+            font-weight: 500;
+            color: #5669FF;
+        }
+
+        .event-time {
+            font-size: 13px;
+            font-weight: 400;
+            color: #5669FF;
+        }
+
+        .event-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1A1A1A;
+            margin: 0 0 8px 0;
+            line-height: 1.4;
+        }
+
+        .event-location {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .location-icon {
+            width: 14px;
+            height: 14px;
+            opacity: 0.6;
+        }
+
+        .location-text {
+            font-size: 13px;
+            color: #747688;
+            line-height: 1.3;
+        }
+
+        .usage-info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px;
+        }
+
+        .usage-title {
+            font-weight: 600;
+            color: #0066cc;
+            margin-bottom: 8px;
+        }
+
+        .demo-controls {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px;
+        }
+
+        .demo-controls h3 {
+            margin: 0 0 12px 0;
+            color: #495057;
+            font-size: 16px;
+        }
+
+        .demo-button {
+            background: #5669FF;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .demo-button:hover {
+            background: #4557E8;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <h1 class="preview-title">📢 Announce Page Component</h1>
+        
+        <div class="device-frame">
+            <div id="app">
+                <announce-page @event-click="handleEventClick"></announce-page>
+            </div>
+        </div>
+
+        <div class="demo-controls">
+            <h3>🎮 Demo Controls</h3>
+            <button class="demo-button" @click="addNewEvent">Add Event</button>
+            <button class="demo-button" @click="toggleTheme">Toggle Theme</button>
+            <button class="demo-button" @click="showEventDetails">Show Details</button>
+        </div>
+
+        <div class="usage-info">
+            <div class="usage-title">🚀 Component Features</div>
+            <ul>
+                <li>📱 <strong>Mobile-first Design</strong>: Optimized for mobile with responsive breakpoints</li>
+                <li>🎨 <strong>Beautiful Event Cards</strong>: Gradient backgrounds with custom icons</li>
+                <li>📅 <strong>Event Information</strong>: Date, time, title, and location display</li>
+                <li>🖱️ <strong>Interactive Elements</strong>: Hover effects and click handlers</li>
+                <li>🌙 <strong>Dark Mode Support</strong>: Automatic dark theme detection</li>
+                <li>📐 <strong>Responsive Layout</strong>: Grid layout on larger screens</li>
+                <li>⚡ <strong>Vue 3 Integration</strong>: Modern Vue composition with events</li>
+            </ul>
+            
+            <div class="usage-title">🎯 Event Types</div>
+            <ul>
+                <li>🎭 Cultural Events (Jo Malone, Art exhibitions)</li>
+                <li>🎵 Music Events (Jazz evenings, Festivals)</li>
+                <li>👥 Professional Events (Leadership conferences)</li>
+                <li>👨‍👩‍👧‍👦 Family Events (Kids safe nights)</li>
+                <li>🎪 Entertainment Events (Music performances)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        // AnnouncePage Component
+        const AnnouncePage = {
+            name: 'AnnouncePage',
+            data() {
+                return {
+                    events: [
+                        {
+                            id: 1,
+                            day: 'Wed, Apr 28',
+                            time: '5:30 PM',
+                            title: "Jo Malone London's Mother's Day Presents",
+                            location: 'Radius Gallery • Santa Cruz, CA',
+                            icon: '../../assets/CodeBubbyAssets/39_1118/1.svg',
+                            iconBg: 'linear-gradient(135deg, #FFE5E5 0%, #FFB3B3 100%)'
+                        },
+                        {
+                            id: 2,
+                            day: 'Sat, May 1',
+                            time: '2:00 PM',
+                            title: 'A Virtual Evening of Smooth Jazz',
+                            location: 'Lot 13 • Oakland, CA',
+                            icon: '../../assets/CodeBubbyAssets/39_1118/2.svg',
+                            iconBg: 'linear-gradient(135deg, #4A1A5C 0%, #7B2D8E 100%)'
+                        },
+                        {
+                            id: 3,
+                            day: 'Sat, Apr 24',
+                            time: '1:30 PM',
+                            title: "Women's Leadership Conference 2021",
+                            location: '53 Bush St • San Francisco, CA',
+                            icon: '../../assets/CodeBubbyAssets/39_1118/3.svg',
+                            iconBg: 'linear-gradient(135deg, #E8D5FF 0%, #C4A3FF 100%)'
+                        },
+                        {
+                            id: 4,
+                            day: 'Fri, Apr 23',
+                            time: '6:00 PM',
+                            title: 'International Kids Safe Parents Night Out',
+                            location: 'Lot 13 • Oakland, CA',
+                            icon: '../../assets/CodeBubbyAssets/39_1118/4.svg',
+                            iconBg: 'linear-gradient(135deg, #B3E5FC 0%, #81D4FA 100%)'
+                        },
+                        {
+                            id: 5,
+                            day: 'Mon, Jun 21',
+                            time: '10:00 PM',
+                            title: 'Collectivity Plays the Music of Jimi',
+                            location: 'Longboard Margarita Bar',
+                            icon: '../../assets/CodeBubbyAssets/39_1118/5.svg',
+                            iconBg: 'linear-gradient(135deg, #E1F5FE 0%, #B3E5FC 100%)'
+                        },
+                        {
+                            id: 6,
+                            day: 'Sun, Apr 25',
+                            time: '10:15 AM',
+                            title: 'International Gala Music Festival',
+                            location: '36 Guild Street London, UK',
+                            icon: '../../assets/CodeBubbyAssets/39_1118/6.svg',
+                            iconBg: 'linear-gradient(135deg, #E0F2F1 0%, #80CBC4 100%)'
+                        }
+                    ]
+                }
+            },
+            methods: {
+                handleEventClick(event) {
+                    this.$emit('event-click', event);
+                    console.log('Event clicked:', event);
+                }
+            },
+            template: `
+                <div class="announce-page">
+                    <!-- Header -->
+                    <div class="page-header">
+                        <h1 class="page-title">Events</h1>
+                    </div>
+
+                    <!-- Events List -->
+                    <div class="events-container">
+                        <div 
+                            v-for="event in events" 
+                            :key="event.id"
+                            class="event-card"
+                            @click="handleEventClick(event)"
+                        >
+                            <!-- Event Icon -->
+                            <div class="event-icon" :style="{ background: event.iconBg }">
+                                <img :src="event.icon" :alt="event.title" />
+                            </div>
+
+                            <!-- Event Content -->
+                            <div class="event-content">
+                                <!-- Date and Time -->
+                                <div class="event-datetime">
+                                    <span class="event-day">{{ event.day }}</span>
+                                    <span class="event-time">{{ event.time }}</span>
+                                </div>
+
+                                <!-- Event Title -->
+                                <h3 class="event-title">{{ event.title }}</h3>
+
+                                <!-- Event Location -->
+                                <div class="event-location">
+                                    <svg class="location-icon" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                    </svg>
+                                    <span class="location-text">{{ event.location }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+        };
+
+        // Main App
+        const app = createApp({
+            components: {
+                AnnouncePage
+            },
+            data() {
+                return {
+                    isDarkTheme: false,
+                    selectedEvent: null
+                }
+            },
+            methods: {
+                handleEventClick(event) {
+                    this.selectedEvent = event;
+                    console.log('Event selected:', event);
+                    alert(`Event clicked: ${event.title}\nDate: ${event.day} at ${event.time}\nLocation: ${event.location}`);
+                },
+                addNewEvent() {
+                    const newEvent = {
+                        id: Date.now(),
+                        day: 'Today',
+                        time: '3:00 PM',
+                        title: 'New Demo Event',
+                        location: 'Demo Location • Demo City, CA',
+                        icon: '../../assets/CodeBubbyAssets/39_1118/1.svg',
+                        iconBg: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)'
+                    };
+                    
+                    // This would normally update the component's data
+                    console.log('Adding new event:', newEvent);
+                    alert('New event would be added to the list!');
+                },
+                toggleTheme() {
+                    this.isDarkTheme = !this.isDarkTheme;
+                    document.body.style.background = this.isDarkTheme ? '#1a1a1a' : '#f5f5f5';
+                    console.log('Theme toggled:', this.isDarkTheme ? 'Dark' : 'Light');
+                },
+                showEventDetails() {
+                    if (this.selectedEvent) {
+                        alert(`Event Details:\n\nTitle: ${this.selectedEvent.title}\nDate: ${this.selectedEvent.day}\nTime: ${this.selectedEvent.time}\nLocation: ${this.selectedEvent.location}`);
+                    } else {
+                        alert('Please click on an event first to see its details!');
+                    }
+                }
+            }
+        });
+
+        app.mount('#app');
+    </script>
+</body>
+</html>
