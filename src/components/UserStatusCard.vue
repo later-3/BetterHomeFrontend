@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia';
 import { useUserStore } from '@/store/user';
 
 interface Props {
-  theme?: 'green' | 'wechat' | 'blue';
+  theme?: 'green' | 'wechat' | 'blue' | 'orange';
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -18,7 +18,8 @@ const { loggedIn, userInfo } = storeToRefs(userStore);
 const themeColors = {
   wechat: '#07c160', // 微信绿 - neighbor页面
   green: '#28a745', // Bootstrap绿 - task页面
-  blue: '#007aff' // 蓝色 - create页面
+  blue: '#007aff', // 蓝色 - create页面
+  orange: '#ff9500' // 橙色 - notice页面
 };
 
 const currentColor = themeColors[props.theme];

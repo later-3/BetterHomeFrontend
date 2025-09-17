@@ -10,6 +10,7 @@
 import { onMounted } from 'vue';
 import { useNavigation } from '@/hooks/useNavigation';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
+import UserStatusCard from '../../components/UserStatusCard.vue';
 
 // 页面导航和错误处理
 const { initPageNavigation } = useNavigation();
@@ -30,6 +31,9 @@ onMounted(() => {
 
 <template>
   <view class="page-container">
+    <!-- 用户状态显示 -->
+    <UserStatusCard theme="orange" />
+
     <view class="header">
       <text class="title">公告</text>
       <text class="subtitle">社区公告通知</text>
