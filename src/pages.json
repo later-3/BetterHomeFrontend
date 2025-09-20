@@ -62,6 +62,15 @@
         "navigationBarBackgroundColor": "#ffffff",
         "navigationBarTextStyle": "black"
       }
+    },
+    {
+      "name": "neighbor-detail",
+      "path": "pages/neighbor/detail",
+      "style": { 
+        "navigationBarTitleText": "动态详情",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
+      }
     }
   ],
   "subPackages": [

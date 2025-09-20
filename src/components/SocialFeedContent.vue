@@ -124,6 +124,34 @@ const handleBookmark = (postId: any) => {
   console.log('Bookmark post:', postId);
   uni.showToast({ title: `收藏第 ${postId} 条动态！`, icon: 'none' });
 };
+
+const handleCardClick = (post: any, event: Event) => {
+  console.log('点击卡片:', post);
+  event.preventDefault();
+  event.stopPropagation();
+  
+  // 将当前posts数据临时存储到localStorage，供详情页使用
+  try {
+    const postsData = JSON.stringify(props.externalPosts);
+    uni.setStorageSync('temp_social_posts', postsData);
+    console.log('数据已存储到localStorage');
+  } catch (error) {
+    console.error('存储posts数据失败:', error);
+    return;
+  }
+  
+  // 跳转到详情页，传递contentId参数
+  console.log('准备跳转到详情页:', `/pages/neighbor/detail?contentId=${post.id}`);
+  uni.navigateTo({
+    url: `/pages/neighbor/detail?contentId=${post.id}`,
+    success: () => {
+      console.log('跳转成功');
+    },
+    fail: (err) => {
+      console.error('跳转失败:', err);
+    }
+  });
+};
 </script>
 
 <template>
@@ -131,7 +159,7 @@ const handleBookmark = (postId: any) => {
     <!-- 动态列表 -->
     <div class="feed-list">
       <!-- 动态渲染每个post -->
-      <div v-for="post in displayPosts" :key="post.id" class="post-card">
+      <div v-for="post in displayPosts" :key="post.id" class="post-card" @click="handleCardClick(post, $event)">
         <div class="post-header">
           <div class="user-info">
             <!-- 显示用户头像，如果有的话 -->
@@ -196,18 +224,18 @@ const handleBookmark = (postId: any) => {
 
         <div class="post-actions">
           <div class="action-group">
-            <div class="action-item" @click="handleLike(post.id)">
+            <div class="action-item" @click.stop="handleLike(post.id)">
               <span class="action-icon">❤️</span>
               <span class="action-count">{{ post.likes }}</span>
             </div>
-            <div class="action-item" @click="handleComment(post.id)">
+            <div class="action-item" @click.stop="handleComment(post.id)">
               <span class="action-icon">💬</span>
               <span class="action-count">{{ post.comments }}</span>
             </div>
           </div>
           <div class="share-group">
-            <span class="share-icon" @click="handleShare(post.id)">📤</span>
-            <span class="bookmark-icon" @click="handleBookmark(post.id)"
+            <span class="share-icon" @click.stop="handleShare(post.id)">📤</span>
+            <span class="bookmark-icon" @click.stop="handleBookmark(post.id)"
               >🔖</span
             >
           </div>
