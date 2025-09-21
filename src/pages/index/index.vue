@@ -37,13 +37,6 @@ const mainFeatures = ref([
     description: '查看个人信息',
     icon: '/static/icons/profile.png',
     path: '/pages/profile/profile'
-  },
-  {
-    id: 'test',
-    title: '功能测试',
-    description: '测试应用功能',
-    icon: '/static/logo.png',
-    path: '/pages/test/test'
   }
 ]);
 
@@ -141,16 +134,10 @@ onMounted(async () => {
       <view class="quick-actions">
         <view class="section-title">快捷操作</view>
         <view class="action-buttons">
-          <button
-            class="action-btn primary"
-            @click="navigateToFeature(mainFeatures[0])"
-          >
+          <button class="action-btn primary" @click="navigateToFeature(mainFeatures[0])">
             立即创建
           </button>
-          <button
-            class="action-btn secondary"
-            @click="navigateToFeature(mainFeatures[1])"
-          >
+          <button class="action-btn secondary" @click="navigateToFeature(mainFeatures[1])">
             个人中心
           </button>
         </view>

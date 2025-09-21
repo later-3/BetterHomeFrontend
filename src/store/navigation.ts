@@ -297,8 +297,8 @@ const useNavigationStore = defineStore(
 
     return {
       // 状态
-      tabs: readonly(tabs),
-      currentTab: readonly(currentTab),
+      tabs,
+      currentTab,
 
       // 计算属性
       currentTabItem,
