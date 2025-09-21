@@ -9,8 +9,10 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    AudioPlayer: typeof import('./components/AudioPlayer.vue')['default']
     NeighborContentDetail: typeof import('./components/NeighborContentDetail.vue')['default']
     PullList: typeof import('./components/pullList.vue')['default']
+    RichCommentItem: typeof import('./components/RichCommentItem.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SocialFeedContent: typeof import('./components/SocialFeedContent.vue')['default']

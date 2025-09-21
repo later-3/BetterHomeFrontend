@@ -3,24 +3,73 @@
  * 公告页面
  * 用于展示社区公告和通知相关功能
  *
- * @author Claude Code
- * @created 2025-01-07
+ * 同时作为原生图片/视频与评论组件的预览调试场景
  */
 
 import { onMounted } from 'vue';
 import { useNavigation } from '@/hooks/useNavigation';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
 import UserStatusCard from '../../components/UserStatusCard.vue';
+import RichCommentItem from '@/components/RichCommentItem.vue';
+import AudioPlayer from '@/components/AudioPlayer.vue';
+
+const DEFAULT_IMAGE_URL = 'https://picsum.photos/800/480?image=1050';
+const DEFAULT_VIDEO_URL =
+  'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
+const LOCAL_VIDEO_URL = DEFAULT_VIDEO_URL;
+
+const baseCommentShell = (id: string, name: string) => ({
+  id,
+  author: {
+    id,
+    name,
+    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,
+    verified: true
+  },
+  content: '',
+  created_at: new Date().toISOString(),
+  likes_count: 0,
+  replies_count: 0,
+  is_liked: false
+});
+
+const commentVideoSample = {
+  ...baseCommentShell('notice-comment-video', '公告管理员'),
+  content: `
+    <p>🎞️ 评论组件视频展示：</p>
+    <video controls src="${DEFAULT_VIDEO_URL}" poster="${DEFAULT_IMAGE_URL}"></video>
+    <p>点击右下角可放大全屏，验证组件媒体集成效果。</p>
+  `
+};
+
+const commentLocalVideoSample = {
+  ...baseCommentShell('notice-comment-local-video', '物业管理员'),
+  content: `
+    <p>📁 本地视频 (ui/comment/1.mp4) 验证：</p>
+    <video controls src="${LOCAL_VIDEO_URL}" poster="${DEFAULT_IMAGE_URL}"></video>
+  `
+};
+
+const commentImageSample = {
+  ...baseCommentShell('notice-comment-image', '摄影达人工具人'),
+  content: `
+    <p>📷 评论组件图片展示：</p>
+    <img src="${DEFAULT_IMAGE_URL}" alt="示例图片" />
+    <p>点击图片可预览，验证组件内图片展示效果。</p>
+  `
+};
+
+function previewImage(url: string) {
+  uni.previewImage({ current: url, urls: [url], indicator: 'number' });
+}
 
 // 页面导航和错误处理
 const { initPageNavigation } = useNavigation();
 const { handlePageError } = useErrorHandler({ pageName: '公告' });
 
-// 页面生命周期
 onMounted(() => {
   try {
     initPageNavigation('notice');
-    // 页面加载完成
   } catch (error) {
     handlePageError(error as Error, {
       fallbackMessage: '公告页面初始化失败'
@@ -44,6 +93,45 @@ onMounted(() => {
         <text class="placeholder-text">功能开发中...</text>
         <text class="description">这里将展示社区公告和通知</text>
       </view>
+
+      <view class="test-section">
+        <text class="test-title">原生媒体基础示例</text>
+        <view class="rich-block" @click="previewImage(DEFAULT_IMAGE_URL)">
+          <text class="rich-label">图片</text>
+          <view class="image-wrapper">
+            <image class="preview-image" :src="DEFAULT_IMAGE_URL" mode="aspectFill" />
+          </view>
+        </view>
+        <view class="rich-block">
+          <text class="rich-label">视频</text>
+          <video
+            class="basic-video"
+            controls
+            :poster="DEFAULT_IMAGE_URL"
+            :src="DEFAULT_VIDEO_URL"
+          >
+            您的设备暂不支持 video 标签
+          </video>
+        </view>
+      </view>
+
+      <view class="test-section">
+        <text class="test-title">AudioPlayer 组件测试</text>
+        <AudioPlayer
+          src="https://www.w3schools.com/html/horse.mp3"
+          title="🎵 自定义音频播放器"
+        />
+      </view>
+
+      <view class="test-section">
+        <text class="test-title">评论组件媒体展示</text>
+        <view class="comment-demo">
+          <RichCommentItem :comment="commentVideoSample" />
+          <RichCommentItem :comment="commentLocalVideoSample" />
+          <RichCommentItem :comment="commentImageSample" />
+        </view>
+      </view>
+
     </view>
   </view>
 </template>
@@ -51,7 +139,7 @@ onMounted(() => {
 <style scoped>
 .page-container {
   padding: 20px;
-  padding-bottom: 70px; /* 为底部TabBar留出空间 */
+  padding-bottom: 70px;
   min-height: 100vh;
   background-color: #f5f5f5;
 }
@@ -73,6 +161,9 @@ onMounted(() => {
 }
 .content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 .placeholder-card {
   padding: 40px 20px;
@@ -91,5 +182,65 @@ onMounted(() => {
   display: block;
   font-size: 14px;
   color: #ccc;
+}
+.test-section {
+  padding: 16px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.test-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2933;
+}
+.rich-block {
+  border: 1px solid rgba(26, 168, 108, 0.12);
+  border-radius: 10px;
+  padding: 12px;
+  background: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rich-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1aa86c;
+}
+.rich-content {
+  font-size: 14px;
+}
+.image-wrapper {
+  overflow: hidden;
+  border-radius: 8px;
+}
+.preview-image {
+  width: 100%;
+  height: 200px;
+}
+.basic-video {
+  width: 100%;
+  border-radius: 8px;
+  margin: 8px 0;
+  background: #000;
+  min-height: 200px;
+}
+.comment-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stub-btn {
+  padding: 6px 12px;
+  border-radius: 16px;
+  border: none;
+  background: rgba(26, 168, 108, 0.12);
+  color: #1aa86c;
+  font-size: 12px;
 }
 </style>
