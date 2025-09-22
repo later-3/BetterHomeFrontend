@@ -160,12 +160,13 @@
                   controls
                   :src="getAssetUrl(att.directus_files_id.id)"
                 ></video>
-                <audio
+                <view
                   v-else-if="isAudio(att.directus_files_id)"
-                  class="comment-media__audio"
-                  controls
-                  :src="getAssetUrl(att.directus_files_id.id)"
-                ></audio>
+                  class="comment-media__audio-link"
+                  @click="copyText(getAssetUrl(att.directus_files_id.id))"
+                >
+                  音频附件（点击复制链接）
+                </view>
                 <view v-else class="comment-media__unknown">
                   不支持的附件：{{ att.directus_files_id?.filename_download || att.directus_files_id?.id }}
                 </view>
@@ -776,8 +777,14 @@ function previewImage(url: string) {
   object-fit: cover;
 }
 
-.comment-media__audio {
+.comment-media__audio-link {
   width: 100%;
+  padding: 10px;
+  text-align: center;
+  background: #eef2ff;
+  color: #1f2a62;
+  border-radius: 6px;
+  font-size: 12px;
 }
 
 .comment-media__unknown {
