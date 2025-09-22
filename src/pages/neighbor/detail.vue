@@ -219,7 +219,8 @@ async function fetchComments() {
     filter: {
       content_id: { _eq: id }
     },
-    fields: 'id,text,like_count,unlike_count,author_id,date_created,user_created',
+    fields:
+      'id,text,like_count,unlike_count,author_id,date_created,user_created,attachments.directus_files_id.*',
     sort: '-date_created'
   };
 
