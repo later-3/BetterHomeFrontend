@@ -144,7 +144,7 @@
             <view
               v-for="(att, idx) in item.attachments"
               :key="`${item.id}-${att.id || idx}`"
-              class="comment-media__item"
+              :class="['comment-media__item', { 'comment-media__item--video': isVideo(att) }]"
             >
               <image
                 v-if="isImage(att)"
@@ -153,23 +153,23 @@
                 mode="aspectFill"
                 @click="previewImage(getAssetUrl(att.fileId))"
               />
-              <view
-                v-else-if="isVideo(att)"
-                class="comment-media__video-container"
-                @click="handleVideoTap(getVideoElementId(item.id, att, idx))"
-              >
+              <template v-else-if="isVideo(att)">
                 <video
                   class="comment-media__video"
                   playsinline
                   webkit-playsinline
-                  :controls="false"
+                  controls
                   :id="getVideoElementId(item.id, att, idx)"
                   :src="getAssetUrl(att.fileId)"
                   @fullscreenchange="handleVideoFullscreenChange($event, getVideoElementId(item.id, att, idx))"
                   @ended="handleVideoEnded(getVideoElementId(item.id, att, idx))"
-                  :ref="el => registerVideoRef(getVideoElementId(item.id, att, idx), el)">
-                </video>
-              </view>
+                  :ref="el => registerVideoRef(getVideoElementId(item.id, att, idx), el)"
+                ></video>
+                <button
+                  class="comment-media__video-fullscreen"
+                  @click.stop="handleVideoTap(getVideoElementId(item.id, att, idx))"
+                >⛶</button>
+              </template>
               <AudioPlayer
                 v-else-if="isAudio(att)"
                 class="comment-media__audio"
@@ -432,10 +432,12 @@ function handleVideoTap(videoId: string) {
   const videoEl = videoRefs.get(videoId);
   if (videoEl) {
     try {
-      if (videoEl.requestFullscreen) {
+      if (typeof videoEl.requestFullscreen === 'function') {
         videoEl.requestFullscreen().catch(() => {});
       }
-      videoEl.play().catch(() => {});
+      if (typeof videoEl.play === 'function') {
+        videoEl.play().catch(() => {});
+      }
     } catch (err) {
       console.warn('video full screen failed', err);
     }
@@ -845,6 +847,13 @@ function handleVideoFullscreenChange(event: any, videoId: string) {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+}
+
+.comment-media__item--video {
+  width: 260px;
+  height: 146px;
+  background: #000;
 }
 
 .comment-media__img,
@@ -854,15 +863,22 @@ function handleVideoFullscreenChange(event: any, videoId: string) {
   object-fit: cover;
 }
 
-.comment-media__video-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
 .comment-media__audio {
   width: 100%;
   display: block;
+}
+
+.comment-media__video-fullscreen {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
 }
 
 .comment-media__unknown {
