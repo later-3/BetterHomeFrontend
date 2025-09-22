@@ -153,18 +153,29 @@
                 mode="aspectFill"
                 @click="previewImage(getAssetUrl(att.fileId))"
               />
+              <view v-else-if="isVideo(att)" class="comment-media__video-container">
                 <video
-                  v-else-if="isVideo(att)"
                   class="comment-media__video"
                   controls
+                  :id="getVideoElementId(item.id, att, idx)"
                   :src="getAssetUrl(att.fileId)"
+                  @fullscreenchange="handleVideoFullscreenChange($event, getVideoElementId(item.id, att, idx))"
+                  @ended="handleVideoEnded(getVideoElementId(item.id, att, idx))"
+                  :ref="el => registerVideoRef(getVideoElementId(item.id, att, idx), el)"
                 ></video>
-                <AudioPlayer
-                  v-else-if="isAudio(att)"
-                  class="comment-media__audio"
-                  :src="getAssetUrl(att.fileId)"
-                  :title="att.title || att.filename || '音频附件'"
-                />
+                <view
+                  class="comment-media__video-mask"
+                  @click.stop="handleVideoTap(getVideoElementId(item.id, att, idx))"
+                >
+                  全屏播放
+                </view>
+              </view>
+              <AudioPlayer
+                v-else-if="isAudio(att)"
+                class="comment-media__audio"
+                :src="getAssetUrl(att.fileId)"
+                :title="att.title || att.filename || '音频附件'"
+              />
               <view v-else class="comment-media__unknown">
                 不支持的附件：{{ att.filename || att.fileId }}
               </view>
@@ -206,6 +217,7 @@ const errorText = ref('');
 const userStore = useUserStore();
 const { token } = storeToRefs(userStore);
 const commentsList = ref<CommentEntity[]>([]);
+const videoRefs = new Map<string, HTMLVideoElement>();
 
 // 页面加载时接收参数
 onLoad((query: any) => {
@@ -388,6 +400,72 @@ function isAudio(att: CommentAttachment) {
 function previewImage(url: string) {
   if (!url) return;
   uni.previewImage({ current: url, urls: [url], indicator: 'number' });
+}
+
+function getVideoElementId(commentId: string, attachment: CommentAttachment, index: number) {
+  return `video-${commentId}-${attachment.fileId || index}`;
+}
+
+function registerVideoRef(key: string, el: HTMLVideoElement | null | undefined) {
+  if (!key) return;
+  if (el) {
+    videoRefs.set(key, el);
+  } else {
+    videoRefs.delete(key);
+  }
+}
+
+function handleVideoTap(videoId: string) {
+  if (!videoId) return;
+  /* #ifdef MP */
+  const mpContext = uni.createVideoContext(videoId);
+  try {
+    mpContext.requestFullScreen({ direction: 0 });
+    mpContext.play();
+  } catch (err) {
+    console.warn('requestFullScreen failed', err);
+  }
+  /* #endif */
+
+  /* #ifdef H5 */
+  const videoEl = videoRefs.get(videoId);
+  if (videoEl) {
+    try {
+      if (videoEl.requestFullscreen) {
+        videoEl.requestFullscreen().catch(() => {});
+      }
+      videoEl.play().catch(() => {});
+    } catch (err) {
+      console.warn('video full screen failed', err);
+    }
+  }
+  /* #endif */
+}
+
+function handleVideoEnded(videoId: string) {
+  if (!videoId) return;
+  /* #ifdef MP */
+  const mpContext = uni.createVideoContext(videoId);
+  try {
+    mpContext.exitFullScreen();
+  } catch (err) {
+    console.warn('exitFullScreen failed', err);
+  }
+  /* #endif */
+}
+
+function handleVideoFullscreenChange(event: any, videoId: string) {
+  if (!videoId) return;
+  /* #ifdef MP */
+  if (!event?.detail?.fullscreen) {
+    const mpContext = uni.createVideoContext(videoId);
+    try {
+      mpContext.pause();
+    } catch (err) {
+      console.warn('pause failed', err);
+    }
+  }
+  /* #endif */
 }
 </script>
 
@@ -772,6 +850,23 @@ function previewImage(url: string) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.comment-media__video-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.comment-media__video-mask {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border-radius: 12px;
+  font-size: 12px;
 }
 
 .comment-media__audio {
