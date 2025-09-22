@@ -420,6 +420,7 @@ function handleVideoTap(videoId: string) {
   /* #ifdef MP */
   const mpContext = uni.createVideoContext(videoId);
   try {
+    mpContext.pause();
     mpContext.requestFullScreen({ direction: 0 });
     mpContext.play();
   } catch (err) {
@@ -447,6 +448,7 @@ function handleVideoEnded(videoId: string) {
   /* #ifdef MP */
   const mpContext = uni.createVideoContext(videoId);
   try {
+    mpContext.pause();
     mpContext.exitFullScreen();
   } catch (err) {
     console.warn('exitFullScreen failed', err);

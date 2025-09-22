@@ -137,7 +137,7 @@ function init(src: string) {
   core.onPause(() => { playing.value = false })
   core.onEnded(() => { playing.value = false })
   core.onTimeUpdate(() => {
-    if (!core) return;
+    if (!core || !core.currentTime) return;
     const time = core.currentTime || 0;
     const total = core.duration || 0;
     current.value = time;
