@@ -160,18 +160,15 @@
               >
                 <video
                   class="comment-media__video"
-                  controls
                   playsinline
                   webkit-playsinline
+                  :controls="false"
                   :id="getVideoElementId(item.id, att, idx)"
                   :src="getAssetUrl(att.fileId)"
                   @fullscreenchange="handleVideoFullscreenChange($event, getVideoElementId(item.id, att, idx))"
                   @ended="handleVideoEnded(getVideoElementId(item.id, att, idx))"
-                  :ref="el => registerVideoRef(getVideoElementId(item.id, att, idx), el)"
-                ></video>
-                <view class="comment-media__video-overlay">
-                  <text class="comment-media__video-icon">▶</text>
-                </view>
+                  :ref="el => registerVideoRef(getVideoElementId(item.id, att, idx), el)">
+                </video>
               </view>
               <AudioPlayer
                 v-else-if="isAudio(att)"
@@ -859,22 +856,6 @@ function handleVideoFullscreenChange(event: any, videoId: string) {
   position: relative;
   width: 100%;
   height: 100%;
-}
-
-.comment-media__video-overlay {
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.25);
-}
-
-.comment-media__video-icon {
-  font-size: 28px;
-  color: #fff;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .comment-media__audio {
