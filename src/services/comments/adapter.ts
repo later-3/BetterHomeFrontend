@@ -60,7 +60,14 @@ function mapAttachments(dto: CommentDto): CommentAttachment[] {
     .filter((item): item is CommentAttachment => Boolean(item));
 }
 
-function mapAuthor(dto: CommentDto): { id?: string; name: string; avatar?: string | null } {
+function extractAvatarFileId(avatar: any): string | undefined {
+  if (!avatar) return undefined;
+  if (typeof avatar === 'string') return avatar || undefined;
+  if (typeof avatar === 'object' && avatar.id) return avatar.id;
+  return undefined;
+}
+
+function mapAuthor(dto: CommentDto): { id?: string; name: string; avatar?: string } {
   const author = dto.author_id;
   if (!author) {
     return {
@@ -79,7 +86,7 @@ function mapAuthor(dto: CommentDto): { id?: string; name: string; avatar?: strin
   return {
     id,
     name,
-    avatar: avatar ?? undefined
+    avatar: extractAvatarFileId(avatar)
   };
 }
 

@@ -366,8 +366,8 @@ function getAuthorName(author: CommentAuthor | undefined) {
 }
 
 function getAuthorAvatar(author: CommentAuthor | undefined) {
-  if (!author) return '';
-  return author.avatar || '';
+  if (!author?.avatar) return '';
+  return getAssetUrl(author.avatar);
 }
 
 function formatDate(value: string) {
