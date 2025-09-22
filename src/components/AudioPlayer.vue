@@ -137,11 +137,23 @@ function init(src: string) {
   core.onPause(() => { playing.value = false })
   core.onEnded(() => { playing.value = false })
   core.onTimeUpdate(() => {
-    current.value = core!.currentTime
-    if (!duration.value && core!.duration) duration.value = core!.duration
+    if (!core) return;
+    const time = core.currentTime || 0;
+    const total = core.duration || 0;
+    current.value = time;
+    if (!duration.value && total) duration.value = total;
   })
   // 部分端初始 duration 为 0：轻触发一次
-  setTimeout(() => { if (!duration.value) { core!.play(); setTimeout(() => core && core.pause(), 60) } }, 60)
+  setTimeout(() => {
+    if (!duration.value && core) {
+      try {
+        core.play();
+        setTimeout(() => { core && core.pause(); }, 60);
+      } catch (err) {
+        console.warn('audio init play failed', err);
+      }
+    }
+  }, 60);
 
   // 倍速（仅 H5 真正生效；小程序端多数场景忽略）
   setRate(props.speeds[speedIndex.value])
