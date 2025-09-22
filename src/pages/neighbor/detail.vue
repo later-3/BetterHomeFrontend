@@ -153,21 +153,24 @@
                 mode="aspectFill"
                 @click="previewImage(getAssetUrl(att.fileId))"
               />
-              <view v-else-if="isVideo(att)" class="comment-media__video-container">
+              <view
+                v-else-if="isVideo(att)"
+                class="comment-media__video-container"
+                @click="handleVideoTap(getVideoElementId(item.id, att, idx))"
+              >
                 <video
                   class="comment-media__video"
                   controls
+                  playsinline
+                  webkit-playsinline
                   :id="getVideoElementId(item.id, att, idx)"
                   :src="getAssetUrl(att.fileId)"
                   @fullscreenchange="handleVideoFullscreenChange($event, getVideoElementId(item.id, att, idx))"
                   @ended="handleVideoEnded(getVideoElementId(item.id, att, idx))"
                   :ref="el => registerVideoRef(getVideoElementId(item.id, att, idx), el)"
                 ></video>
-                <view
-                  class="comment-media__video-mask"
-                  @click.stop="handleVideoTap(getVideoElementId(item.id, att, idx))"
-                >
-                  全屏播放
+                <view class="comment-media__video-overlay">
+                  <text class="comment-media__video-icon">▶</text>
                 </view>
               </view>
               <AudioPlayer
@@ -858,15 +861,20 @@ function handleVideoFullscreenChange(event: any, videoId: string) {
   height: 100%;
 }
 
-.comment-media__video-mask {
+.comment-media__video-overlay {
+  pointer-events: none;
   position: absolute;
-  right: 8px;
-  bottom: 8px;
-  padding: 4px 10px;
-  background: rgba(0, 0, 0, 0.55);
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.comment-media__video-icon {
+  font-size: 28px;
   color: #fff;
-  border-radius: 12px;
-  font-size: 12px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .comment-media__audio {
