@@ -114,6 +114,70 @@
           <textarea class="debug-textarea error" readonly :value="errorText"></textarea>
         </view>
       </view>
+
+      <view class="comment-list" v-if="commentsList.length">
+        <view class="comment-title">评论列表（{{ commentsList.length }}）</view>
+        <view
+          class="comment-item"
+          v-for="item in commentsList"
+          :key="item.id"
+        >
+          <view class="comment-header">
+            <view class="comment-avatar">
+              <image
+                v-if="item.author_id && getAuthorAvatar(item.author_id)"
+                class="comment-avatar__img"
+                :src="getAuthorAvatar(item.author_id)"
+                mode="aspectFill"
+              />
+              <view v-else class="comment-avatar__placeholder">👤</view>
+            </view>
+            <view class="comment-meta">
+              <view class="comment-author">{{ getAuthorName(item.author_id) }}</view>
+              <view class="comment-time">{{ formatDate(item.date_created) }}</view>
+            </view>
+          </view>
+
+          <view v-if="item.text" class="comment-text">{{ item.text }}</view>
+
+          <view v-if="item.attachments?.length" class="comment-media">
+            <view
+              v-for="(att, idx) in item.attachments"
+              :key="`${item.id}-${idx}`"
+              class="comment-media__item"
+            >
+              <template v-if="att.directus_files_id">
+                <image
+                  v-if="isImage(att.directus_files_id)"
+                  class="comment-media__img"
+                  :src="getAssetUrl(att.directus_files_id.id)"
+                  mode="aspectFill"
+                  @click="previewImage(getAssetUrl(att.directus_files_id.id))"
+                />
+                <video
+                  v-else-if="isVideo(att.directus_files_id)"
+                  class="comment-media__video"
+                  controls
+                  :src="getAssetUrl(att.directus_files_id.id)"
+                ></video>
+                <audio
+                  v-else-if="isAudio(att.directus_files_id)"
+                  class="comment-media__audio"
+                  controls
+                  :src="getAssetUrl(att.directus_files_id.id)"
+                ></audio>
+                <view v-else class="comment-media__unknown">
+                  不支持的附件：{{ att.directus_files_id?.filename_download || att.directus_files_id?.id }}
+                </view>
+              </template>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view v-else-if="responseText && !commentLoading" class="comment-empty">
+        暂无评论
+      </view>
     </view>
   </view>
 </template>
@@ -140,6 +204,7 @@ const errorText = ref('');
 
 const userStore = useUserStore();
 const { token } = storeToRefs(userStore);
+const commentsList = ref<any[]>([]);
 
 // 页面加载时接收参数
 onLoad((query: any) => {
@@ -204,6 +269,7 @@ function ensureContentId(): string {
 
 async function fetchComments() {
   errorText.value = '';
+  commentsList.value = [];
   responseText.value = '';
   const id = ensureContentId();
   if (!id) return;
@@ -220,7 +286,7 @@ async function fetchComments() {
       content_id: { _eq: id }
     },
     fields:
-      'id,text,like_count,unlike_count,author_id,date_created,user_created,attachments.directus_files_id.*',
+      'id,text,like_count,unlike_count,author_id,date_created,user_created,author_id.first_name,author_id.last_name,author_id.avatar,attachments.directus_files_id.*',
     sort: '-date_created'
   };
 
@@ -249,6 +315,7 @@ async function fetchComments() {
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
       responseText.value = JSON.stringify(res.data, null, 2);
+      commentsList.value = Array.isArray(res.data?.data) ? res.data.data : [];
       if (!res.data?.data || res.data.data.length === 0) {
         uni.showToast({ title: '暂无评论', icon: 'none' });
       } else {
@@ -278,6 +345,51 @@ function copyText(text: string) {
     success: () => uni.showToast({ title: '已复制', icon: 'success' }),
     fail: () => uni.showToast({ title: '复制失败', icon: 'error' })
   });
+}
+
+function getAuthorName(author: any) {
+  if (!author) return '匿名用户';
+  if (author.name) return author.name;
+  const first = author.first_name || '';
+  const last = author.last_name || '';
+  return `${first} ${last}`.trim() || '匿名用户';
+}
+
+function getAuthorAvatar(author: any) {
+  if (!author) return '';
+  return author.avatar || author.picture || '';
+}
+
+function formatDate(value: string) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  const pad = (num: number) => String(num).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(
+    date.getHours()
+  )}:${pad(date.getMinutes())}`;
+}
+
+function getAssetUrl(fileId: string) {
+  if (!fileId) return '';
+  return `${apiBaseUrl.value}/assets/${fileId}?access_token=${token.value}`;
+}
+
+function isImage(file: any) {
+  return file?.type?.startsWith('image/');
+}
+
+function isVideo(file: any) {
+  return file?.type?.startsWith('video/');
+}
+
+function isAudio(file: any) {
+  return file?.type?.startsWith('audio/');
+}
+
+function previewImage(url: string) {
+  if (!url) return;
+  uni.previewImage({ current: url, urls: [url], indicator: 'number' });
 }
 </script>
 
@@ -565,6 +677,121 @@ function copyText(text: string) {
   border-color: #e74c3c;
   color: #c0392b;
   background: #fff5f3;
+}
+
+.comment-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.comment-item {
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.comment-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.comment-avatar__img {
+  width: 100%;
+  height: 100%;
+}
+
+.comment-avatar__placeholder {
+  font-size: 16px;
+}
+
+.comment-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.comment-author {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.comment-time {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.comment-text {
+  font-size: 14px;
+  color: #1f2937;
+  line-height: 1.5;
+}
+
+.comment-media {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.comment-media__item {
+  width: 140px;
+  height: 140px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.comment-media__img,
+.comment-media__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.comment-media__audio {
+  width: 100%;
+}
+
+.comment-media__unknown {
+  font-size: 12px;
+  text-align: center;
+  padding: 8px;
+  color: #555;
+}
+
+.comment-empty {
+  margin-top: 16px;
+  font-size: 14px;
+  color: #6b7280;
+  text-align: center;
 }
 
 /* 响应式设计 */
