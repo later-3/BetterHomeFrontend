@@ -125,15 +125,15 @@
           <view class="comment-header">
             <view class="comment-avatar">
               <image
-                v-if="item.author_id && getAuthorAvatar(item.author_id)"
+                v-if="item.author && getAuthorAvatar(item.author)"
                 class="comment-avatar__img"
-                :src="getAuthorAvatar(item.author_id)"
+                :src="getAuthorAvatar(item.author)"
                 mode="aspectFill"
               />
               <view v-else class="comment-avatar__placeholder">👤</view>
             </view>
             <view class="comment-meta">
-              <view class="comment-author">{{ getAuthorName(item.author_id) }}</view>
+              <view class="comment-author">{{ getAuthorName(item.author) }}</view>
               <view class="comment-time">{{ formatDate(item.date_created) }}</view>
             </view>
           </view>
@@ -143,34 +143,31 @@
           <view v-if="item.attachments?.length" class="comment-media">
             <view
               v-for="(att, idx) in item.attachments"
-              :key="`${item.id}-${idx}`"
+              :key="`${item.id}-${att.id || idx}`"
               class="comment-media__item"
             >
-              <template v-if="att.directus_files_id">
-                <image
-                  v-if="isImage(att.directus_files_id)"
-                  class="comment-media__img"
-                  :src="getAssetUrl(att.directus_files_id.id)"
-                  mode="aspectFill"
-                  @click="previewImage(getAssetUrl(att.directus_files_id.id))"
-                />
+              <image
+                v-if="isImage(att)"
+                class="comment-media__img"
+                :src="getAssetUrl(att.fileId)"
+                mode="aspectFill"
+                @click="previewImage(getAssetUrl(att.fileId))"
+              />
                 <video
-                  v-else-if="isVideo(att.directus_files_id)"
+                  v-else-if="isVideo(att)"
                   class="comment-media__video"
                   controls
-                  :src="getAssetUrl(att.directus_files_id.id)"
+                  :src="getAssetUrl(att.fileId)"
                 ></video>
-                <view
-                  v-else-if="isAudio(att.directus_files_id)"
-                  class="comment-media__audio-link"
-                  @click="copyText(getAssetUrl(att.directus_files_id.id))"
-                >
-                  音频附件（点击复制链接）
-                </view>
-                <view v-else class="comment-media__unknown">
-                  不支持的附件：{{ att.directus_files_id?.filename_download || att.directus_files_id?.id }}
-                </view>
-              </template>
+                <AudioPlayer
+                  v-else-if="isAudio(att)"
+                  class="comment-media__audio"
+                  :src="getAssetUrl(att.fileId)"
+                  :title="att.title || att.filename || '音频附件'"
+                />
+              <view v-else class="comment-media__unknown">
+                不支持的附件：{{ att.filename || att.fileId }}
+              </view>
             </view>
           </view>
         </view>
@@ -188,6 +185,9 @@ import { ref, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { storeToRefs } from 'pinia';
 import { useUserStore } from '@/store/user';
+import { mapCommentsResponse } from '@/services/comments/adapter';
+import type { CommentAttachment, CommentAuthor, CommentEntity } from '@/services/comments/types';
+import AudioPlayer from '@/components/AudioPlayer.vue';
 
 // 页面参数
 const contentId = ref('');
@@ -205,7 +205,7 @@ const errorText = ref('');
 
 const userStore = useUserStore();
 const { token } = storeToRefs(userStore);
-const commentsList = ref<any[]>([]);
+const commentsList = ref<CommentEntity[]>([]);
 
 // 页面加载时接收参数
 onLoad((query: any) => {
@@ -287,7 +287,7 @@ async function fetchComments() {
       content_id: { _eq: id }
     },
     fields:
-      'id,text,like_count,unlike_count,author_id,date_created,user_created,author_id.first_name,author_id.last_name,author_id.avatar,attachments.directus_files_id.*',
+      'id,text,like_count,unlike_count,replies_count,date_created,user_created,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,attachments.id,attachments.directus_files_id.id,attachments.directus_files_id.type,attachments.directus_files_id.filename_download,attachments.directus_files_id.title',
     sort: '-date_created'
   };
 
@@ -316,7 +316,7 @@ async function fetchComments() {
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
       responseText.value = JSON.stringify(res.data, null, 2);
-      commentsList.value = Array.isArray(res.data?.data) ? res.data.data : [];
+      commentsList.value = mapCommentsResponse(res.data?.data);
       if (!res.data?.data || res.data.data.length === 0) {
         uni.showToast({ title: '暂无评论', icon: 'none' });
       } else {
@@ -348,17 +348,14 @@ function copyText(text: string) {
   });
 }
 
-function getAuthorName(author: any) {
+function getAuthorName(author: CommentAuthor | undefined) {
   if (!author) return '匿名用户';
-  if (author.name) return author.name;
-  const first = author.first_name || '';
-  const last = author.last_name || '';
-  return `${first} ${last}`.trim() || '匿名用户';
+  return author.name || '匿名用户';
 }
 
-function getAuthorAvatar(author: any) {
+function getAuthorAvatar(author: CommentAuthor | undefined) {
   if (!author) return '';
-  return author.avatar || author.picture || '';
+  return author.avatar || '';
 }
 
 function formatDate(value: string) {
@@ -376,16 +373,16 @@ function getAssetUrl(fileId: string) {
   return `${apiBaseUrl.value}/assets/${fileId}?access_token=${token.value}`;
 }
 
-function isImage(file: any) {
-  return file?.type?.startsWith('image/');
+function isImage(att: CommentAttachment) {
+  return att.type === 'image';
 }
 
-function isVideo(file: any) {
-  return file?.type?.startsWith('video/');
+function isVideo(att: CommentAttachment) {
+  return att.type === 'video';
 }
 
-function isAudio(file: any) {
-  return file?.type?.startsWith('audio/');
+function isAudio(att: CommentAttachment) {
+  return att.type === 'audio';
 }
 
 function previewImage(url: string) {
@@ -777,14 +774,9 @@ function previewImage(url: string) {
   object-fit: cover;
 }
 
-.comment-media__audio-link {
+.comment-media__audio {
   width: 100%;
-  padding: 10px;
-  text-align: center;
-  background: #eef2ff;
-  color: #1f2a62;
-  border-radius: 6px;
-  font-size: 12px;
+  display: block;
 }
 
 .comment-media__unknown {
