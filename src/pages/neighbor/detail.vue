@@ -68,9 +68,52 @@
       </div>
     </view>
     
-    <!-- 区域2：简单文本显示 -->
+    <!-- 区域2：评论调试区域 -->
     <view class="detail-ui-section">
-      <view class="simple-text">区域二</view>
+      <view class="simple-text">评论调试专区（区域二）</view>
+
+      <view class="comment-debug-panel">
+        <view class="debug-row">
+          <button class="debug-btn" :disabled="commentLoading" @click="fetchComments">
+            {{ commentLoading ? '获取中...' : '获取评论' }}
+          </button>
+          <view class="content-id-text">内容 ID：{{ contentId || '未传入' }}</view>
+        </view>
+
+        <view class="debug-block">
+          <view class="debug-block__header">
+            <text class="debug-block__title">请求（GET）</text>
+            <button class="copy-btn" :disabled="!requestPreview" @click="copyText(requestPreview)">复制</button>
+          </view>
+          <textarea
+            class="debug-textarea"
+            readonly
+            :value="requestPreview"
+            placeholder="点击上方按钮生成请求信息"
+          ></textarea>
+        </view>
+
+        <view class="debug-block">
+          <view class="debug-block__header">
+            <text class="debug-block__title">响应内容</text>
+            <button class="copy-btn" :disabled="!responseText" @click="copyText(responseText)">复制</button>
+          </view>
+          <textarea
+            class="debug-textarea"
+            readonly
+            :value="responseText"
+            placeholder="尚未获取到评论数据"
+          ></textarea>
+        </view>
+
+        <view class="debug-block" v-if="errorText">
+          <view class="debug-block__header error">
+            <text class="debug-block__title">错误信息</text>
+            <button class="copy-btn" @click="copyText(errorText)">复制</button>
+          </view>
+          <textarea class="debug-textarea error" readonly :value="errorText"></textarea>
+        </view>
+      </view>
     </view>
   </view>
 </template>
@@ -78,6 +121,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
+import { storeToRefs } from 'pinia';
+import { useUserStore } from '@/store/user';
 
 // 页面参数
 const contentId = ref('');
@@ -85,6 +130,16 @@ const selectedPost = ref<any>(null);
 
 // 模拟的posts数据存储（实际应该从全局状态或API获取）
 const allPosts = ref<any[]>([]);
+
+// 评论调试相关状态
+const apiBaseUrl = ref('/api');
+const commentLoading = ref(false);
+const requestPreview = ref('');
+const responseText = ref('');
+const errorText = ref('');
+
+const userStore = useUserStore();
+const { token } = storeToRefs(userStore);
 
 // 页面加载时接收参数
 onLoad((query: any) => {
@@ -137,6 +192,92 @@ function goBack() {
 onMounted(() => {
   console.log('详情页加载完成');
 });
+
+function ensureContentId(): string {
+  if (!contentId.value) {
+    errorText.value = '未获取到内容 ID，无法请求评论。';
+    uni.showToast({ title: '缺少内容 ID', icon: 'none' });
+    return '';
+  }
+  return contentId.value;
+}
+
+async function fetchComments() {
+  errorText.value = '';
+  responseText.value = '';
+  const id = ensureContentId();
+  if (!id) return;
+
+  if (!token.value) {
+    errorText.value = '未登录或缺少访问令牌，请先登录。';
+    uni.showToast({ title: '缺少 token', icon: 'none' });
+    return;
+  }
+
+  const url = `${apiBaseUrl.value}/items/comments`;
+  const requestData = {
+    filter: {
+      content_id: { _eq: id }
+    },
+    fields: 'id,text,like_count,unlike_count,author_id,date_created,user_created',
+    sort: '-date_created'
+  };
+
+  requestPreview.value = JSON.stringify(
+    {
+      method: 'GET',
+      url,
+      params: requestData,
+      headers: { Authorization: `Bearer ${token.value}` }
+    },
+    null,
+    2
+  );
+
+  commentLoading.value = true;
+  try {
+    const res: any = await uni.request({
+      url,
+      method: 'GET',
+      data: requestData,
+      header: {
+        Authorization: `Bearer ${token.value}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      responseText.value = JSON.stringify(res.data, null, 2);
+      if (!res.data?.data || res.data.data.length === 0) {
+        uni.showToast({ title: '暂无评论', icon: 'none' });
+      } else {
+        uni.showToast({ title: '获取成功', icon: 'success' });
+      }
+    } else {
+      throw new Error(
+        `HTTP ${res.statusCode}: ${typeof res.data === 'string' ? res.data : JSON.stringify(res.data)}`
+      );
+    }
+  } catch (err: any) {
+    const message = err?.message || JSON.stringify(err);
+    errorText.value = `请求失败：${message}`;
+    uni.showToast({ title: '请求失败', icon: 'error' });
+  } finally {
+    commentLoading.value = false;
+  }
+}
+
+function copyText(text: string) {
+  if (!text) {
+    uni.showToast({ title: '无内容可复制', icon: 'none' });
+    return;
+  }
+  uni.setClipboardData({
+    data: text,
+    success: () => uni.showToast({ title: '已复制', icon: 'success' }),
+    fail: () => uni.showToast({ title: '复制失败', icon: 'error' })
+  });
+}
 </script>
 
 <style scoped>
@@ -323,20 +464,106 @@ onMounted(() => {
   transition: background-color 0.2s ease;
 }
 
-/* 区域2：简单文本显示区域 */
+/* 区域2：评论调试 */
 .detail-ui-section {
   background: white;
-  flex: 1;
+  padding: 24px 16px 48px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .simple-text {
   font-size: 18px;
-  color: #808187;
-  text-align: center;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.comment-debug-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.debug-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.debug-btn {
+  padding: 8px 18px;
+  background: linear-gradient(135deg, #34c759 0%, #2aa568 100%);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.debug-btn:disabled {
+  opacity: 0.7;
+}
+
+.content-id-text {
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.debug-block {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.debug-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.debug-block__header.error {
+  color: #c0392b;
+}
+
+.debug-block__title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.copy-btn {
+  padding: 4px 12px;
+  font-size: 12px;
+  border: none;
+  border-radius: 4px;
+  background: #e5edff;
+  color: #1f2a62;
+}
+
+.copy-btn:disabled {
+  opacity: 0.5;
+}
+
+.debug-textarea {
+  width: 100%;
+  min-height: 110px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+  padding: 8px;
+  font-family: Menlo, Consolas, monospace;
+  font-size: 12px;
+  background: white;
+  color: #1f2937;
+}
+
+.debug-textarea.error {
+  border-color: #e74c3c;
+  color: #c0392b;
+  background: #fff5f3;
 }
 
 /* 响应式设计 */
