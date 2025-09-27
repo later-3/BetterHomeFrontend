@@ -1,0 +1,338 @@
+// -----------------------------------------------------------
+// 项目: BetterHome - 小区业主交流与监督平台
+// 数据架构 v1.1（企业级最终版）
+// 特性：
+// - UUID 主键，全局唯一，安全
+// - 完整软删除支持
+// - 多层评论（≤3层）+ 稳定分页
+// - 工单全生命周期管理
+// - 企业级索引与冗余设计
+// -----------------------------------------------------------
+
+// -----------------------------------------------------------
+// 核心数据表
+// -----------------------------------------------------------
+
+Table Users {
+  id uuid [pk]
+  username varchar(255) [not null, unique]
+  password_hash varchar(255) [not null]
+  phone_number varchar(20) [unique]
+  email varchar(255) [unique]
+  first_name varchar(255)
+  last_name varchar(255)
+  user_type user_type [not null, default: 'resident']
+  is_verified boolean [not null, default: false] // 实名认证状态（v1.2 扩展点）
+
+  community_id uuid
+  building_id uuid
+
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (community_id) [name: 'idx_users_community']
+    (building_id) [name: 'idx_users_building']
+  }
+}
+
+Table Communities {
+  id uuid [pk]
+  name varchar(255) [not null]
+  address varchar(255)
+  contact_phone varchar(20) // 物业联系电话
+
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table Buildings {
+  id uuid [pk]
+  name varchar(255) [not null]
+  community_id uuid [not null]
+
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (community_id) [name: 'idx_buildings_community']
+  }
+}
+
+// 社区动态（图文/视频/音频）
+Table Posts {
+  id uuid [pk]
+  title varchar(255)
+  content text [not null]
+
+  // 媒体支持
+  media_type varchar(16) [not null, default: 'none']  // none | image | video | audio
+  media_url text
+  media_meta json
+
+  // 发布信息
+  author_id uuid [not null]
+  community_id uuid [not null]
+  building_id uuid // 可选：仅本楼栋可见
+
+  // 内容治理
+  is_pinned boolean [not null, default: false]
+  status varchar(24) [not null, default: 'published']
+  tags varchar(255) // v1.2: 逗号分隔标签，如 "电梯,维修"
+
+  // 冗余计数（企业级性能优化）
+  total_comments_count int [not null, default: 0]
+  like_count int [not null, default: 0]
+
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  deleted_at timestamp
+
+  // 企业级索引（覆盖所有核心场景）
+  // Posts: 置顶+时间序（主场景）
+  // Posts: 媒体筛选（扩展场景）
+  indexes {
+    (community_id, is_pinned, created_at, id) [name: 'idx_posts_pinned_community']
+    (building_id, is_pinned, created_at, id) [name: 'idx_posts_building_pinned']
+    (community_id, media_type, created_at) [name: 'idx_posts_media']
+    (author_id, created_at) [name: 'idx_posts_author']
+  }
+}
+
+// 公告（支持楼栋定向）
+Table Announcements {
+  id uuid [pk]
+  title varchar(255) [not null]
+  content text [not null]
+  author_id uuid [not null]
+  community_id uuid [not null]
+  building_id uuid // v1.1 新增：可定向到楼栋
+
+  is_pinned boolean [not null, default: false]
+  status varchar(24) [not null, default: 'published']
+
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  deleted_at timestamp
+
+  // 企业级索引（覆盖所有核心场景）
+  // Announcements: 置顶+时间序
+  indexes {
+    (community_id, is_pinned, created_at, id) [name: 'idx_announcements_pinned_community']
+    (building_id, created_at, id) [name: 'idx_announcements_building']
+    (author_id, created_at) [name: 'idx_announcements_author']
+  }
+}
+
+// 工单（企业级增强）
+Table WorkOrders {
+  id uuid [pk]
+  title varchar(255) [not null]
+  description text [not null]
+  
+  // 分类与优先级
+  category work_order_category [not null, default: 'other'] // v1.1 新增
+  status work_order_status [not null, default: 'submitted']
+  priority work_order_priority [not null, default: 'low']
+  
+  // 时间控制
+  deadline timestamp // v1.1 新增：处理截止时间
+  resolved_at timestamp // 实际解决时间
+
+  // 人员
+  submitter_id uuid [not null]
+  assignee_id uuid
+  community_id uuid [not null]
+
+  // 满意度（v1.1 新增）
+  rating int // 1-5 分
+  feedback text // 评价内容
+
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  deleted_at timestamp
+
+  // 企业级索引（覆盖所有核心场景）
+  // WorkOrders: 状态+优先级筛选
+  // WorkOrders: 超时监控
+  indexes {
+    (community_id, status, priority, created_at, id) [name: 'idx_orders_community_state_time']
+    (community_id, deadline) [name: 'idx_orders_deadline']
+    (submitter_id, created_at) [name: 'idx_orders_submitter']
+    (assignee_id, status, created_at) [name: 'idx_orders_assignee']
+  }
+}
+
+// 工单时间轴节点
+Table WorkOrderNodes {
+  id uuid [pk]
+  work_order_id uuid [not null]
+  description text [not null]
+  node_type work_order_node_type [not null]
+
+  // 媒体支持
+  media_type varchar(16) [not null, default: 'none']
+  media_url text
+  media_meta json
+
+  actor_id uuid [not null]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  // 企业级索引（覆盖所有核心场景）
+  // WorkOrderNodes: 时间轴正序
+  indexes {
+    (work_order_id, created_at, id) [name: 'idx_nodes_order_time']
+    (actor_id, created_at) [name: 'idx_nodes_actor']
+  }
+}
+
+// -----------------------------------------------------------
+// 通用互动
+// -----------------------------------------------------------
+
+Table Comments {
+  id uuid [pk]
+  parent_id uuid [not null]
+  parent_type comment_parent_type [not null]
+
+  // 楼中楼结构
+  parent_comment_id uuid
+  root_comment_id uuid
+  depth int [not null, default: 1] // 1=顶层, 2=二级, 3=三级
+  replies_count int [not null, default: 0]
+  last_reply_at timestamp
+
+  content text
+  media_type varchar(16) [not null, default: 'none']
+  media_url text
+  media_meta json
+
+  // @提及预留（v1.2）
+  mentions json // [{"user_id": "uuid", "display_name": "张三"}]
+
+  like_count int [not null, default: 0]
+  unlike_count int [not null, default: 0]
+
+  author_id uuid [not null]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  deleted_at timestamp
+
+  // 企业级索引（覆盖所有核心场景）
+  // Comments: 顶层评论（按活跃度）
+  // Comments: 子评展开
+  // Comments: 同根治理
+  indexes {
+    (parent_type, parent_id, last_reply_at, created_at, id) [name: 'idx_comments_target_active']
+    (parent_type, parent_id, created_at, id) [name: 'idx_comments_target_time']
+    (parent_comment_id, created_at, id) [name: 'idx_comments_parent_time']
+    (root_comment_id) [name: 'idx_comments_root']
+    (author_id, created_at) [name: 'idx_comments_author']
+  }
+}
+
+Table Reactions {
+  id uuid [pk]
+  reaction_type reaction_type [not null] // like | unlike
+  author_id uuid [not null]
+  parent_id uuid [not null]
+  parent_type reaction_parent_type [not null]
+
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  // 企业级索引（覆盖所有核心场景）
+  // Reactions: 互斥与查询
+  indexes {
+    (parent_type, parent_id) [name: 'idx_reactions_target']
+    (author_id, created_at, id) [name: 'idx_reactions_user']
+    (parent_type, parent_id, author_id) [unique, name: 'uq_reaction_once']
+  }
+}
+
+// -----------------------------------------------------------
+// 枚举类型
+// -----------------------------------------------------------
+
+Enum user_type {
+  resident
+  property_manager
+  committee_member
+  admin
+}
+
+Enum work_order_category {
+  repair       // 维修
+  complaint    // 投诉
+  suggestion   // 建议
+  inquiry      // 咨询
+  other        // 其他
+}
+
+Enum work_order_status {
+  submitted
+  accepted
+  in_progress
+  resolved
+  closed
+}
+
+Enum work_order_priority {
+  low
+  medium
+  high
+  urgent // v1.1 企业级增强
+}
+
+Enum work_order_node_type {
+  submitted
+  accepted
+  in_progress
+  resolved
+  updated_by_submitter
+  updated_by_assignee
+}
+
+Enum comment_parent_type {
+  post
+  announcement
+  work_order
+  work_order_node
+}
+
+Enum reaction_type {
+  like
+  unlike
+}
+
+Enum reaction_parent_type {
+  post
+  comment
+}
+
+// -----------------------------------------------------------
+// 关系
+// -----------------------------------------------------------
+
+Ref: Users.community_id > Communities.id
+Ref: Users.building_id > Buildings.id
+Ref: Buildings.community_id > Communities.id
+
+Ref: Posts.author_id > Users.id
+Ref: Posts.community_id > Communities.id
+Ref: Posts.building_id > Buildings.id
+
+Ref: Announcements.author_id > Users.id
+Ref: Announcements.community_id > Communities.id
+Ref: Announcements.building_id > Buildings.id
+
+Ref: WorkOrders.submitter_id > Users.id
+Ref: WorkOrders.assignee_id > Users.id
+Ref: WorkOrders.community_id > Communities.id
+
+Ref: WorkOrderNodes.work_order_id > WorkOrders.id
+Ref: WorkOrderNodes.actor_id > Users.id
+
+Ref: Comments.author_id > Users.id
+Ref: Reactions.author_id > Users.id

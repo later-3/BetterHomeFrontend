@@ -26,6 +26,11 @@ type CommentDto = {
   date_created?: string | null;
   attachments?: AttachmentDto[] | null;
   author_id?: AuthorDto | null;
+  comment_reactions?: Array<{
+    id?: string;
+    reaction?: string | null;
+    user_id?: string | null;
+  }> | null;
 };
 
 const UNKNOWN_AUTHOR = '匿名用户';
@@ -92,6 +97,8 @@ function mapAuthor(dto: CommentDto): { id?: string; name: string; avatar?: strin
 
 export function mapCommentDtoToEntity(dto: CommentDto): CommentEntity {
   const id = dto.id ?? '';
+  const firstReaction = dto.comment_reactions?.[0];
+  const myReaction = firstReaction?.reaction === 'like' ? 'like' : 'none';
 
   return {
     id,
@@ -101,7 +108,8 @@ export function mapCommentDtoToEntity(dto: CommentDto): CommentEntity {
     attachments: mapAttachments(dto),
     likeCount: Number(dto.like_count ?? 0),
     replyCount: Number(dto.replies_count ?? 0),
-    myReaction: 'none',
+    myReaction,
+    myReactionId: firstReaction?.id ?? undefined,
     raw: dto
   };
 }

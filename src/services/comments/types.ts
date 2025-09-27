@@ -26,5 +26,6 @@ export interface CommentEntity {
   likeCount: number;
   replyCount: number;
   myReaction: CommentReaction;
+  myReactionId?: string | null;
   raw?: unknown;
 }
