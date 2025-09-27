@@ -3,7 +3,10 @@
     <!-- 回复提示条 -->
     <div class="reply-indicator">
       <div class="reply-info">
-        <span class="reply-text">回复 @{{ replyTo.name }}</span>
+        <span
+          v-if="replyTo"
+          class="reply-text"
+        >回复 @{{ replyTo.name }}</span>
         <button class="cancel-btn" @click="handleCancel" aria-label="取消回复">
           <span class="cancel-icon">×</span>
         </button>

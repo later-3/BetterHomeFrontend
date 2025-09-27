@@ -102,14 +102,14 @@
       </view>
 
       <!-- 回复输入框 -->
-      <ReplyInput :visible="showReplyInput" :current-user="userStore.userInfo" :reply-to="replyTarget"
+      <ReplyInput :visible="showReplyInput" :current-user="currentUser" :reply-to="replyTarget"
         :resolve-asset-url="getAssetUrl" @submit="handleReplySubmit" @cancel="handleReplyCancel" />
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { storeToRefs } from 'pinia';
 import { useUserStore } from '@/store/user';
@@ -159,13 +159,26 @@ const responseText = ref('');
 const errorText = ref('');
 
 const userStore = useUserStore();
-const { token } = storeToRefs(userStore);
+const { token, isLoggedIn } = storeToRefs(userStore);
 const commentsList = ref<CommentEntity[]>([]);
 const reactionInFlight = new Set<string>();
 
 // 回复相关状态
 const showReplyInput = ref(false);
 const replyTarget = ref<{ id: string; name: string } | null>(null);
+
+const currentUser = computed(() => {
+  if (!isLoggedIn.value || !userStore.userInfo.id) return null;
+
+  const { id, first_name, last_name, email } = userStore.userInfo;
+  const fullName = [first_name, last_name].filter(Boolean).join(' ').trim();
+
+  return {
+    id,
+    name: fullName || email || id,
+    avatar: undefined
+  };
+});
 
 // 页面加载时接收参数
 onLoad((query: any) => {
@@ -519,6 +532,9 @@ async function handleReplySubmit(data: { text: string; replyTo: { id: string; na
   try {
     // 获取父评论信息用于计算字段
     const parentComment = commentsList.value.find(c => c.id === data.replyTo.id);
+    const parentRaw = (parentComment?.raw ?? {}) as Record<string, any>;
+    const rootId = parentRaw?.root_comment_id ?? parentComment?.id ?? null;
+    const depth = (parentRaw?.depth ?? 0) + 1;
 
     // 调用创建评论API
     const res: any = await uni.request({
@@ -534,8 +550,8 @@ async function handleReplySubmit(data: { text: string; replyTo: { id: string; na
         author_id: userStore.userInfo.id,
         target_id: contentId.value,
         target_collection: 'contents',
-        root_id: parentComment?.root_id || parentComment?.id || null,
-        depth: (parentComment?.depth || 0) + 1,
+        root_id: rootId,
+        depth,
         type: 'reply',
         status: 'published'
       },
@@ -598,18 +614,20 @@ async function hydrateUserReactions(comments: CommentEntity[]) {
     const comment = comments[i];
     console.log(`[hydrateUserReactions] 处理评论 ${i + 1}/${comments.length}, ID: ${comment.id}`);
 
-    // 检查评论是否有reactions数据
-    if (!comment.reactions || !Array.isArray(comment.reactions)) {
+    const rawReactions = Array.isArray((comment.raw as any)?.comment_reactions)
+      ? ((comment.raw as any).comment_reactions as Array<{ id?: string; reaction?: string | null; user_id?: string | null }>)
+      : [];
+
+    if (!rawReactions.length) {
       console.log(`[hydrateUserReactions] 评论 ${comment.id} 没有reactions数据`);
       comment.myReaction = 'none';
       comment.myReactionId = undefined;
       continue;
     }
 
-    console.log(`[hydrateUserReactions] 评论 ${comment.id} 有 ${comment.reactions.length} 个reactions`);
+    console.log(`[hydrateUserReactions] 评论 ${comment.id} 有 ${rawReactions.length} 个reactions`);
 
-    // 在reactions中查找当前用户的点赞记录
-    const userReaction = comment.reactions.find(
+    const userReaction = rawReactions.find(
       reaction => reaction.user_id === currentUserId && reaction.reaction === 'like'
     );
 

@@ -47,22 +47,24 @@ function mapAttachments(dto: CommentDto): CommentAttachment[] {
   if (!dto.attachments?.length) return [];
 
   return dto.attachments
-    .map((attachment) => {
+    .map((attachment): CommentAttachment | null => {
       const file = attachment?.directus_files_id;
       if (!file?.id) return null;
 
       const type = resolveAttachmentType(file.type);
 
-      return {
+      const result: CommentAttachment = {
         id: attachment.id ?? file.id,
         fileId: file.id,
         type,
-        mimeType: file.type ?? undefined,
-        filename: file.filename_download ?? undefined,
-        title: file.title ?? undefined
-      } satisfies CommentAttachment;
+        mimeType: file.type ?? null,
+        filename: file.filename_download ?? null,
+        title: file.title ?? null
+      };
+
+      return result;
     })
-    .filter((item): item is CommentAttachment => Boolean(item));
+    .filter((item): item is CommentAttachment => item !== null);
 }
 
 function extractAvatarFileId(avatar: any): string | undefined {
