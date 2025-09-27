@@ -1295,7 +1295,7 @@ async function testRawDataFetch() {
     
     // 测试1: 获取邻居类型数据（包含关联查询）
     const neighborRes: any = await uni.request({
-      url: `/api/items/contents`,
+      url: `/api/items/posts`,
       method: 'GET', 
       data: {
         limit: 3,
@@ -1306,13 +1306,14 @@ async function testRawDataFetch() {
       },
       header: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token.value}`
+        // Authorization: `Bearer ${token.value}`
+        Authorization: `Bearer sfXUxkm3bEwOKO8fDKrZoClDQ4N08D0n`
       }
     });
 
     // 测试2: 获取post类型数据
     const postRes: any = await uni.request({
-      url: `/api/items/contents`,
+      url: `/api/items/posts`,
       method: 'GET',
       data: {
         limit: 3,
@@ -1323,13 +1324,14 @@ async function testRawDataFetch() {
       },
       header: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token.value}`
+        // Authorization: `Bearer ${token.value}`
+        Authorization: `Bearer sfXUxkm3bEwOKO8fDKrZoClDQ4N08D0n`
       }
     });
 
     // 测试3: 获取所有数据（无过滤）
     const allRes: any = await uni.request({
-      url: `/api/items/contents`,
+      url: `/api/items/posts`,
       method: 'GET',
       data: {
         limit: 5,
@@ -1337,7 +1339,8 @@ async function testRawDataFetch() {
       },
       header: {
         'Content-Type': 'application/json', 
-        Authorization: `Bearer ${token.value}`
+        // Authorization: `Bearer ${token.value}`
+        Authorization: `Bearer sfXUxkm3bEwOKO8fDKrZoClDQ4N08D0n`
       }
     });
 

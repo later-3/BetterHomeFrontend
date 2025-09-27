@@ -1,23 +1,36 @@
 import pagesJson from '../pages.json';
 
+type PageConfig = {
+  name?: string;
+  path: string;
+};
+
+type SubPackageConfig = {
+  root: string;
+  pages?: PageConfig[];
+};
+
+const pages = Array.isArray(pagesJson.pages) ? (pagesJson.pages as PageConfig[]) : [];
+const subPackages = Array.isArray(pagesJson.subPackages)
+  ? (pagesJson.subPackages as SubPackageConfig[])
+  : [];
+
 // tabBar页面
-const tabBarPagesMap = pagesJson.pages.map((i) => {
-  return {
-    type: 'tabBarPage',
-    name: i.name,
-    path: `/${i.path}`
-  };
-});
+const tabBarPagesMap = pages.map((i) => ({
+  type: 'tabBarPage' as const,
+  name: i.name,
+  path: `/${i.path}`
+}));
 
 // 二级页面
-const subPagesMap = pagesJson.subPackages.flatMap((i) => {
-  return i.pages.map((x) => {
-    return {
-      type: 'subPage',
-      name: x.name,
-      path: `/${i.root}/${x.path}`
-    };
-  });
+const subPagesMap = subPackages.flatMap((pkg) => {
+  if (!Array.isArray(pkg.pages)) return [] as const;
+
+  return pkg.pages.map((page) => ({
+    type: 'subPage' as const,
+    name: page.name,
+    path: `/${pkg.root}/${page.path}`
+  }));
 });
 
 // h5页面
