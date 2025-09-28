@@ -2,6 +2,7 @@ import 'uno.css';
 import { createSSRApp } from 'vue';
 import { createPinia } from 'pinia'; // 导入 createPinia
 import piniaPluginPersistUni from 'pinia-plugin-persist-uni'; // 导入持久化插件
+import uviewPlus from 'uview-plus';
 import App from './App.vue';
 import { initGlobalErrorHandler } from '@/utils/globalErrorHandler';
 
@@ -16,6 +17,9 @@ export function createApp() {
 
   // 3. 将配置好的 Pinia 实例应用到整个 Vue app
   app.use(pinia);
+
+  // 4. 使用 uview-plus
+  app.use(uviewPlus);
 
   // 初始化全局错误处理
   initGlobalErrorHandler();

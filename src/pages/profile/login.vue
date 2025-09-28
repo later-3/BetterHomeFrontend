@@ -1,80 +1,30 @@
 <script setup lang="ts" name="login">
 import { ref } from 'vue';
 import { useUserStore } from '@/store/user';
+import type { LoginCredentials } from '@/store/user'
 
 // --- 登录与通用状态 ---
-const apiBaseUrl = ref('/api');
-const email = ref('bob@test.com');
-const password = ref('123');
-const token = ref<string | null>(null);
-const loading = ref(false);
+const credentials = ref<LoginCredentials>({
+  email: 'bob@test.com',
+  password: '123'
+});
+
 
 // 用户状态管理
 const userStore = useUserStore();
 
 async function login() {
-  if (!email.value || !password.value) {
+  if (!credentials.value.email || !credentials.value.password) {
     uni.showToast({ title: '请输入邮箱和密码', icon: 'none' });
     return;
   }
 
-  loading.value = true;
   try {
-    const res: any = await uni.request({
-      url: `${apiBaseUrl.value}/auth/login`,
-      method: 'POST',
-      data: {
-        email: email.value,
-        password: password.value,
-        // 请求较长的token有效期，适用于移动应用
-        mode: 'json' // 使用JSON模式获取较长有效期的token
-      },
-      header: {
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (res.statusCode === 200 && res.data?.data?.access_token) {
-      token.value = res.data.data.access_token;
-
-      // 获取用户信息
-      const userRes: any = await uni.request({
-        url: `${apiBaseUrl.value}/users/me`,
-        method: 'GET',
-        header: {
-          Authorization: `Bearer ${token.value}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (userRes.statusCode >= 200 && userRes.statusCode < 300) {
-        const userData = userRes.data?.data || userRes.data;
-
-        // 保存用户状态，设置2小时过期时间（移动应用标准）
-        userStore.login(
-          {
-            id: userData.id,
-            first_name: userData.first_name || 'bob',
-            last_name: userData.last_name || '',
-            email: userData.email || email.value,
-            community_id: userData.community_id || '',
-            community_name: userData.community_name || ''
-          },
-          token.value || undefined,
-          120
-        ); // 2小时 = 120分钟
-      }
-
-      uni.showToast({ title: '登录成功', icon: 'success' });
-    } else {
-      throw new Error(
-        `登录失败: ${res.statusCode} - ${JSON.stringify(res.data)}`
-      );
-    }
-  } catch (error: any) {
-    uni.showToast({ title: '登录失败', icon: 'error' });
-  } finally {
-    loading.value = false;
+    await userStore.login(credentials.value);
+    uni.showToast({ title: '登录成功', icon: 'success' });
+  } catch (error) {
+    // handleDirectusError 已经显示了错误 toast
+    // 这里可以添加额外的错误处理逻辑，或者留空
   }
 }
 </script>
@@ -86,25 +36,15 @@ async function login() {
       <view class="form-title">🔐 登录认证</view>
       <view class="row">
         <text class="label">邮箱 *</text>
-        <input
-          v-model="email"
-          class="input"
-          type="email"
-          placeholder="请输入邮箱"
-        />
+        <input v-model="credentials.email" class="input" type="email" placeholder="请输入邮箱" />
       </view>
       <view class="row">
         <text class="label">密码 *</text>
-        <input
-          v-model="password"
-          class="input"
-          type="password"
-          placeholder="请输入密码"
-        />
+        <input v-model="credentials.password" class="input" type="password" placeholder="请输入密码" />
       </view>
       <view class="row gap">
-        <uni-button type="primary"  @click="login">登录</uni-button>
-        <text v-if="token" class="token">已登录</text>
+        <u-button type="primary" :loading="userStore.loading" @click="login">登录</u-button>
+        <text v-if="userStore.isLoggedIn" class="token">已登录</text>
       </view>
     </view>
   </view>
@@ -116,6 +56,7 @@ async function login() {
   min-height: 100vh;
   background-color: #f5f5f5;
 }
+
 .section {
   margin-bottom: 20px;
   padding: 16px;
@@ -123,19 +64,23 @@ async function login() {
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
+
 .row {
   display: flex;
   align-items: center;
   margin-bottom: 8px;
 }
+
 .gap button {
   margin-right: 8px;
 }
+
 .label {
   width: 80px;
   font-size: 14px;
   color: #555;
 }
+
 .input {
   flex: 1;
   padding: 6px 8px;
@@ -144,11 +89,13 @@ async function login() {
   height: 36px;
   background: #fafafa;
 }
+
 .token {
   margin-left: 8px;
   font-size: 12px;
   color: #07c160;
 }
+
 .form-title {
   margin-bottom: 12px;
   font-weight: bold;

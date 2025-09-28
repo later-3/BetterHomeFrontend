@@ -8,7 +8,7 @@ import directus, {
 } from '@/utils/directus';
 import type { Community, Building, DirectusUser } from '@/@types/directus-schema';
 
-interface LoginCredentials {
+export interface LoginCredentials {
   email: string;
   password: string;
 }
