@@ -1,24 +1,6 @@
 {
   "pages": [
     {
-      "name": "neighbor",
-      "path": "pages/neighbor/neighbor",
-      "style": {
-        "navigationBarTitleText": "邻里",
-        "navigationBarBackgroundColor": "#ffffff",
-        "navigationBarTextStyle": "black"
-      }
-    },
-    {
-      "name": "notice",
-      "path": "pages/notice/notice", 
-      "style": { 
-        "navigationBarTitleText": "公告",
-        "navigationBarBackgroundColor": "#ffffff",
-        "navigationBarTextStyle": "black"
-      }
-    },
-    {
       "name": "create",
       "path": "pages/create/create",
       "style": { 
@@ -97,29 +79,22 @@
     "spacing": "3px",
     "list": [
       {
-        "pagePath": "pages/neighbor/neighbor",
-        "iconPath": "static/icons/ic--round-house.svg",
-        "selectedIconPath": "static/icons/ic--round-house.svg"
-      },
-      {
-        "pagePath": "pages/notice/notice",
-        "iconPath": "static/icons/ic--round-house.svg",
-        "selectedIconPath": "static/icons/ic--round-house.svg"
-      },
-      {
         "pagePath": "pages/create/create",
         "iconPath": "static/icons/ic--round-house.svg",
-        "selectedIconPath": "static/icons/ic--round-house.svg"
+        "selectedIconPath": "static/icons/ic--round-house.svg",
+        "text": "创建"
       },
       {
         "pagePath": "pages/task/task",
         "iconPath": "static/icons/ic--round-house.svg",
-        "selectedIconPath": "static/icons/ic--round-house.svg"
+        "selectedIconPath": "static/icons/ic--round-house.svg",
+        "text": "事项"
       },
       {
         "pagePath": "pages/profile/profile",
         "iconPath": "static/icons/ic--round-house.svg",
-        "selectedIconPath": "static/icons/ic--round-house.svg"
+        "selectedIconPath": "static/icons/ic--round-house.svg",
+        "text": "我"
       }
     ]
   }
