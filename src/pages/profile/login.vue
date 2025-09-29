@@ -1,105 +1,120 @@
 <script setup lang="ts" name="login">
 import { ref } from 'vue';
 import { useUserStore } from '@/store/user';
-import type { LoginCredentials } from '@/store/user'
+import type { LoginCredentials } from '@/store/user';
 
-// --- 登录与通用状态 ---
-const credentials = ref<LoginCredentials>({
-  email: 'bob@test.com',
-  password: '123'
+const USERNAME_SUFFIX = '@test.com';
+
+const formRef = ref();
+const credentials = ref({
+  username: 'test',
+  password: '123456'
 });
 
+const formRules = {
+  username: [{ required: true, message: '请输入用户名', trigger: ['blur', 'change'] }],
+  password: [
+    { required: true, message: '请输入密码', trigger: ['blur', 'change'] },
+    { min: 6, message: '密码至少6位', trigger: 'blur' }
+  ]
+};
 
-// 用户状态管理
+function buildEmailFromUsername(raw: string): string {
+  const normalized = raw
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '.')
+    .replace(/\.+/g, '.')
+    .replace(/^\.+|\.+$/g, '');
+  const localPart = normalized || `user.${Date.now()}`;
+  return `${localPart}${USERNAME_SUFFIX}`;
+}
+
 const userStore = useUserStore();
 
-async function login() {
-  if (!credentials.value.email || !credentials.value.password) {
-    uni.showToast({ title: '请输入邮箱和密码', icon: 'none' });
+async function handleLogin() {
+  try {
+    await formRef.value?.validate?.();
+  } catch (error) {
     return;
   }
 
   try {
-    await userStore.login(credentials.value);
+    const payload: LoginCredentials = {
+      email: buildEmailFromUsername(credentials.value.username),
+      password: credentials.value.password
+    };
+    await userStore.login(payload);
     uni.showToast({ title: '登录成功', icon: 'success' });
+    uni.navigateBack({ delta: 1 });
   } catch (error) {
-    // handleDirectusError 已经显示了错误 toast
-    // 这里可以添加额外的错误处理逻辑，或者留空
+    // handleDirectusError 已处理具体提示
   }
 }
 </script>
 
 <template>
-  <view class="login-container">
-    <!-- 登录区 -->
-    <view class="section">
-      <view class="form-title">🔐 登录认证</view>
-      <view class="row">
-        <text class="label">邮箱 *</text>
-        <input v-model="credentials.email" class="input" type="email" placeholder="请输入邮箱" />
-      </view>
-      <view class="row">
-        <text class="label">密码 *</text>
-        <input v-model="credentials.password" class="input" type="password" placeholder="请输入密码" />
-      </view>
-      <view class="row gap">
-        <u-button type="primary" :loading="userStore.loading" @click="login">登录</u-button>
-        <text v-if="userStore.isLoggedIn" class="token">已登录</text>
-      </view>
-    </view>
+  <view class="login-page">
+    <up-card :showHead="false" :border="false" class="login-card">
+      <template #body>
+        <view class="card-title">账号登录</view>
+        <up-form ref="formRef" :model="credentials" :rules="formRules" labelPosition="top">
+          <up-form-item label="用户名" prop="username">
+            <up-input
+              v-model="credentials.username"
+              type="text"
+              clearable
+              placeholder="请输入用户名"
+              prefixIcon="account"
+            />
+          </up-form-item>
+          <up-form-item label="密码" prop="password">
+            <up-input
+              v-model="credentials.password"
+              type="password"
+              clearable
+              placeholder="请输入密码"
+              prefixIcon="lock"
+            />
+          </up-form-item>
+        </up-form>
+
+        <view class="action-area">
+          <up-button
+            type="primary"
+            shape="circle"
+            :loading="userStore.loading"
+            loadingText="登录中"
+            text="登录"
+            @click="handleLogin"
+          />
+        </view>
+      </template>
+    </up-card>
   </view>
 </template>
 
-<style scoped>
-.login-container {
-  padding: 20px;
+<style lang="scss" scoped>
+.login-page {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  padding: 32rpx;
+  background: #f5f5f5;
 }
 
-.section {
-  margin-bottom: 20px;
-  padding: 16px;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.login-card {
+  border-radius: 24rpx;
+  box-shadow: 0 12rpx 36rpx rgba(0, 0, 0, 0.08);
 }
 
-.row {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
+.card-title {
+  margin-bottom: 32rpx;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1aa86c;
+  text-align: center;
 }
 
-.gap button {
-  margin-right: 8px;
-}
-
-.label {
-  width: 80px;
-  font-size: 14px;
-  color: #555;
-}
-
-.input {
-  flex: 1;
-  padding: 6px 8px;
-  border: 1px solid #e5e6eb;
-  border-radius: 6px;
-  height: 36px;
-  background: #fafafa;
-}
-
-.token {
-  margin-left: 8px;
-  font-size: 12px;
-  color: #07c160;
-}
-
-.form-title {
-  margin-bottom: 12px;
-  font-weight: bold;
-  font-size: 16px;
-  color: #333;
+.action-area {
+  margin-top: 40rpx;
 }
 </style>

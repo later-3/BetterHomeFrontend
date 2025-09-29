@@ -8,6 +8,32 @@ import directus, {
 } from '@/utils/directus';
 import type { Community, Building, DirectusUser } from '@/@types/directus-schema';
 
+type UserFieldSelection =
+  | keyof DirectusUser
+  | '*'
+  | 'community_id.*'
+  | 'building_id.*'
+  | 'avatar.*'
+  | 'avatar.id'
+  | 'avatar.filename_disk'
+  | 'avatar.type';
+
+const USER_PROFILE_FIELDS: UserFieldSelection[] = [
+  'id',
+  'first_name',
+  'last_name',
+  'email',
+  'status',
+  'language',
+  'user_type',
+  'community_id.*',
+  'building_id.*',
+  'avatar.*',
+  'avatar.id',
+  'avatar.filename_disk',
+  'avatar.type'
+];
+
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -42,8 +68,9 @@ function normalizeUserPayload(user: DirectusUser): NormalizedProfile {
 
   const profile: DirectusUser = {
     ...user,
-    community_id: community ? community.id : (user.community_id as string),
-    building_id: building ? building.id : (typeof user.building_id === 'string' ? user.building_id : null)
+    community_id: community ?? user.community_id,
+    building_id: building ?? user.building_id ?? null,
+    avatar: typeof user.avatar === 'object' || typeof user.avatar === 'string' ? user.avatar : null
   };
 
   return { profile, community, building };
@@ -171,20 +198,13 @@ export const useUserStore = defineStore('user', {
 
           const user = await directus.request(
             readMe({
-              fields: [
-                'id',
-                'first_name',
-                'last_name',
-                'email',
-                'status',
-                'language',
-                'user_type',
-                'avatar',
-                'community_id',
-                'building_id'
-              ]
+              fields: USER_PROFILE_FIELDS as unknown as (keyof DirectusUser)[]
             })
           );
+
+          if (import.meta.env.DEV) {
+            console.log('[user-store] login readMe result', user);
+          }
 
           const normalized = normalizeUserPayload(user as DirectusUser);
           this.profile = normalized.profile;
@@ -235,20 +255,13 @@ export const useUserStore = defineStore('user', {
       try {
         const user = await directus.request(
           readMe({
-            fields: [
-              'id',
-              'first_name',
-              'last_name',
-              'email',
-              'status',
-              'language',
-              'user_type',
-              'avatar',
-              'community_id',
-              'building_id'
-            ]
+            fields: USER_PROFILE_FIELDS as unknown as (keyof DirectusUser)[]
           })
         );
+
+        if (import.meta.env.DEV) {
+          console.log('[user-store] fetchProfile readMe result', user);
+        }
 
         const normalized = normalizeUserPayload(user as DirectusUser);
         this.profile = normalized.profile;

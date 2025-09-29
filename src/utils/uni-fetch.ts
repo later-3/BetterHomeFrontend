@@ -38,6 +38,21 @@ export function createUniFetch() {
         header: headers,
         data: method === 'GET' ? undefined : body,
         success: (res) => {
+          const status = res.statusCode ?? 200;
+          const headersInit = res.header as HeadersInit;
+          const noBodyStatus = status === 204 || status === 205 || status === 304;
+          const hasBody = res.data !== undefined && res.data !== null && res.data !== '' && !noBodyStatus;
+
+          if (!hasBody) {
+            resolve(
+              new Response(undefined, {
+                status,
+                headers: headersInit
+              })
+            );
+            return;
+          }
+
           const responseBody =
             typeof res.data === 'string' || (typeof ArrayBuffer !== 'undefined' && res.data instanceof ArrayBuffer)
               ? res.data
@@ -45,8 +60,8 @@ export function createUniFetch() {
 
           resolve(
             new Response(responseBody, {
-              status: res.statusCode,
-              headers: res.header as HeadersInit
+              status,
+              headers: headersInit
             })
           );
         },
