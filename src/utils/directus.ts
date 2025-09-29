@@ -7,6 +7,7 @@ import {
   createItem,
   updateItem,
   deleteItem,
+  registerUser,
   type Query,
   type QueryItem,
   type RegularCollections,
@@ -102,7 +103,11 @@ export function getAuthToken() {
 }
 
 export const directusClient = directus;
-
+export const registerDirectusUser = (
+  email: string,
+  password: string,
+  options?: Parameters<typeof registerUser>[2]
+) => directus.request(registerUser(email, password, options));
 export default directus;
 
 export type {

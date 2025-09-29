@@ -71,6 +71,7 @@
     "pinia": "2.0.33",
     "pinia-auto-refs": "0.0.10",
     "pinia-plugin-persist-uni": "1.2.0",
+    "uview-plus": "3.5.52",
     "vue": "3.4.21",
     "vue-i18n": "9.14.5"
   },
