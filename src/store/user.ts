@@ -59,21 +59,72 @@ interface NormalizedProfile {
   building: Building | null;
 }
 
-function normalizeUserPayload(user: DirectusUser): NormalizedProfile {
-  const community =
-    typeof user.community_id === "object" && user.community_id !== null
-      ? (user.community_id as Community)
-      : null;
+let refreshSessionPromise: Promise<any> | null = null;
 
-  const building =
+function resolveCommunityId(value: DirectusUser["community_id"]): string {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  const record = value as Record<string, any>;
+  return (
+    record.id ??
+    record.community_id ??
+    record.uuid ??
+    record._id ??
+    ""
+  );
+}
+
+function resolveBuildingId(value: DirectusUser["building_id"]): string {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  const record = value as Record<string, any>;
+  return record.id ?? record.building_id ?? record.uuid ?? record._id ?? "";
+}
+
+function normalizeUserPayload(user: DirectusUser): NormalizedProfile {
+  const communityId = resolveCommunityId(user.community_id);
+  const buildingId = resolveBuildingId(user.building_id);
+
+  let community: Community | null = null;
+  if (typeof user.community_id === "object" && user.community_id !== null) {
+    const raw = user.community_id as Community;
+    community = communityId && raw?.id !== communityId
+      ? ({ ...raw, id: communityId } as Community)
+      : (raw as Community);
+  }
+
+  let building: Building | null = null;
+  if (typeof user.building_id === "object" && user.building_id !== null) {
+    const raw = user.building_id as Building;
+    building = buildingId && raw?.id !== buildingId
+      ? ({ ...raw, id: buildingId } as Building)
+      : (raw as Building);
+  }
+
+  const profileCommunity =
+    typeof user.community_id === "object" && user.community_id !== null
+      ? (communityId
+          ? ({
+              ...(user.community_id as Record<string, any>),
+              id: communityId,
+            } as Community)
+          : (user.community_id as Community))
+      : communityId || user.community_id;
+
+  const profileBuilding =
     typeof user.building_id === "object" && user.building_id !== null
-      ? (user.building_id as Building)
-      : null;
+      ? (buildingId
+          ? ({
+              ...(user.building_id as Record<string, any>),
+              id: buildingId,
+            } as Building)
+          : (user.building_id as Building))
+      : (buildingId ? buildingId : user.building_id ?? null);
 
   const profile: DirectusUser = {
     ...user,
-    community_id: community ?? user.community_id,
-    building_id: building ?? user.building_id ?? null,
+    community_id: profileCommunity,
+    building_id: profileBuilding,
     avatar:
       typeof user.avatar === "object" || typeof user.avatar === "string"
         ? user.avatar
@@ -146,9 +197,9 @@ export const useUserStore = defineStore("user", {
       return name || email || state.profile.id;
     },
     communityId: (state) => {
-      const value = state.profile?.community_id;
-      if (!value) return "";
-      return typeof value === "string" ? value : value.id;
+      const fromProfile = resolveCommunityId(state.profile?.community_id ?? null);
+      const fromCommunity = state.community?.id ?? "";
+      return fromProfile || fromCommunity || "";
     },
     buildingId: (state) => {
       const value = state.profile?.building_id;
@@ -182,9 +233,7 @@ export const useUserStore = defineStore("user", {
         last_name: profile?.last_name ?? "",
         email: profile?.email ?? "",
         community_id:
-          typeof profile?.community_id === "string"
-            ? profile.community_id
-            : profile?.community_id?.id ?? community?.id ?? "",
+          resolveCommunityId(profile?.community_id ?? null) || community?.id || "",
         community_name: community?.name ?? "",
       };
     },
@@ -389,6 +438,26 @@ export const useUserStore = defineStore("user", {
           console.warn("[user-store] Failed to load community details", error);
         }
 
+        if (communityId && this.profile) {
+          if (
+            this.profile.community_id &&
+            typeof this.profile.community_id === "object"
+          ) {
+            this.profile = {
+              ...this.profile,
+              community_id: {
+                ...(this.profile.community_id as Record<string, any>),
+                id: communityId,
+              } as Community,
+            };
+          } else {
+            this.profile = {
+              ...this.profile,
+              community_id: communityId,
+            };
+          }
+        }
+
         const buildingRef = this.profile.building_id;
         if (!buildingRef) {
           this.building = null;
@@ -432,6 +501,39 @@ export const useUserStore = defineStore("user", {
         await this.logout();
         handleDirectusError(error);
       }
+    },
+
+    async ensureActiveSession(options?: {
+      force?: boolean;
+      refreshIfNearExpiry?: boolean;
+    }): Promise<boolean> {
+      const { force = false, refreshIfNearExpiry = true } = options ?? {};
+
+      if (!this.token) {
+        return false;
+      }
+
+      const shouldRefresh =
+        force || this.tokenExpired || (refreshIfNearExpiry && this.tokenNearExpiry);
+
+      if (!shouldRefresh) {
+        await setAuthToken(this.token);
+        return true;
+      }
+
+      if (!this.refreshToken) {
+        await this.logout();
+        return false;
+      }
+
+      if (!refreshSessionPromise) {
+        refreshSessionPromise = this.refreshSession().finally(() => {
+          refreshSessionPromise = null;
+        });
+      }
+
+      await refreshSessionPromise;
+      return Boolean(this.token);
     },
 
     async hydrate() {
