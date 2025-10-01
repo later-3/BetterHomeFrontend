@@ -1,4 +1,4 @@
-import type { CommentAttachment, CommentEntity } from './types';
+import type { CommentAttachment, CommentEntity } from "./types";
 
 type AttachmentDto = {
   id?: string;
@@ -33,14 +33,16 @@ type CommentDto = {
   }> | null;
 };
 
-const UNKNOWN_AUTHOR = '匿名用户';
+const UNKNOWN_AUTHOR = "匿名用户";
 
-function resolveAttachmentType(mimeType: string | null | undefined): CommentAttachment['type'] {
-  if (!mimeType) return 'file';
-  if (mimeType.startsWith('image/')) return 'image';
-  if (mimeType.startsWith('video/')) return 'video';
-  if (mimeType.startsWith('audio/')) return 'audio';
-  return 'file';
+function resolveAttachmentType(
+  mimeType: string | null | undefined
+): CommentAttachment["type"] {
+  if (!mimeType) return "file";
+  if (mimeType.startsWith("image/")) return "image";
+  if (mimeType.startsWith("video/")) return "video";
+  if (mimeType.startsWith("audio/")) return "audio";
+  return "file";
 }
 
 function mapAttachments(dto: CommentDto): CommentAttachment[] {
@@ -59,7 +61,7 @@ function mapAttachments(dto: CommentDto): CommentAttachment[] {
         type,
         mimeType: file.type ?? null,
         filename: file.filename_download ?? null,
-        title: file.title ?? null
+        title: file.title ?? null,
       };
 
       return result;
@@ -69,54 +71,60 @@ function mapAttachments(dto: CommentDto): CommentAttachment[] {
 
 function extractAvatarFileId(avatar: any): string | undefined {
   if (!avatar) return undefined;
-  if (typeof avatar === 'string') return avatar || undefined;
-  if (typeof avatar === 'object' && avatar.id) return avatar.id;
+  if (typeof avatar === "string") return avatar || undefined;
+  if (typeof avatar === "object" && avatar.id) return avatar.id;
   return undefined;
 }
 
-function mapAuthor(dto: CommentDto): { id?: string; name: string; avatar?: string } {
+function mapAuthor(dto: CommentDto): {
+  id?: string;
+  name: string;
+  avatar?: string;
+} {
   const author = dto.author_id;
   if (!author) {
     return {
       id: undefined,
       name: UNKNOWN_AUTHOR,
-      avatar: undefined
+      avatar: undefined,
     };
   }
 
   const { id, avatar } = author;
   const name =
     author.name ||
-    [author.first_name, author.last_name].filter(Boolean).join(' ').trim() ||
+    [author.first_name, author.last_name].filter(Boolean).join(" ").trim() ||
     UNKNOWN_AUTHOR;
 
   return {
     id,
     name,
-    avatar: extractAvatarFileId(avatar)
+    avatar: extractAvatarFileId(avatar),
   };
 }
 
 export function mapCommentDtoToEntity(dto: CommentDto): CommentEntity {
-  const id = dto.id ?? '';
+  const id = dto.id ?? "";
   const firstReaction = dto.comment_reactions?.[0];
-  const myReaction = firstReaction?.reaction === 'like' ? 'like' : 'none';
+  const myReaction = firstReaction?.reaction === "like" ? "like" : "none";
 
   return {
     id,
     author: mapAuthor(dto),
-    createdAt: dto.date_created ?? '',
-    text: dto.text ?? '',
+    createdAt: dto.date_created ?? "",
+    text: dto.text ?? "",
     attachments: mapAttachments(dto),
     likeCount: Number(dto.like_count ?? 0),
     replyCount: Number(dto.replies_count ?? 0),
     myReaction,
     myReactionId: firstReaction?.id ?? undefined,
-    raw: dto
+    raw: dto,
   };
 }
 
-export function mapCommentsResponse(data: CommentDto[] | undefined | null): CommentEntity[] {
+export function mapCommentsResponse(
+  data: CommentDto[] | undefined | null
+): CommentEntity[] {
   if (!data?.length) return [];
   return data.map((item) => mapCommentDtoToEntity(item));
 }

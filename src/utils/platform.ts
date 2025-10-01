@@ -1,31 +1,31 @@
 /** 枚举EPlatform */
 enum EPlatform {
   /** App */
-  AppPlus = 'APP-PLUS',
+  AppPlus = "APP-PLUS",
   /** App nvue */
-  AppPlusNvue = 'APP-PLUS-NVUE',
+  AppPlusNvue = "APP-PLUS-NVUE",
   /** H5 */
-  H5 = 'H5',
+  H5 = "H5",
   /** 微信小程序 */
-  MpWeixin = 'MP-WEIXIN',
+  MpWeixin = "MP-WEIXIN",
   /** 支付宝小程序 */
-  MpAlipay = 'MP-ALIPAY',
+  MpAlipay = "MP-ALIPAY",
   /** 百度小程序 */
-  MpBaidu = 'MP-BAIDU',
+  MpBaidu = "MP-BAIDU",
   /** 字节跳动小程序 */
-  MpToutiao = 'MP-TOUTIAO',
+  MpToutiao = "MP-TOUTIAO",
   /** QQ小程序 */
-  MpQq = 'MP-QQ',
+  MpQq = "MP-QQ",
   /** 360小程序 */
-  Mp360 = 'MP-360',
+  Mp360 = "MP-360",
   /** 微信小程序/支付宝小程序/百度小程序/字节跳动小程序/QQ小程序/360小程序 */
-  Mp = 'MP',
+  Mp = "MP",
   /** 快应用通用(包含联盟、华为) */
-  QuickappWebview = 'quickapp-webview',
+  QuickappWebview = "quickapp-webview",
   /** 快应用联盟 */
-  QuickappWebviewUnion = 'quickapp-webview-union',
+  QuickappWebviewUnion = "quickapp-webview-union",
   /** 快应用华为 */
-  QuickappWebviewHuawei = 'quickapp-webview-huawei'
+  QuickappWebviewHuawei = "quickapp-webview-huawei",
 }
 
 /** 使用条件编译获取平台信息 */
@@ -101,6 +101,6 @@ export const isQuickappWebviewUnion =
 export const isQuickappWebviewHuawei =
   platform === EPlatform.QuickappWebviewHuawei;
 /** 是否开发环境 */
-export const isDevelopment = import.meta.env.MODE === 'development';
+export const isDevelopment = import.meta.env.MODE === "development";
 /** 是否线上环境 */
-export const isProduction = import.meta.env.MODE === 'production';
+export const isProduction = import.meta.env.MODE === "production";

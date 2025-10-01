@@ -35,18 +35,18 @@ class ErrorHandler {
     const {
       showToast = true,
       logError = true,
-      fallbackMessage = '页面加载失败，请重试',
-      duration = 2000
+      fallbackMessage = "页面加载失败，请重试",
+      duration = 2000,
     } = options;
 
     const errorInfo: ErrorInfo = {
       message: error.message || fallbackMessage,
-      code: 'PAGE_LOAD_ERROR',
+      code: "PAGE_LOAD_ERROR",
       stack: error.stack,
       timestamp: Date.now(),
       page: pageName,
-      action: 'page_load',
-      userAgent: this.getUserAgent()
+      action: "page_load",
+      userAgent: this.getUserAgent(),
     };
 
     if (logError) {
@@ -56,8 +56,8 @@ class ErrorHandler {
     if (showToast) {
       uni.showToast({
         title: fallbackMessage,
-        icon: 'none',
-        duration
+        icon: "none",
+        duration,
       });
     }
 
@@ -75,18 +75,18 @@ class ErrorHandler {
     const {
       showToast = true,
       logError = true,
-      fallbackMessage = '导航失败，请重试',
-      duration = 2000
+      fallbackMessage = "导航失败，请重试",
+      duration = 2000,
     } = options;
 
     const errorInfo: ErrorInfo = {
       message: error.message || fallbackMessage,
-      code: 'NAVIGATION_ERROR',
+      code: "NAVIGATION_ERROR",
       stack: error.stack,
       timestamp: Date.now(),
       page: targetPath,
-      action: 'navigation',
-      userAgent: this.getUserAgent()
+      action: "navigation",
+      userAgent: this.getUserAgent(),
     };
 
     if (logError) {
@@ -96,8 +96,8 @@ class ErrorHandler {
     if (showToast) {
       uni.showToast({
         title: fallbackMessage,
-        icon: 'none',
-        duration
+        icon: "none",
+        duration,
       });
     }
 
@@ -118,18 +118,18 @@ class ErrorHandler {
     const {
       showToast = true,
       logError = true,
-      fallbackMessage = '网络请求失败，请检查网络连接',
-      duration = 2000
+      fallbackMessage = "网络请求失败，请检查网络连接",
+      duration = 2000,
     } = options;
 
     const errorInfo: ErrorInfo = {
       message: error.message || fallbackMessage,
-      code: 'API_ERROR',
+      code: "API_ERROR",
       stack: error.stack,
       timestamp: Date.now(),
       page: apiPath,
-      action: 'api_request',
-      userAgent: this.getUserAgent()
+      action: "api_request",
+      userAgent: this.getUserAgent(),
     };
 
     if (logError) {
@@ -139,8 +139,8 @@ class ErrorHandler {
     if (showToast) {
       uni.showToast({
         title: fallbackMessage,
-        icon: 'none',
-        duration
+        icon: "none",
+        duration,
       });
     }
 
@@ -158,17 +158,17 @@ class ErrorHandler {
     const {
       showToast = false, // 组件错误默认不显示toast
       logError = true,
-      fallbackMessage = '组件渲染失败'
+      fallbackMessage = "组件渲染失败",
     } = options;
 
     const errorInfo: ErrorInfo = {
       message: error.message || fallbackMessage,
-      code: 'COMPONENT_ERROR',
+      code: "COMPONENT_ERROR",
       stack: error.stack,
       timestamp: Date.now(),
       page: componentName,
-      action: 'component_render',
-      userAgent: this.getUserAgent()
+      action: "component_render",
+      userAgent: this.getUserAgent(),
     };
 
     if (logError) {
@@ -178,8 +178,8 @@ class ErrorHandler {
     if (showToast) {
       uni.showToast({
         title: fallbackMessage,
-        icon: 'none',
-        duration: 2000
+        icon: "none",
+        duration: 2000,
       });
     }
 
@@ -199,16 +199,16 @@ class ErrorHandler {
     }
 
     // 控制台输出
-    console.error('[ErrorHandler]', errorInfo);
+    console.error("[ErrorHandler]", errorInfo);
 
     // 存储到本地存储
     try {
       uni.setStorageSync(
-        'error_logs',
+        "error_logs",
         JSON.stringify(this.errorLogs.slice(0, 50))
       );
     } catch (e) {
-      console.warn('Failed to save error logs to storage:', e);
+      console.warn("Failed to save error logs to storage:", e);
     }
 
     // 这里可以添加上报到服务器的逻辑
@@ -223,7 +223,7 @@ class ErrorHandler {
       const systemInfo = uni.getSystemInfoSync();
       return `${systemInfo.platform} ${systemInfo.system} ${systemInfo.version}`;
     } catch (e) {
-      return 'Unknown';
+      return "Unknown";
     }
   }
 
@@ -233,17 +233,17 @@ class ErrorHandler {
   private fallbackToHome() {
     try {
       uni.switchTab({
-        url: '/pages/index/index',
+        url: "/pages/index/index",
         fail: (err) => {
-          console.error('Failed to fallback to home:', err);
+          console.error("Failed to fallback to home:", err);
           // 如果switchTab失败，尝试使用reLaunch
           uni.reLaunch({
-            url: '/pages/index/index'
+            url: "/pages/index/index",
           });
-        }
+        },
       });
     } catch (e) {
-      console.error('Critical navigation error:', e);
+      console.error("Critical navigation error:", e);
     }
   }
 
@@ -260,9 +260,9 @@ class ErrorHandler {
   clearErrorLogs() {
     this.errorLogs = [];
     try {
-      uni.removeStorageSync('error_logs');
+      uni.removeStorageSync("error_logs");
     } catch (e) {
-      console.warn('Failed to clear error logs from storage:', e);
+      console.warn("Failed to clear error logs from storage:", e);
     }
   }
 
@@ -271,12 +271,12 @@ class ErrorHandler {
    */
   restoreErrorLogs() {
     try {
-      const storedLogs = uni.getStorageSync('error_logs');
+      const storedLogs = uni.getStorageSync("error_logs");
       if (storedLogs) {
         this.errorLogs = JSON.parse(storedLogs);
       }
     } catch (e) {
-      console.warn('Failed to restore error logs from storage:', e);
+      console.warn("Failed to restore error logs from storage:", e);
     }
   }
 }

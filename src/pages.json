@@ -3,16 +3,16 @@
     {
       "name": "create",
       "path": "pages/create/create",
-      "style": { 
+      "style": {
         "navigationBarTitleText": "创建",
-        "navigationBarBackgroundColor": "#ffffff", 
+        "navigationBarBackgroundColor": "#ffffff",
         "navigationBarTextStyle": "black"
       }
     },
     {
       "name": "task",
       "path": "pages/task/task",
-      "style": { 
+      "style": {
         "navigationBarTitleText": "事项",
         "navigationBarBackgroundColor": "#ffffff",
         "navigationBarTextStyle": "black"
@@ -21,7 +21,7 @@
     {
       "name": "profile",
       "path": "pages/profile/profile",
-      "style": { 
+      "style": {
         "navigationBarTitleText": "我",
         "navigationBarBackgroundColor": "#ffffff",
         "navigationBarTextStyle": "black"
@@ -30,7 +30,7 @@
     {
       "name": "register",
       "path": "pages/profile/register",
-      "style": { 
+      "style": {
         "navigationBarTitleText": "注册",
         "navigationBarBackgroundColor": "#ffffff",
         "navigationBarTextStyle": "black"
@@ -39,7 +39,7 @@
     {
       "name": "login",
       "path": "pages/profile/login",
-      "style": { 
+      "style": {
         "navigationBarTitleText": "登录",
         "navigationBarBackgroundColor": "#ffffff",
         "navigationBarTextStyle": "black"
@@ -48,7 +48,7 @@
     {
       "name": "neighbor-detail",
       "path": "pages/neighbor/detail",
-      "style": { 
+      "style": {
         "navigationBarTitleText": "动态详情",
         "navigationBarBackgroundColor": "#ffffff",
         "navigationBarTextStyle": "black"

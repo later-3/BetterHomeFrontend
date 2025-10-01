@@ -10,10 +10,10 @@ const uniAsync = new Proxy({} as any, {
           },
           fail: (err: any) => {
             reject(err);
-          }
+          },
         });
       });
-  }
+  },
 });
 
 export default uniAsync;

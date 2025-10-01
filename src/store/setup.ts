@@ -1,8 +1,8 @@
 export default defineStore(
-  'setup',
+  "setup",
   () => {
-    const name = ref<string>('allen');
-    const token = ref<string>('token...');
+    const name = ref<string>("allen");
+    const token = ref<string>("token...");
 
     const fullName = computed(() => {
       return `${name.value} ttk`;
@@ -15,12 +15,12 @@ export default defineStore(
       name,
       token,
       fullName,
-      updateName
+      updateName,
     };
   },
   {
     persist: {
-      enabled: true
-    }
+      enabled: true,
+    },
   }
 );

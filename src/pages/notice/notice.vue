@@ -6,16 +6,16 @@
  * 同时作为原生图片/视频与评论组件的预览调试场景
  */
 
-import { onMounted } from 'vue';
-import { useNavigation } from '@/hooks/useNavigation';
-import { useErrorHandler } from '@/hooks/useErrorHandler';
-import UserStatusCard from '../../components/UserStatusCard.vue';
-import RichCommentItem from '@/components/RichCommentItem.vue';
-import AudioPlayer from '@/components/AudioPlayer.vue';
+import { onMounted } from "vue";
+import { useNavigation } from "@/hooks/useNavigation";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import UserStatusCard from "../../components/UserStatusCard.vue";
+import RichCommentItem from "@/components/RichCommentItem.vue";
+import AudioPlayer from "@/components/AudioPlayer.vue";
 
-const DEFAULT_IMAGE_URL = 'https://picsum.photos/800/480?image=1050';
+const DEFAULT_IMAGE_URL = "https://picsum.photos/800/480?image=1050";
 const DEFAULT_VIDEO_URL =
-  'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
+  "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
 const LOCAL_VIDEO_URL = DEFAULT_VIDEO_URL;
 
 const baseCommentShell = (id: string, name: string) => ({
@@ -23,56 +23,58 @@ const baseCommentShell = (id: string, name: string) => ({
   author: {
     id,
     name,
-    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,
-    verified: true
+    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+      name
+    )}`,
+    verified: true,
   },
-  content: '',
+  content: "",
   created_at: new Date().toISOString(),
   likes_count: 0,
   replies_count: 0,
-  is_liked: false
+  is_liked: false,
 });
 
 const commentVideoSample = {
-  ...baseCommentShell('notice-comment-video', '公告管理员'),
+  ...baseCommentShell("notice-comment-video", "公告管理员"),
   content: `
     <p>🎞️ 评论组件视频展示：</p>
     <video controls src="${DEFAULT_VIDEO_URL}" poster="${DEFAULT_IMAGE_URL}"></video>
     <p>点击右下角可放大全屏，验证组件媒体集成效果。</p>
-  `
+  `,
 };
 
 const commentLocalVideoSample = {
-  ...baseCommentShell('notice-comment-local-video', '物业管理员'),
+  ...baseCommentShell("notice-comment-local-video", "物业管理员"),
   content: `
     <p>📁 本地视频 (ui/comment/1.mp4) 验证：</p>
     <video controls src="${LOCAL_VIDEO_URL}" poster="${DEFAULT_IMAGE_URL}"></video>
-  `
+  `,
 };
 
 const commentImageSample = {
-  ...baseCommentShell('notice-comment-image', '摄影达人工具人'),
+  ...baseCommentShell("notice-comment-image", "摄影达人工具人"),
   content: `
     <p>📷 评论组件图片展示：</p>
     <img src="${DEFAULT_IMAGE_URL}" alt="示例图片" />
     <p>点击图片可预览，验证组件内图片展示效果。</p>
-  `
+  `,
 };
 
 function previewImage(url: string) {
-  uni.previewImage({ current: url, urls: [url], indicator: 'number' });
+  uni.previewImage({ current: url, urls: [url], indicator: "number" });
 }
 
 // 页面导航和错误处理
 const { initPageNavigation } = useNavigation();
-const { handlePageError } = useErrorHandler({ pageName: '公告' });
+const { handlePageError } = useErrorHandler({ pageName: "公告" });
 
 onMounted(() => {
   try {
-    initPageNavigation('notice');
+    initPageNavigation("notice");
   } catch (error) {
     handlePageError(error as Error, {
-      fallbackMessage: '公告页面初始化失败'
+      fallbackMessage: "公告页面初始化失败",
     });
   }
 });
@@ -99,7 +101,11 @@ onMounted(() => {
         <view class="rich-block" @click="previewImage(DEFAULT_IMAGE_URL)">
           <text class="rich-label">图片</text>
           <view class="image-wrapper">
-            <image class="preview-image" :src="DEFAULT_IMAGE_URL" mode="aspectFill" />
+            <image
+              class="preview-image"
+              :src="DEFAULT_IMAGE_URL"
+              mode="aspectFill"
+            />
           </view>
         </view>
         <view class="rich-block">
@@ -131,7 +137,6 @@ onMounted(() => {
           <RichCommentItem :comment="commentImageSample" />
         </view>
       </view>
-
     </view>
   </view>
 </template>
@@ -160,9 +165,9 @@ onMounted(() => {
   color: #666;
 }
 .content {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  flex: 1;
   gap: 20px;
 }
 .placeholder-card {
@@ -184,31 +189,31 @@ onMounted(() => {
   color: #ccc;
 }
 .test-section {
-  padding: 16px;
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
+  padding: 16px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   gap: 12px;
 }
 .test-title {
-  font-size: 16px;
   font-weight: 600;
+  font-size: 16px;
   color: #1f2933;
 }
 .rich-block {
-  border: 1px solid rgba(26, 168, 108, 0.12);
-  border-radius: 10px;
-  padding: 12px;
-  background: #f9fafb;
   display: flex;
   flex-direction: column;
+  padding: 12px;
+  border: 1px solid rgba(26, 168, 108, 0.12);
+  border-radius: 10px;
+  background: #f9fafb;
   gap: 6px;
 }
 .rich-label {
-  font-size: 13px;
   font-weight: 600;
+  font-size: 13px;
   color: #1aa86c;
 }
 .rich-content {
@@ -223,24 +228,23 @@ onMounted(() => {
   height: 200px;
 }
 .basic-video {
-  width: 100%;
-  border-radius: 8px;
   margin: 8px 0;
-  background: #000;
+  border-radius: 8px;
+  width: 100%;
   min-height: 200px;
+  background: #000;
 }
 .comment-demo {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-
 .stub-btn {
   padding: 6px 12px;
-  border-radius: 16px;
   border: none;
+  border-radius: 16px;
   background: rgba(26, 168, 108, 0.12);
-  color: #1aa86c;
   font-size: 12px;
+  color: #1aa86c;
 }
 </style>

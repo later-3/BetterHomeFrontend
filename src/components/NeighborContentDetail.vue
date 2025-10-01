@@ -4,26 +4,41 @@
     <div class="status-bar">
       <div class="time">9:41</div>
       <div class="status-icons">
-        <img src="@/static/pages/neighbor/content-detail/2.svg" alt="Signal" class="status-icon">
-        <img src="@/static/pages/neighbor/content-detail/3.svg" alt="WiFi" class="status-icon">
-        <img src="@/static/pages/neighbor/content-detail/1.svg" alt="Battery" class="status-icon">
+        <img
+          src="@/static/pages/neighbor/content-detail/2.svg"
+          alt="Signal"
+          class="status-icon"
+        />
+        <img
+          src="@/static/pages/neighbor/content-detail/3.svg"
+          alt="WiFi"
+          class="status-icon"
+        />
+        <img
+          src="@/static/pages/neighbor/content-detail/1.svg"
+          alt="Battery"
+          class="status-icon"
+        />
       </div>
     </div>
 
     <!-- Navigation Header -->
     <div class="nav-header">
       <button class="back-btn" @click="goBack">
-        <img src="@/static/pages/neighbor/content-detail/4.svg" alt="Back">
+        <img src="@/static/pages/neighbor/content-detail/4.svg" alt="Back" />
       </button>
       <div class="nav-actions">
         <button class="nav-btn" @click="shareContent">
-          <img src="@/static/pages/neighbor/content-detail/5.svg" alt="Share">
+          <img src="@/static/pages/neighbor/content-detail/5.svg" alt="Share" />
         </button>
         <button class="nav-btn" @click="bookmarkContent">
-          <img src="@/static/pages/neighbor/content-detail/6.svg" alt="Bookmark">
+          <img
+            src="@/static/pages/neighbor/content-detail/6.svg"
+            alt="Bookmark"
+          />
         </button>
         <button class="nav-btn" @click="moreOptions">
-          <img src="@/static/pages/neighbor/content-detail/7.svg" alt="More">
+          <img src="@/static/pages/neighbor/content-detail/7.svg" alt="More" />
         </button>
       </div>
     </div>
@@ -33,7 +48,10 @@
       <!-- User Info -->
       <div class="user-info">
         <div class="user-avatar">
-          <img src="@/static/pages/neighbor/content-detail/8.svg" alt="User Avatar">
+          <img
+            src="@/static/pages/neighbor/content-detail/8.svg"
+            alt="User Avatar"
+          />
         </div>
         <div class="user-details">
           <span class="username">{{ content.author }}</span>
@@ -43,22 +61,34 @@
 
       <!-- Main Image -->
       <div class="main-image">
-        <img :src="content.imageUrl" :alt="content.title">
+        <img :src="content.imageUrl" :alt="content.title" />
       </div>
 
       <!-- Interaction Stats -->
       <div class="interaction-stats">
         <div class="stat-item">
           <span class="stat-number">{{ content.views }}</span>
-          <img src="@/static/pages/neighbor/content-detail/10.svg" alt="Views" class="stat-icon">
+          <img
+            src="@/static/pages/neighbor/content-detail/10.svg"
+            alt="Views"
+            class="stat-icon"
+          />
         </div>
         <div class="stat-item">
           <span class="stat-number">{{ content.comments }}</span>
-          <img src="@/static/pages/neighbor/content-detail/11.svg" alt="Comments" class="stat-icon">
+          <img
+            src="@/static/pages/neighbor/content-detail/11.svg"
+            alt="Comments"
+            class="stat-icon"
+          />
         </div>
         <div class="stat-item">
           <span class="stat-number">{{ content.likes }}</span>
-          <img src="@/static/pages/neighbor/content-detail/12.svg" alt="Likes" class="stat-icon">
+          <img
+            src="@/static/pages/neighbor/content-detail/12.svg"
+            alt="Likes"
+            class="stat-icon"
+          />
         </div>
       </div>
     </div>
@@ -71,13 +101,9 @@
 
     <!-- Comments Section -->
     <div class="comments-section">
-      <div 
-        v-for="comment in comments" 
-        :key="comment.id" 
-        class="comment-item"
-      >
+      <div v-for="comment in comments" :key="comment.id" class="comment-item">
         <div class="comment-avatar">
-          <img :src="comment.avatar" :alt="comment.author">
+          <img :src="comment.avatar" :alt="comment.author" />
         </div>
         <div class="comment-content">
           <div class="comment-header">
@@ -93,15 +119,18 @@
     <div class="comment-input-section">
       <div class="comment-input-box">
         <div class="input-avatar">
-          <img src="@/static/pages/neighbor/content-detail/15.svg" alt="Your Avatar">
+          <img
+            src="@/static/pages/neighbor/content-detail/15.svg"
+            alt="Your Avatar"
+          />
         </div>
-        <input 
+        <input
           v-model="newComment"
-          type="text" 
+          type="text"
           placeholder="Add a comment"
           class="comment-input"
           @keyup.enter="addComment"
-        >
+        />
       </div>
       <div class="bottom-indicator">
         <div class="home-indicator"></div>
@@ -112,337 +141,302 @@
 
 <script>
 export default {
-  name: 'NeighborContentDetail',
+  name: "NeighborContentDetail",
   props: {
     contentData: {
       type: Object,
       default: () => ({
-        author: 'Thanh Pham',
-        timeAgo: '1 hour ago',
-        title: 'Street portrait',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quis risus, neque cursus risus. Eget dictumst vitae enim, felis morbi. Quis risus, neque cursus risus. Eget dictumst vitae enim, felis morbi. Quis risus, neque cursus risus.',
-        imageUrl: '@/static/pages/neighbor/content-detail/9.png',
+        author: "Thanh Pham",
+        timeAgo: "1 hour ago",
+        title: "Street portrait",
+        description:
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quis risus, neque cursus risus. Eget dictumst vitae enim, felis morbi. Quis risus, neque cursus risus. Eget dictumst vitae enim, felis morbi. Quis risus, neque cursus risus.",
+        imageUrl: "@/static/pages/neighbor/content-detail/9.png",
         views: 125,
         comments: 20,
-        likes: 125
-      })
-    }
+        likes: 125,
+      }),
+    },
   },
   computed: {
     content() {
       return this.contentData;
-    }
+    },
   },
   data() {
     return {
-      newComment: '',
+      newComment: "",
       comments: [
         {
           id: 1,
-          author: 'Bruno Pham',
-          text: 'Great shot! I love it',
-          timeAgo: '2 mins ago',
-          avatar: '@/static/pages/neighbor/content-detail/13.svg'
+          author: "Bruno Pham",
+          text: "Great shot! I love it",
+          timeAgo: "2 mins ago",
+          avatar: "@/static/pages/neighbor/content-detail/13.svg",
         },
         {
           id: 2,
-          author: 'Bruno Pham',
-          text: 'Great shot! I love it',
-          timeAgo: '2 mins ago',
-          avatar: '@/static/pages/neighbor/content-detail/14.svg'
+          author: "Bruno Pham",
+          text: "Great shot! I love it",
+          timeAgo: "2 mins ago",
+          avatar: "@/static/pages/neighbor/content-detail/14.svg",
         },
         {
           id: 3,
-          author: 'Bruno Pham',
-          text: 'Great shot! I love it',
-          timeAgo: '2 mins ago',
-          avatar: '@/static/pages/neighbor/content-detail/16.png'
-        }
-      ]
-    }
+          author: "Bruno Pham",
+          text: "Great shot! I love it",
+          timeAgo: "2 mins ago",
+          avatar: "@/static/pages/neighbor/content-detail/16.png",
+        },
+      ],
+    };
   },
   methods: {
     goBack() {
-      console.log('Going back...');
+      console.log("Going back...");
       // 使用uni-app的返回功能
       uni.navigateBack();
     },
     shareContent() {
-      console.log('Sharing content...');
+      console.log("Sharing content...");
       // 实现分享功能
     },
     bookmarkContent() {
-      console.log('Bookmarking content...');
+      console.log("Bookmarking content...");
       // 实现收藏功能
     },
     moreOptions() {
-      console.log('More options...');
+      console.log("More options...");
       // 显示更多选项菜单
     },
     addComment() {
       if (this.newComment.trim()) {
         const comment = {
           id: Date.now(),
-          author: 'You',
+          author: "You",
           text: this.newComment,
-          timeAgo: 'Just now',
-          avatar: '@/static/pages/neighbor/content-detail/15.svg'
+          timeAgo: "Just now",
+          avatar: "@/static/pages/neighbor/content-detail/15.svg",
         };
         this.comments.unshift(comment);
         this.content.comments++;
-        this.newComment = '';
+        this.newComment = "";
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style scoped>
 .neighbor-content-detail {
+  overflow: hidden;
+  position: relative;
   width: 375px;
   height: 812px;
   background: white;
-  position: relative;
-  overflow: hidden;
-  font-family: 'Circular Std', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "Circular Std", -apple-system, BlinkMacSystemFont, sans-serif;
 }
-
 /* Status Bar */
 .status-bar {
-  width: 100%;
-  height: 44px;
-  background: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
   box-sizing: border-box;
+  padding: 0 20px;
+  width: 100%;
+  height: 44px;
+  background: white;
 }
-
 .time {
-  font-size: 15px;
+  font-family: "SF Pro Text", sans-serif;
   font-weight: 600;
+  font-size: 15px;
   color: #212121;
-  font-family: 'SF Pro Text', sans-serif;
 }
-
 .status-icons {
   display: flex;
   gap: 5px;
   align-items: center;
 }
-
 .status-icon {
   height: 11.5px;
 }
-
 /* Navigation Header */
 .nav-header {
-  width: 100%;
-  height: 48px;
-  background: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 16px;
   box-sizing: border-box;
+  padding: 0 16px;
+  width: 100%;
+  height: 48px;
+  background: white;
 }
-
 .back-btn {
-  background: none;
-  border: none;
-  padding: 12px;
-  cursor: pointer;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  padding: 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
 }
-
 .back-btn img {
   width: 24px;
   height: 24px;
 }
-
 .nav-actions {
   display: flex;
   gap: 44px;
   align-items: center;
 }
-
 .nav-btn {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
 }
-
 .nav-btn img {
   width: 24px;
   height: 24px;
 }
-
 /* Content Card */
 .content-card {
   width: 100%;
   background: white;
 }
-
 .user-info {
-  height: 50px;
   display: flex;
   align-items: center;
-  padding: 10px 14px;
   box-sizing: border-box;
+  padding: 10px 14px;
+  height: 50px;
 }
-
 .user-avatar {
+  margin-right: 10px;
   width: 30px;
   height: 30px;
-  margin-right: 10px;
 }
-
 .user-avatar img {
+  border-radius: 50%;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
 }
-
 .user-details {
   flex: 1;
 }
-
 .username {
-  font-size: 16px;
   font-weight: 400;
+  font-size: 16px;
   color: #242424;
 }
-
 .post-time {
-  font-size: 14px;
-  color: #BDBDBD;
   font-weight: 400;
+  font-size: 14px;
+  color: #bdbdbd;
 }
-
 .main-image {
+  overflow: hidden;
   width: 100%;
   height: 250.75px;
-  overflow: hidden;
 }
-
 .main-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-
 .interaction-stats {
-  height: 45px;
-  background: white;
   display: flex;
   justify-content: space-around;
   align-items: center;
   padding: 12px 0;
+  height: 45px;
+  background: white;
 }
-
 .stat-item {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-
 .stat-number {
+  font-weight: 400;
   font-size: 14px;
   color: #828282;
-  font-weight: 400;
 }
-
 .stat-icon {
   width: 20px;
   height: 20px;
 }
-
 /* Content Description */
 .content-description {
   padding: 20px;
   background: white;
 }
-
 .content-title {
-  font-size: 20px;
+  margin: 0 0 10px;
   font-weight: 700;
+  font-size: 20px;
   color: #212121;
-  margin: 0 0 10px 0;
 }
-
 .content-text {
-  font-size: 14px;
-  font-weight: 400;
-  color: #828282;
-  line-height: 1.5;
   margin: 0;
+  line-height: 1.5;
+  font-weight: 400;
+  font-size: 14px;
+  color: #828282;
 }
-
 /* Comments Section */
 .comments-section {
   padding: 0 14px;
   background: white;
 }
-
 .comment-item {
-  background: #F6F7F9;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 10px;
   display: flex;
+  margin-bottom: 10px;
+  padding: 16px;
+  border-radius: 8px;
+  background: #f6f7f9;
   gap: 14px;
 }
-
 .comment-avatar {
+  flex-shrink: 0;
   width: 30px;
   height: 30px;
-  flex-shrink: 0;
 }
-
 .comment-avatar img {
+  border-radius: 50%;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
 }
-
 .comment-content {
   flex: 1;
 }
-
 .comment-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 5px;
 }
-
 .comment-author {
-  font-size: 16px;
   font-weight: 700;
+  font-size: 16px;
   color: #212121;
 }
-
 .comment-time {
+  font-weight: 400;
   font-size: 12px;
   color: #828282;
-  font-weight: 400;
 }
-
 .comment-text {
-  font-size: 14px;
-  font-weight: 400;
-  color: #212121;
   margin: 0;
   line-height: 1.4;
+  font-weight: 400;
+  font-size: 14px;
+  color: #212121;
 }
-
 /* Comment Input */
 .comment-input-section {
   position: absolute;
@@ -450,81 +444,69 @@ export default {
   width: 100%;
   background: white;
 }
-
 .comment-input-box {
-  height: 54px;
   display: flex;
   align-items: center;
   padding: 0 16px;
-  gap: 14px;
+  height: 54px;
   background: white;
+  gap: 14px;
 }
-
 .input-avatar {
+  flex-shrink: 0;
   width: 30px;
   height: 30px;
-  flex-shrink: 0;
 }
-
 .input-avatar img {
+  border-radius: 50%;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
 }
-
 .comment-input {
   flex: 1;
   border: none;
   outline: none;
+  background: transparent;
   font-size: 14px;
   color: #212121;
-  background: transparent;
 }
-
 .comment-input::placeholder {
-  color: #BDBDBD;
+  color: #bdbdbd;
 }
-
 .bottom-indicator {
-  height: 34px;
-  background: white;
   display: flex;
   justify-content: center;
   align-items: flex-end;
   padding-bottom: 13px;
+  height: 34px;
+  background: white;
 }
-
 .home-indicator {
+  border-radius: 100px;
   width: 134px;
   height: 5px;
   background: #737982;
-  border-radius: 100px;
 }
-
 /* Responsive Design */
 @media (max-width: 375px) {
   .neighbor-content-detail {
     width: 100%;
   }
 }
-
 /* Hover Effects */
 .back-btn:hover,
 .nav-btn:hover {
   opacity: 0.7;
   transition: opacity 0.2s ease;
 }
-
 .comment-item:hover {
   background: #f0f1f3;
   transition: background-color 0.2s ease;
 }
-
 /* Animation */
 .comment-item {
   animation: slideIn 0.3s ease-out;
 }
-
 @keyframes slideIn {
   from {
     opacity: 0;

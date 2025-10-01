@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // import { computed, reactive, ref } from 'vue';
-import { computed, type PropType } from 'vue';
+import { computed, type PropType } from "vue";
 
 interface User {
   name: string;
@@ -13,7 +13,7 @@ interface Post {
   id: number | string;
   user: User;
   content: string;
-  type: 'text' | 'image' | 'video';
+  type: "text" | "image" | "video";
   images?: string[];
   likes: string | number;
   comments: string | number;
@@ -23,8 +23,8 @@ interface Post {
 const props = defineProps({
   externalPosts: {
     type: Array as PropType<Post[]>,
-    default: () => []
-  }
+    default: () => [],
+  },
 });
 
 // 响应式数据
@@ -98,58 +98,61 @@ const displayPosts = computed(() => {
 
 // 方法
 const handleLike = (postId: any) => {
-  console.log('Like post:', postId);
-  uni.showToast({ title: `点赞了第 ${postId} 条动态！`, icon: 'success' });
+  console.log("Like post:", postId);
+  uni.showToast({ title: `点赞了第 ${postId} 条动态！`, icon: "success" });
 };
 
 const handleComment = (postId: any) => {
-  console.log('Comment on post:', postId);
-  uni.showToast({ title: `评论第 ${postId} 条动态！`, icon: 'none' });
+  console.log("Comment on post:", postId);
+  uni.showToast({ title: `评论第 ${postId} 条动态！`, icon: "none" });
 };
 
 const handleShare = (postId: any) => {
-  console.log('Share post:', postId);
-  uni.showToast({ title: `分享第 ${postId} 条动态！`, icon: 'none' });
+  console.log("Share post:", postId);
+  uni.showToast({ title: `分享第 ${postId} 条动态！`, icon: "none" });
 };
 
 const handleImageError = (image: string) => {
-  console.log('图片加载失败:', image);
+  console.log("图片加载失败:", image);
 };
 
 const handleImageLoad = (image: string) => {
-  console.log('图片加载成功:', image);
+  console.log("图片加载成功:", image);
 };
 
 const handleBookmark = (postId: any) => {
-  console.log('Bookmark post:', postId);
-  uni.showToast({ title: `收藏第 ${postId} 条动态！`, icon: 'none' });
+  console.log("Bookmark post:", postId);
+  uni.showToast({ title: `收藏第 ${postId} 条动态！`, icon: "none" });
 };
 
 const handleCardClick = (post: any, event: Event) => {
-  console.log('点击卡片:', post);
+  console.log("点击卡片:", post);
   event.preventDefault();
   event.stopPropagation();
-  
+
   // 将当前posts数据临时存储到localStorage，供详情页使用
   try {
     const postsData = JSON.stringify(props.externalPosts);
-    uni.setStorageSync('temp_social_posts', postsData);
-    console.log('数据已存储到localStorage');
+    uni.setStorageSync("temp_social_posts", postsData);
+    console.log("数据已存储到localStorage");
   } catch (error) {
-    console.error('存储posts数据失败:', error);
+    console.error("存储posts数据失败:", error);
     return;
   }
-  
+
   // 跳转到详情页，传递contentId参数
-  console.log('准备跳转到详情页:', `/pages/neighbor/detail?contentId=${post.id}`);
+  console.log(
+    "准备跳转到详情页:",
+    `/pages/neighbor/detail?contentId=${post.id}`
+  );
   uni.navigateTo({
     url: `/pages/neighbor/detail?contentId=${post.id}`,
     success: () => {
-      console.log('跳转成功');
+      console.log("跳转成功");
     },
     fail: (err) => {
-      console.error('跳转失败:', err);
-    }
+      console.error("跳转失败:", err);
+    },
   });
 };
 </script>
@@ -159,7 +162,12 @@ const handleCardClick = (post: any, event: Event) => {
     <!-- 动态列表 -->
     <div class="feed-list">
       <!-- 动态渲染每个post -->
-      <div v-for="post in displayPosts" :key="post.id" class="post-card" @click="handleCardClick(post, $event)">
+      <div
+        v-for="post in displayPosts"
+        :key="post.id"
+        class="post-card"
+        @click="handleCardClick(post, $event)"
+      >
         <div class="post-header">
           <div class="user-info">
             <!-- 显示用户头像，如果有的话 -->
@@ -234,7 +242,9 @@ const handleCardClick = (post: any, event: Event) => {
             </div>
           </div>
           <div class="share-group">
-            <span class="share-icon" @click.stop="handleShare(post.id)">📤</span>
+            <span class="share-icon" @click.stop="handleShare(post.id)"
+              >📤</span
+            >
             <span class="bookmark-icon" @click.stop="handleBookmark(post.id)"
               >🔖</span
             >
@@ -251,7 +261,7 @@ const handleCardClick = (post: any, event: Event) => {
   border-radius: 8px;
   width: 100%;
   background: #f5f5f5;
-  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 /* 动态列表 */
 .feed-list {

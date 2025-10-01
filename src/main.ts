@@ -1,10 +1,10 @@
-import 'uno.css';
-import { createSSRApp } from 'vue';
-import { createPinia } from 'pinia'; // 导入 createPinia
-import piniaPluginPersistUni from 'pinia-plugin-persist-uni'; // 导入持久化插件
-import uviewPlus from 'uview-plus';
-import App from './App.vue';
-import { initGlobalErrorHandler } from '@/utils/globalErrorHandler';
+import "uno.css";
+import { createSSRApp } from "vue";
+import { createPinia } from "pinia"; // 导入 createPinia
+import piniaPluginPersistUni from "pinia-plugin-persist-uni"; // 导入持久化插件
+import uviewPlus from "uview-plus";
+import App from "./App.vue";
+import { initGlobalErrorHandler } from "@/utils/globalErrorHandler";
 
 export function createApp() {
   const app = createSSRApp(App);
@@ -25,6 +25,6 @@ export function createApp() {
   initGlobalErrorHandler();
 
   return {
-    app
+    app,
   };
 }

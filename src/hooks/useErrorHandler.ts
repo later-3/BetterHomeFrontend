@@ -3,8 +3,8 @@
  * 为Vue组件提供统一的错误处理能力
  */
 
-import { getCurrentInstance, onErrorCaptured, readonly, ref } from 'vue';
-import { type ErrorHandlerOptions, errorHandler } from '@/utils/errorHandler';
+import { getCurrentInstance, onErrorCaptured, readonly, ref } from "vue";
+import { type ErrorHandlerOptions, errorHandler } from "@/utils/errorHandler";
 
 export interface UseErrorHandlerOptions {
   pageName?: string;
@@ -13,11 +13,11 @@ export interface UseErrorHandlerOptions {
 }
 
 export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
-  const { pageName = 'Unknown', enableErrorBoundary = true, onError } = options;
+  const { pageName = "Unknown", enableErrorBoundary = true, onError } = options;
 
   const instance = getCurrentInstance();
   const hasError = ref(false);
-  const errorMessage = ref('');
+  const errorMessage = ref("");
   const isLoading = ref(false);
 
   /**
@@ -95,7 +95,7 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
     try {
       isLoading.value = true;
       hasError.value = false;
-      errorMessage.value = '';
+      errorMessage.value = "";
 
       const result = await asyncFn();
       return result;
@@ -117,7 +117,7 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
   ): T | null => {
     try {
       hasError.value = false;
-      errorMessage.value = '';
+      errorMessage.value = "";
 
       return syncFn();
     } catch (error) {
@@ -132,7 +132,7 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
    */
   const resetError = () => {
     hasError.value = false;
-    errorMessage.value = '';
+    errorMessage.value = "";
   };
 
   /**
@@ -163,7 +163,7 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
     // 所有重试都失败了
     if (lastError) {
       handlePageError(lastError, {
-        fallbackMessage: `操作失败，已重试${maxRetries}次`
+        fallbackMessage: `操作失败，已重试${maxRetries}次`,
       });
     }
 
@@ -175,12 +175,12 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
    */
   if (enableErrorBoundary && instance) {
     onErrorCaptured((error: Error, instance, info) => {
-      console.error('[Error Boundary]', error, info);
+      console.error("[Error Boundary]", error, info);
 
       const componentName =
         instance?.$options.name ||
         instance?.$options.__name ||
-        'Unknown Component';
+        "Unknown Component";
       errorHandler.handleComponentError(error, componentName);
 
       hasError.value = true;
@@ -208,6 +208,6 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}) {
     safeAsync,
     safeSync,
     resetError,
-    retry
+    retry,
   };
 }
