@@ -1,5 +1,5 @@
-import { errorHandler } from '@/utils/errorHandler';
-import { performanceDebugger } from '@/utils/performanceDebugger';
+import { errorHandler } from "@/utils/errorHandler";
+import { performanceDebugger } from "@/utils/performanceDebugger";
 
 export interface TabItem {
   id: string;
@@ -17,7 +17,7 @@ export interface TabBarState {
 }
 
 const useNavigationStore = defineStore(
-  'navigation',
+  "navigation",
   () => {
     // 定义导航标签页数据 - 隐藏前两个页面（邻里和公告）
     const tabs = ref<TabItem[]>([
@@ -39,29 +39,29 @@ const useNavigationStore = defineStore(
       //   activeIcon: 'static/icons/notice-active.png'
       // },
       {
-        id: 'create',
-        name: 'create',
-        path: '/pages/create/create',
-        text: '创建',
-        icon: 'static/icons/add.png',
-        activeIcon: 'static/icons/add-active.png'
+        id: "create",
+        name: "create",
+        path: "/pages/create/create",
+        text: "创建",
+        icon: "static/icons/add.png",
+        activeIcon: "static/icons/add-active.png",
       },
       {
-        id: 'task',
-        name: 'task',
-        path: '/pages/task/task',
-        text: '事项',
-        icon: 'static/icons/task.png',
-        activeIcon: 'static/icons/task-active.png'
+        id: "task",
+        name: "task",
+        path: "/pages/task/task",
+        text: "事项",
+        icon: "static/icons/task.png",
+        activeIcon: "static/icons/task-active.png",
       },
       {
-        id: 'profile',
-        name: 'profile',
-        path: '/pages/profile/profile',
-        text: '我',
-        icon: 'static/icons/profile.png',
-        activeIcon: 'static/icons/profile-active.png'
-      }
+        id: "profile",
+        name: "profile",
+        path: "/pages/profile/profile",
+        text: "我",
+        icon: "static/icons/profile.png",
+        activeIcon: "static/icons/profile-active.png",
+      },
     ]);
 
     // 当前激活的标签页索引
@@ -74,7 +74,7 @@ const useNavigationStore = defineStore(
 
     // 计算属性：当前页面路径
     const currentPath = computed(() => {
-      return currentTabItem.value?.path || '/pages/index/index';
+      return currentTabItem.value?.path || "/pages/index/index";
     });
 
     // 设置当前标签页
@@ -107,7 +107,7 @@ const useNavigationStore = defineStore(
           if (index < 0 || index >= tabs.value.length) {
             const error = new Error(`无效的标签页索引: ${index}`);
             errorHandler.handleNavigationError(error, `tab-${index}`, {
-              fallbackMessage: '导航失败，标签页不存在'
+              fallbackMessage: "导航失败，标签页不存在",
             });
             reject(error);
             return;
@@ -120,23 +120,23 @@ const useNavigationStore = defineStore(
           const navigationId = performanceDebugger.startNavigation(
             targetTab.id
           );
-          performanceDebugger.startMetric('navigation-state-update');
+          performanceDebugger.startMetric("navigation-state-update");
 
           // 先更新状态
           setCurrentTab(index);
-          performanceDebugger.endMetric('navigation-state-update');
+          performanceDebugger.endMetric("navigation-state-update");
 
-          performanceDebugger.startMetric('uni-switchTab');
+          performanceDebugger.startMetric("uni-switchTab");
           uni.switchTab({
             url: targetTab.path,
             success: () => {
-              performanceDebugger.endMetric('uni-switchTab');
+              performanceDebugger.endMetric("uni-switchTab");
               performanceDebugger.endNavigation(navigationId, true);
               console.log(`导航到 ${targetTab.text} 成功`);
               resolve();
             },
             fail: (error) => {
-              performanceDebugger.endMetric('uni-switchTab');
+              performanceDebugger.endMetric("uni-switchTab");
               performanceDebugger.endNavigation(
                 navigationId,
                 false,
@@ -149,19 +149,19 @@ const useNavigationStore = defineStore(
 
               // 处理导航错误
               const navError = new Error(
-                `导航到${targetTab.text}失败: ${error.errMsg || '未知错误'}`
+                `导航到${targetTab.text}失败: ${error.errMsg || "未知错误"}`
               );
               errorHandler.handleNavigationError(navError, targetTab.path, {
-                fallbackMessage: `无法打开${targetTab.text}，请重试`
+                fallbackMessage: `无法打开${targetTab.text}，请重试`,
               });
 
               reject(navError);
-            }
+            },
           });
         } catch (error) {
           const navError = error as Error;
           errorHandler.handleNavigationError(navError, `tab-${index}`, {
-            fallbackMessage: '导航过程中发生错误'
+            fallbackMessage: "导航过程中发生错误",
           });
           reject(navError);
         }
@@ -201,7 +201,7 @@ const useNavigationStore = defineStore(
       } catch (error) {
         const navError = error as Error;
         errorHandler.handleNavigationError(navError, `/tab/${tabId}`, {
-          fallbackMessage: `无法打开${tabId}页面，请重试`
+          fallbackMessage: `无法打开${tabId}页面，请重试`,
         });
         throw navError;
       }
@@ -218,7 +218,7 @@ const useNavigationStore = defineStore(
       } catch (error) {
         const navError = error as Error;
         errorHandler.handleNavigationError(navError, `/tab/${tabName}`, {
-          fallbackMessage: `无法打开${tabName}页面，请重试`
+          fallbackMessage: `无法打开${tabName}页面，请重试`,
         });
         throw navError;
       }
@@ -227,21 +227,21 @@ const useNavigationStore = defineStore(
     // 导航回退机制
     const fallbackNavigation = async (): Promise<void> => {
       try {
-        console.log('执行导航回退到首页');
+        console.log("执行导航回退到首页");
         await navigateToTab(0); // 回退到首页
       } catch (error) {
-        console.error('导航回退失败，尝试重新加载应用:', error);
+        console.error("导航回退失败，尝试重新加载应用:", error);
         // 最后的回退方案：重新加载应用
         uni.reLaunch({
-          url: '/pages/index/index',
+          url: "/pages/index/index",
           fail: (err) => {
-            console.error('重新加载应用失败:', err);
+            console.error("重新加载应用失败:", err);
             uni.showModal({
-              title: '应用错误',
-              content: '应用出现严重错误，请重启应用',
-              showCancel: false
+              title: "应用错误",
+              content: "应用出现严重错误，请重启应用",
+              showCancel: false,
             });
-          }
+          },
         });
       }
     };
@@ -251,7 +251,7 @@ const useNavigationStore = defineStore(
       try {
         // 检查当前标签页索引是否有效
         if (currentTab.value < 0 || currentTab.value >= tabs.value.length) {
-          console.warn('导航状态异常：当前标签页索引无效');
+          console.warn("导航状态异常：当前标签页索引无效");
           setCurrentTab(0); // 重置为首页
           return false;
         }
@@ -259,14 +259,14 @@ const useNavigationStore = defineStore(
         // 检查标签页数据完整性
         const currentTabData = tabs.value[currentTab.value];
         if (!currentTabData || !currentTabData.path) {
-          console.warn('导航状态异常：当前标签页数据不完整');
+          console.warn("导航状态异常：当前标签页数据不完整");
           setCurrentTab(0); // 重置为首页
           return false;
         }
 
         return true;
       } catch (error) {
-        console.error('导航健康检查失败:', error);
+        console.error("导航健康检查失败:", error);
         setCurrentTab(0); // 重置为首页
         return false;
       }
@@ -284,12 +284,12 @@ const useNavigationStore = defineStore(
 
         // 执行健康检查
         if (!checkNavigationHealth()) {
-          console.warn('导航初始化后健康检查失败，已重置为首页');
+          console.warn("导航初始化后健康检查失败，已重置为首页");
         }
       } catch (error) {
-        console.error('导航初始化失败:', error);
-        errorHandler.handleNavigationError(error as Error, '/init', {
-          fallbackMessage: '导航初始化失败'
+        console.error("导航初始化失败:", error);
+        errorHandler.handleNavigationError(error as Error, "/init", {
+          fallbackMessage: "导航初始化失败",
         });
         // 设置为默认状态
         setCurrentTab(0);
@@ -318,7 +318,7 @@ const useNavigationStore = defineStore(
       getTabByIndex,
       initNavigation,
       fallbackNavigation,
-      checkNavigationHealth
+      checkNavigationHealth,
     };
   },
   {
@@ -326,22 +326,22 @@ const useNavigationStore = defineStore(
       enabled: true,
       strategies: [
         {
-          key: 'navigation',
+          key: "navigation",
           storage: {
             getItem: (key: string) => uni.getStorageSync(key),
             setItem: (key: string, value: any) =>
               uni.setStorageSync(key, value),
             removeItem: (key: string) => uni.removeStorageSync(key),
             clear: () => uni.clearStorageSync(),
-            key: (_index: number) => '',
+            key: (_index: number) => "",
             get length() {
               return 0;
-            }
+            },
           },
-          paths: ['currentTab'] // 只持久化当前标签页索引
-        }
-      ]
-    }
+          paths: ["currentTab"], // 只持久化当前标签页索引
+        },
+      ],
+    },
   }
 );
 

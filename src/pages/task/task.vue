@@ -1,9 +1,9 @@
 <script setup lang="ts" name="task">
-import { computed, ref } from 'vue';
-import { storeToRefs } from 'pinia';
-import UserStatusCard from '../../components/UserStatusCard.vue';
-import { useUserStore } from '@/store/user';
-import TaskList from '../../../ui/complaint/complaint_page/TaskList.vue';
+import { computed, ref } from "vue";
+import { storeToRefs } from "pinia";
+import UserStatusCard from "../../components/UserStatusCard.vue";
+import { useUserStore } from "@/store/user";
+import TaskList from "../../../ui/complaint/complaint_page/TaskList.vue";
 
 /**
  * 事项页面 - 获取业主投诉工单数据
@@ -15,9 +15,9 @@ const userStore = useUserStore();
 const { loggedIn } = storeToRefs(userStore);
 
 // 基础配置
-const apiBaseUrl = ref('/api');
-const email = ref('molly@mail.com'); // 预设账户
-const password = ref('123'); // 预设密码
+const apiBaseUrl = ref("/api");
+const email = ref("molly@mail.com"); // 预设账户
+const password = ref("123"); // 预设密码
 const token = ref<string | null>(null);
 const loading = ref(false);
 const contentData = ref<any>(null);
@@ -26,41 +26,41 @@ const errorInfo = ref<any>(null);
 // 格式化显示内容
 const prettyContentData = computed(() => {
   try {
-    return contentData.value ? JSON.stringify(contentData.value, null, 2) : '';
+    return contentData.value ? JSON.stringify(contentData.value, null, 2) : "";
   } catch {
-    return String(contentData.value || '');
+    return String(contentData.value || "");
   }
 });
 
 const prettyErrorInfo = computed(() => {
   try {
-    return errorInfo.value ? JSON.stringify(errorInfo.value, null, 2) : '';
+    return errorInfo.value ? JSON.stringify(errorInfo.value, null, 2) : "";
   } catch {
-    return String(errorInfo.value || '');
+    return String(errorInfo.value || "");
   }
 });
 
 // 图片相关功能
-const previewImage = ref<string>('');
+const previewImage = ref<string>("");
 const showImagePreview = ref(false);
 
 // 获取图片URL（带Token认证）
 function getImageUrl(attachment: any): string {
   if (!token.value) {
-    return '';
+    return "";
   }
 
   // 处理不同格式的attachment
-  let attachmentId = '';
-  if (typeof attachment === 'string') {
+  let attachmentId = "";
+  if (typeof attachment === "string") {
     attachmentId = attachment;
-  } else if (attachment && typeof attachment === 'object') {
+  } else if (attachment && typeof attachment === "object") {
     // 使用正确的文件ID
-    attachmentId = attachment.directus_files_id || attachment.id || '';
+    attachmentId = attachment.directus_files_id || attachment.id || "";
   }
 
   if (!attachmentId) {
-    return '';
+    return "";
   }
 
   return `${apiBaseUrl.value}/assets/${attachmentId}?access_token=${token.value}`;
@@ -78,12 +78,12 @@ function previewImageHandler(attachment: any) {
 // 关闭图片预览
 function closeImagePreview() {
   showImagePreview.value = false;
-  previewImage.value = '';
+  previewImage.value = "";
 }
 
 // 图片加载错误处理
 function onImageError(e: any) {
-  console.log('图片加载失败:', e);
+  console.log("图片加载失败:", e);
 }
 
 // 登录获取Token
@@ -94,9 +94,9 @@ async function login() {
   try {
     const res: any = await uni.request({
       url: `${apiBaseUrl.value}/auth/login`,
-      method: 'POST',
+      method: "POST",
       data: { email: email.value, password: password.value },
-      header: { 'Content-Type': 'application/json' }
+      header: { "Content-Type": "application/json" },
     });
 
     if (res.statusCode && res.statusCode >= 400) {
@@ -110,19 +110,19 @@ async function login() {
     token.value = t || null;
 
     if (token.value) {
-      uni.showToast({ title: '登录成功', icon: 'success' });
+      uni.showToast({ title: "登录成功", icon: "success" });
     } else {
-      throw new Error('未获取到有效Token');
+      throw new Error("未获取到有效Token");
     }
   } catch (e: any) {
     errorInfo.value = {
-      action: 'login',
+      action: "login",
       success: false,
       error: e?.message || String(e),
       details: e,
-      tips: ['检查网络连接', '确认Directus服务状态', '验证账号密码']
+      tips: ["检查网络连接", "确认Directus服务状态", "验证账号密码"],
     };
-    uni.showToast({ title: '登录失败', icon: 'error' });
+    uni.showToast({ title: "登录失败", icon: "error" });
   } finally {
     loading.value = false;
   }
@@ -131,7 +131,7 @@ async function login() {
 // 获取Content数据
 async function getContents() {
   if (!token.value) {
-    uni.showToast({ title: '请先登录获取Token', icon: 'none' });
+    uni.showToast({ title: "请先登录获取Token", icon: "none" });
     return;
   }
 
@@ -142,18 +142,18 @@ async function getContents() {
   try {
     const res: any = await uni.request({
       url: `/api/items/contents`,
-      method: 'GET',
+      method: "GET",
       data: {
         limit: 5,
-        fields: 'id,title,body,type,attachments.*',
+        fields: "id,title,body,type,attachments.*",
         filter: {
-          type: { _eq: 'complaint' }
-        }
+          type: { _eq: "complaint" },
+        },
       },
       header: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token.value}`
-      }
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token.value}`,
+      },
     });
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -162,15 +162,15 @@ async function getContents() {
         total: res.data?.data?.length || 0,
         data: res.data?.data || res.data,
         requestInfo: {
-          url: '/api/items/contents',
-          method: 'GET',
+          url: "/api/items/contents",
+          method: "GET",
           statusCode: res.statusCode,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       };
       uni.showToast({
         title: `获取成功! ${contentData.value.total}条数据`,
-        icon: 'success'
+        icon: "success",
       });
     } else {
       throw new Error(
@@ -179,31 +179,31 @@ async function getContents() {
     }
   } catch (e: any) {
     errorInfo.value = {
-      action: 'getContents',
+      action: "getContents",
       success: false,
       error: e?.message || String(e),
       details: e,
       requestInfo: {
-        url: '/api/items/contents',
-        method: 'GET',
+        url: "/api/items/contents",
+        method: "GET",
         hasToken: !!token.value,
         tokenPrefix: `${token.value?.substring(0, 10)}...`,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       possibleCauses: [
-        '用户没有contents集合的读取权限',
-        '某些字段权限被限制',
-        'Directus数据库连接问题',
-        'Token过期或无效'
+        "用户没有contents集合的读取权限",
+        "某些字段权限被限制",
+        "Directus数据库连接问题",
+        "Token过期或无效",
       ],
       tips: [
-        '检查Token是否过期',
-        '确认权限配置正确',
-        '验证Directus服务状态',
-        '检查网络连接'
-      ]
+        "检查Token是否过期",
+        "确认权限配置正确",
+        "验证Directus服务状态",
+        "检查网络连接",
+      ],
     };
-    uni.showToast({ title: '获取失败，查看错误信息', icon: 'error' });
+    uni.showToast({ title: "获取失败，查看错误信息", icon: "error" });
   } finally {
     loading.value = false;
   }
@@ -213,7 +213,7 @@ async function getContents() {
 function copyContent() {
   const text = prettyContentData.value;
   if (!text) {
-    uni.showToast({ title: '没有数据可复制', icon: 'none' });
+    uni.showToast({ title: "没有数据可复制", icon: "none" });
     return;
   }
 
@@ -222,7 +222,7 @@ function copyContent() {
       navigator.clipboard
         .writeText(text)
         .then(() => {
-          uni.showToast({ title: '数据已复制', icon: 'success' });
+          uni.showToast({ title: "数据已复制", icon: "success" });
         })
         .catch(() => {
           fallbackCopyTextToClipboard(text);
@@ -231,14 +231,14 @@ function copyContent() {
       fallbackCopyTextToClipboard(text);
     }
   } catch {
-    uni.showToast({ title: '复制失败', icon: 'error' });
+    uni.showToast({ title: "复制失败", icon: "error" });
   }
 }
 
 function copyError() {
   const text = prettyErrorInfo.value;
   if (!text) {
-    uni.showToast({ title: '没有错误信息可复制', icon: 'none' });
+    uni.showToast({ title: "没有错误信息可复制", icon: "none" });
     return;
   }
 
@@ -247,7 +247,7 @@ function copyError() {
       navigator.clipboard
         .writeText(text)
         .then(() => {
-          uni.showToast({ title: '错误信息已复制', icon: 'success' });
+          uni.showToast({ title: "错误信息已复制", icon: "success" });
         })
         .catch(() => {
           fallbackCopyTextToClipboard(text);
@@ -256,26 +256,26 @@ function copyError() {
       fallbackCopyTextToClipboard(text);
     }
   } catch {
-    uni.showToast({ title: '复制失败', icon: 'error' });
+    uni.showToast({ title: "复制失败", icon: "error" });
   }
 }
 
 // 降级复制方法
 function fallbackCopyTextToClipboard(text: string) {
-  const textArea = document.createElement('textarea');
+  const textArea = document.createElement("textarea");
   textArea.value = text;
-  textArea.style.position = 'fixed';
-  textArea.style.left = '-999999px';
-  textArea.style.top = '-999999px';
+  textArea.style.position = "fixed";
+  textArea.style.left = "-999999px";
+  textArea.style.top = "-999999px";
   document.body.appendChild(textArea);
   textArea.focus();
   textArea.select();
 
   try {
-    document.execCommand('copy');
-    uni.showToast({ title: '复制成功', icon: 'success' });
+    document.execCommand("copy");
+    uni.showToast({ title: "复制成功", icon: "success" });
   } catch {
-    uni.showToast({ title: '复制失败，请手动选择复制', icon: 'error' });
+    uni.showToast({ title: "复制失败，请手动选择复制", icon: "error" });
   }
 
   document.body.removeChild(textArea);
@@ -283,10 +283,10 @@ function fallbackCopyTextToClipboard(text: string) {
 
 // TaskList组件事件处理
 function handleTaskClick(task: any) {
-  console.log('点击了任务:', task);
+  console.log("点击了任务:", task);
   uni.showToast({
     title: `查看任务: ${task.title}`,
-    icon: 'none'
+    icon: "none",
   });
 }
 </script>
@@ -307,7 +307,7 @@ function handleTaskClick(task: any) {
       <view class="account-info">
         <text class="label">预设账户: {{ email }}</text>
         <text class="token-status" :class="{ 'has-token': token }">
-          {{ token ? 'Token已获取' : '未登录' }}
+          {{ token ? "Token已获取" : "未登录" }}
         </text>
       </view>
 
@@ -318,7 +318,7 @@ function handleTaskClick(task: any) {
           :disabled="loading"
           @click="login"
         >
-          {{ loading ? '登录中...' : '获取Token' }}
+          {{ loading ? "登录中..." : "获取Token" }}
         </button>
       </view>
 
@@ -353,11 +353,11 @@ function handleTaskClick(task: any) {
           class="content-card"
         >
           <view class="card-header">
-            <text class="post-title">{{ item.title || '无标题' }}</text>
-            <text class="post-type task-type">{{ item.type || '事项' }}</text>
+            <text class="post-title">{{ item.title || "无标题" }}</text>
+            <text class="post-type task-type">{{ item.type || "事项" }}</text>
           </view>
           <view class="card-body">
-            <text class="post-content">{{ item.body || '无内容' }}</text>
+            <text class="post-content">{{ item.body || "无内容" }}</text>
 
             <!-- 实际图片显示 -->
             <view

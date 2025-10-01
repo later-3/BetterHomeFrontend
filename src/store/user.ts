@@ -1,37 +1,41 @@
-import { defineStore } from 'pinia';
-import { readMe } from '@directus/sdk';
+import { defineStore } from "pinia";
+import { readMe } from "@directus/sdk";
 import directus, {
   setAuthToken,
   handleDirectusError,
   communitiesApi,
-  buildingsApi
-} from '@/utils/directus';
-import type { Community, Building, DirectusUser } from '@/@types/directus-schema';
+  buildingsApi,
+} from "@/utils/directus";
+import type {
+  Community,
+  Building,
+  DirectusUser,
+} from "@/@types/directus-schema";
 
 type UserFieldSelection =
   | keyof DirectusUser
-  | '*'
-  | 'community_id.*'
-  | 'building_id.*'
-  | 'avatar.*'
-  | 'avatar.id'
-  | 'avatar.filename_disk'
-  | 'avatar.type';
+  | "*"
+  | "community_id.*"
+  | "building_id.*"
+  | "avatar.*"
+  | "avatar.id"
+  | "avatar.filename_disk"
+  | "avatar.type";
 
 const USER_PROFILE_FIELDS: UserFieldSelection[] = [
-  'id',
-  'first_name',
-  'last_name',
-  'email',
-  'status',
-  'language',
-  'user_type',
-  'community_id.*',
-  'building_id.*',
-  'avatar.*',
-  'avatar.id',
-  'avatar.filename_disk',
-  'avatar.type'
+  "id",
+  "first_name",
+  "last_name",
+  "email",
+  "status",
+  "language",
+  "user_type",
+  "community_id.*",
+  "building_id.*",
+  "avatar.*",
+  "avatar.id",
+  "avatar.filename_disk",
+  "avatar.type",
 ];
 
 export interface LoginCredentials {
@@ -57,12 +61,12 @@ interface NormalizedProfile {
 
 function normalizeUserPayload(user: DirectusUser): NormalizedProfile {
   const community =
-    typeof user.community_id === 'object' && user.community_id !== null
+    typeof user.community_id === "object" && user.community_id !== null
       ? (user.community_id as Community)
       : null;
 
   const building =
-    typeof user.building_id === 'object' && user.building_id !== null
+    typeof user.building_id === "object" && user.building_id !== null
       ? (user.building_id as Building)
       : null;
 
@@ -70,78 +74,86 @@ function normalizeUserPayload(user: DirectusUser): NormalizedProfile {
     ...user,
     community_id: community ?? user.community_id,
     building_id: building ?? user.building_id ?? null,
-    avatar: typeof user.avatar === 'object' || typeof user.avatar === 'string' ? user.avatar : null
+    avatar:
+      typeof user.avatar === "object" || typeof user.avatar === "string"
+        ? user.avatar
+        : null,
   };
 
   return { profile, community, building };
 }
 
-function resolveExpiry(authData: { expires?: number | null; expires_at?: string | number | null }): number | null {
+function resolveExpiry(authData: {
+  expires?: number | null;
+  expires_at?: string | number | null;
+}): number | null {
   const { expires_at, expires } = authData;
 
-  if (typeof expires_at === 'number' && Number.isFinite(expires_at)) {
+  if (typeof expires_at === "number" && Number.isFinite(expires_at)) {
     return expires_at;
   }
 
-  if (typeof expires_at === 'string') {
+  if (typeof expires_at === "string") {
     const expiresAt = new Date(expires_at).getTime();
     if (!Number.isNaN(expiresAt)) {
       return expiresAt;
     }
   }
 
-  if (typeof expires === 'number' && Number.isFinite(expires)) {
+  if (typeof expires === "number" && Number.isFinite(expires)) {
     return Date.now() + expires;
   }
 
   return null;
 }
 
-function createCommunityFromLegacy(payload: LegacyUserPayload): Community | null {
+function createCommunityFromLegacy(
+  payload: LegacyUserPayload
+): Community | null {
   if (!payload.community_id) return null;
   return {
     id: payload.community_id,
-    name: payload.community_name ?? '',
+    name: payload.community_name ?? "",
     user_created: undefined,
     date_created: undefined,
     user_updated: undefined,
     date_updated: undefined,
-    address: undefined
+    address: undefined,
   };
 }
 
-export const useUserStore = defineStore('user', {
+export const useUserStore = defineStore("user", {
   state: () => ({
-    token: '',
-    refreshToken: '',
+    token: "",
+    refreshToken: "",
     tokenExpiry: null as number | null,
     profile: null as DirectusUser | null,
     community: null as Community | null,
     building: null as Building | null,
-    loading: false
+    loading: false,
   }),
   getters: {
     isLoggedIn: (state) => Boolean(state.token && state.profile?.id),
     loggedIn(): boolean {
       return Boolean(this.token && this.profile?.id);
     },
-    userId: (state) => state.profile?.id ?? '',
+    userId: (state) => state.profile?.id ?? "",
     userType: (state) => state.profile?.user_type ?? null,
     displayName: (state) => {
-      if (!state.profile) return '';
+      if (!state.profile) return "";
       const { first_name, last_name, email } = state.profile;
-      const name = [first_name, last_name].filter(Boolean).join(' ').trim();
+      const name = [first_name, last_name].filter(Boolean).join(" ").trim();
       return name || email || state.profile.id;
     },
     communityId: (state) => {
       const value = state.profile?.community_id;
-      if (!value) return '';
-      return typeof value === 'string' ? value : value.id;
+      if (!value) return "";
+      return typeof value === "string" ? value : value.id;
     },
     buildingId: (state) => {
       const value = state.profile?.building_id;
-      if (!value) return '';
-      return typeof value === 'string' ? value : value.id;
+      if (!value) return "";
+      return typeof value === "string" ? value : value.id;
     },
     tokenNearExpiry: (state) => {
       if (!state.tokenExpiry) return false;
@@ -152,7 +164,9 @@ export const useUserStore = defineStore('user', {
       if (!state.tokenExpiry) return false;
       return Date.now() >= state.tokenExpiry;
     },
-    userInfo: (state): {
+    userInfo: (
+      state
+    ): {
       id: string;
       first_name: string;
       last_name: string;
@@ -163,17 +177,17 @@ export const useUserStore = defineStore('user', {
       const profile = state.profile;
       const community = state.community;
       return {
-        id: profile?.id ?? '',
-        first_name: profile?.first_name ?? '',
-        last_name: profile?.last_name ?? '',
-        email: profile?.email ?? '',
+        id: profile?.id ?? "",
+        first_name: profile?.first_name ?? "",
+        last_name: profile?.last_name ?? "",
+        email: profile?.email ?? "",
         community_id:
-          typeof profile?.community_id === 'string'
+          typeof profile?.community_id === "string"
             ? profile.community_id
-            : profile?.community_id?.id ?? community?.id ?? '',
-        community_name: community?.name ?? ''
+            : profile?.community_id?.id ?? community?.id ?? "",
+        community_name: community?.name ?? "",
       };
-    }
+    },
   },
   actions: {
     async login(
@@ -181,13 +195,15 @@ export const useUserStore = defineStore('user', {
       tokenArg?: string,
       expiryMinutes?: number
     ): Promise<DirectusUser | void> {
-      if ('password' in arg1) {
+      if ("password" in arg1) {
         this.loading = true;
         try {
-          const authData = await directus.login(arg1.email, arg1.password, { mode: 'json' });
+          const authData = await directus.login(arg1.email, arg1.password, {
+            mode: "json",
+          });
 
-          const accessToken = authData?.access_token ?? '';
-          const refreshToken = authData?.refresh_token ?? '';
+          const accessToken = authData?.access_token ?? "";
+          const refreshToken = authData?.refresh_token ?? "";
           const expiresAt = resolveExpiry(authData ?? {});
 
           this.token = accessToken;
@@ -198,12 +214,12 @@ export const useUserStore = defineStore('user', {
 
           const user = await directus.request(
             readMe({
-              fields: USER_PROFILE_FIELDS as unknown as (keyof DirectusUser)[]
+              fields: USER_PROFILE_FIELDS as unknown as (keyof DirectusUser)[],
             })
           );
 
           if (import.meta.env.DEV) {
-            console.log('[user-store] login readMe result', user);
+            console.log("[user-store] login readMe result", user);
           }
 
           const normalized = normalizeUserPayload(user as DirectusUser);
@@ -212,7 +228,12 @@ export const useUserStore = defineStore('user', {
           this.building = normalized.building;
 
           if (!normalized.community || !normalized.building) {
-            await this.fetchContext();
+            // 使用setTimeout避免同步调用导致的递归
+            setTimeout(() => {
+              if (!this.loading) {
+                this.fetchContext();
+              }
+            }, 0);
           }
 
           return this.profile;
@@ -225,10 +246,10 @@ export const useUserStore = defineStore('user', {
         }
       } else {
         const legacy = arg1;
-        this.token = tokenArg ?? '';
-        this.refreshToken = '';
+        this.token = tokenArg ?? "";
+        this.refreshToken = "";
         this.tokenExpiry =
-          typeof expiryMinutes === 'number'
+          typeof expiryMinutes === "number"
             ? Date.now() + expiryMinutes * 60 * 1000
             : null;
 
@@ -239,9 +260,9 @@ export const useUserStore = defineStore('user', {
           first_name: legacy.first_name,
           last_name: legacy.last_name,
           email: legacy.email,
-          community_id: legacy.community_id || '',
+          community_id: legacy.community_id || "",
           building_id: legacy.building_id ?? null,
-          user_type: this.profile?.user_type ?? 'resident'
+          user_type: this.profile?.user_type ?? "resident",
         };
 
         this.profile = fallbackProfile;
@@ -252,15 +273,24 @@ export const useUserStore = defineStore('user', {
 
     async fetchProfile() {
       if (!this.token) return null;
+
+      // 防止重复调用
+      if (this.loading) {
+        console.log("[user-store] fetchProfile 已在执行中，跳过重复调用");
+        return this.profile;
+      }
+
+      this.loading = true;
+
       try {
         const user = await directus.request(
           readMe({
-            fields: USER_PROFILE_FIELDS as unknown as (keyof DirectusUser)[]
+            fields: USER_PROFILE_FIELDS as unknown as (keyof DirectusUser)[],
           })
         );
 
         if (import.meta.env.DEV) {
-          console.log('[user-store] fetchProfile readMe result', user);
+          console.log("[user-store] fetchProfile readMe result", user);
         }
 
         const normalized = normalizeUserPayload(user as DirectusUser);
@@ -268,50 +298,119 @@ export const useUserStore = defineStore('user', {
         this.community = normalized.community;
         this.building = normalized.building;
 
+        // 只有在社区或建筑信息缺失且不在加载状态时才调用fetchContext
         if (!normalized.community || !normalized.building) {
-          await this.fetchContext();
+          // 使用setTimeout避免同步调用导致的递归
+          setTimeout(() => {
+            if (!this.loading) {
+              this.fetchContext();
+            }
+          }, 0);
         }
 
         return this.profile;
       } catch (error) {
         handleDirectusError(error);
+      } finally {
+        this.loading = false;
       }
     },
 
     async fetchContext() {
       if (!this.profile?.community_id) return;
 
-      const communityId =
-        typeof this.profile.community_id === 'string'
-          ? this.profile.community_id
-          : this.profile.community_id.id;
-
-      try {
-        this.community = await communitiesApi.readOne(communityId, {
-          fields: ['id', 'name', 'address']
-        });
-      } catch (error) {
-        console.warn('[user-store] Failed to load community details', error);
-      }
-
-      const buildingRef = this.profile.building_id;
-      if (!buildingRef) {
-        this.building = null;
+      // 防止无限递归：如果正在加载中，直接返回
+      if (this.loading) {
+        console.log("[user-store] fetchContext 已在执行中，跳过重复调用");
         return;
       }
 
-      const buildingId = typeof buildingRef === 'string' ? buildingRef : buildingRef.id;
-      if (!buildingId) {
-        this.building = null;
-        return;
-      }
+      this.loading = true;
 
       try {
-        this.building = await buildingsApi.readOne(buildingId, {
-          fields: ['id', 'name', 'community_id']
-        });
-      } catch (error) {
-        console.warn('[user-store] Failed to load building details', error);
+        // 修复：从 community_id 对象中查找实际的 ID
+        let communityId: string | undefined;
+
+        if (typeof this.profile.community_id === "string") {
+          communityId = this.profile.community_id;
+        } else if (
+          this.profile.community_id &&
+          typeof this.profile.community_id === "object"
+        ) {
+          // 尝试从对象中获取 ID，可能的字段名
+          communityId =
+            (this.profile.community_id as any).id ||
+            (this.profile.community_id as any).community_id ||
+            (this.profile.community_id as any).uuid;
+        }
+
+        // 如果仍然没有找到 ID，尝试通过名称查找社区
+        if (
+          !communityId &&
+          this.profile.community_id &&
+          typeof this.profile.community_id === "object"
+        ) {
+          const communityName = (this.profile.community_id as any).name;
+          if (communityName) {
+            try {
+              console.log("[user-store] 尝试通过社区名称查找:", communityName);
+              const communities = await communitiesApi.readMany({
+                filter: { name: { _eq: communityName } },
+                fields: ["id", "name", "address"],
+                limit: 1,
+              });
+
+              if (communities.length > 0) {
+                communityId = communities[0].id;
+                console.log("[user-store] 通过名称找到社区ID:", communityId);
+                // 更新社区信息，添加缺失的ID
+                this.community = communities[0];
+              }
+            } catch (error) {
+              console.warn("[user-store] 通过名称查找社区失败:", error);
+            }
+          }
+        }
+
+        if (!communityId) {
+          console.warn(
+            "[user-store] 无法获取社区ID，community_id对象:",
+            this.profile.community_id
+          );
+          return;
+        }
+
+        try {
+          this.community = await communitiesApi.readOne(communityId, {
+            fields: ["id", "name", "address"],
+          });
+          console.log("[user-store] 成功加载社区信息:", this.community);
+        } catch (error) {
+          console.warn("[user-store] Failed to load community details", error);
+        }
+
+        const buildingRef = this.profile.building_id;
+        if (!buildingRef) {
+          this.building = null;
+          return;
+        }
+
+        const buildingId =
+          typeof buildingRef === "string" ? buildingRef : buildingRef.id;
+        if (!buildingId) {
+          this.building = null;
+          return;
+        }
+
+        try {
+          this.building = await buildingsApi.readOne(buildingId, {
+            fields: ["id", "name", "community_id"],
+          });
+        } catch (error) {
+          console.warn("[user-store] Failed to load building details", error);
+        }
+      } finally {
+        this.loading = false;
       }
     },
 
@@ -319,7 +418,7 @@ export const useUserStore = defineStore('user', {
       if (!this.refreshToken) return null;
       try {
         const authData = await directus.refresh();
-        const accessToken = authData?.access_token ?? '';
+        const accessToken = authData?.access_token ?? "";
         const refreshToken = authData?.refresh_token ?? this.refreshToken;
         const expiresAt = resolveExpiry(authData ?? {});
 
@@ -349,32 +448,39 @@ export const useUserStore = defineStore('user', {
       try {
         await directus.logout();
       } catch (error) {
-        console.warn('[user-store] logout failed', error);
+        console.warn("[user-store] logout failed", error);
       } finally {
         await setAuthToken(null);
         this.$reset();
       }
-    }
+    },
   },
   persist: {
     enabled: true,
     strategies: [
       {
-        key: 'user',
+        key: "user",
         storage: {
           getItem: (key: string) => uni.getStorageSync(key),
           setItem: (key: string, value: any) => uni.setStorageSync(key, value),
           removeItem: (key: string) => uni.removeStorageSync(key),
           clear: () => uni.clearStorageSync(),
-          key: (_index: number) => '',
+          key: (_index: number) => "",
           get length() {
             return 0;
-          }
+          },
         },
-        paths: ['token', 'refreshToken', 'tokenExpiry', 'profile', 'community', 'building']
-      }
-    ]
-  }
+        paths: [
+          "token",
+          "refreshToken",
+          "tokenExpiry",
+          "profile",
+          "community",
+          "building",
+        ],
+      },
+    ],
+  },
 });
 
 export default useUserStore;

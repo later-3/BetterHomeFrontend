@@ -1,6 +1,6 @@
-export type CommentReaction = 'like' | 'none';
+export type CommentReaction = "like" | "none";
 
-export type CommentAttachmentType = 'image' | 'video' | 'audio' | 'file';
+export type CommentAttachmentType = "image" | "video" | "audio" | "file";
 
 export interface CommentAttachment {
   id: string;

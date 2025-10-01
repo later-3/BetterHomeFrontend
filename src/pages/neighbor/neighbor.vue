@@ -1,9 +1,9 @@
 <script setup lang="ts" name="neighbor">
-import { computed, ref } from 'vue';
-import { storeToRefs } from 'pinia';
-import SocialFeedContent from '../../components/SocialFeedContent.vue';
-import UserStatusCard from '../../components/UserStatusCard.vue';
-import { useUserStore } from '@/store/user';
+import { computed, ref } from "vue";
+import { storeToRefs } from "pinia";
+import SocialFeedContent from "../../components/SocialFeedContent.vue";
+import UserStatusCard from "../../components/UserStatusCard.vue";
+import { useUserStore } from "@/store/user";
 
 /**
  * 业主圈页面 - 获取业主圈帖子
@@ -16,17 +16,17 @@ const userStore = useUserStore();
 const { loggedIn, token, userInfo } = storeToRefs(userStore);
 
 // 基础配置
-const apiBaseUrl = ref('/api');
-const email = ref('molly@mail.com'); // 预设账户
-const password = ref('123'); // 预设密码
+const apiBaseUrl = ref("/api");
+const email = ref("molly@mail.com"); // 预设账户
+const password = ref("123"); // 预设密码
 const loading = ref(false);
 const contentData = ref<any>(null);
 const errorInfo = ref<any>(null);
 // const autoLoading = ref(false); // 新增：自动加载状态
-const tempCommunityId = ref(''); // 临时小区ID用于测试
+const tempCommunityId = ref(""); // 临时小区ID用于测试
 
 // 社交动态调试相关
-const debugLog = ref('=== 社交动态Props集成调试日志 ===\n');
+const debugLog = ref("=== 社交动态Props集成调试日志 ===\n");
 const socialFeedPosts = ref<any[]>([]); // 传递给SocialFeedContent的数据
 
 // 测试原始数据显示
@@ -36,58 +36,58 @@ const showRawData = ref(false); // 控制是否显示原始数据区域
 // 格式化显示内容
 const prettyContentData = computed(() => {
   try {
-    return contentData.value ? JSON.stringify(contentData.value, null, 2) : '';
+    return contentData.value ? JSON.stringify(contentData.value, null, 2) : "";
   } catch {
-    return String(contentData.value || '');
+    return String(contentData.value || "");
   }
 });
 
 const prettyErrorInfo = computed(() => {
   try {
-    return errorInfo.value ? JSON.stringify(errorInfo.value, null, 2) : '';
+    return errorInfo.value ? JSON.stringify(errorInfo.value, null, 2) : "";
   } catch {
-    return String(errorInfo.value || '');
+    return String(errorInfo.value || "");
   }
 });
 
 // 图片相关功能
-const previewImage = ref<string>('');
+const previewImage = ref<string>("");
 const showImagePreview = ref(false);
 // const imageCache = ref<Record<string, string>>({});
 
 // 获取图片URL（带Token认证）
 function getImageUrl(attachment: any): string {
   if (!token.value) {
-    console.log('获取图片URL失败: 没有token');
-    return '';
+    console.log("获取图片URL失败: 没有token");
+    return "";
   }
 
   // 处理不同格式的attachment
-  let attachmentId = '';
-  if (typeof attachment === 'string') {
+  let attachmentId = "";
+  if (typeof attachment === "string") {
     attachmentId = attachment;
-    console.log('图片ID（字符串）:', attachmentId);
-  } else if (attachment && typeof attachment === 'object') {
+    console.log("图片ID（字符串）:", attachmentId);
+  } else if (attachment && typeof attachment === "object") {
     // 尝试多种可能的ID字段
     attachmentId =
       attachment.directus_files_id ||
       attachment.id ||
       attachment.file_id ||
       attachment.attachment_id ||
-      '';
-    console.log('图片attachment对象:', attachment);
-    console.log('提取的图片ID:', attachmentId);
-    console.log('可用字段:', Object.keys(attachment));
+      "";
+    console.log("图片attachment对象:", attachment);
+    console.log("提取的图片ID:", attachmentId);
+    console.log("可用字段:", Object.keys(attachment));
   }
 
   if (!attachmentId) {
-    console.log('无效的attachment，无法提取ID:', attachment);
-    return '';
+    console.log("无效的attachment，无法提取ID:", attachment);
+    return "";
   }
 
   // 生成图片URL
   const imageUrl = `${apiBaseUrl.value}/assets/${attachmentId}?access_token=${token.value}`;
-  console.log('生成的图片URL:', imageUrl);
+  console.log("生成的图片URL:", imageUrl);
   return imageUrl;
 }
 
@@ -143,12 +143,12 @@ function previewImageHandler(attachment: any) {
 // 关闭图片预览
 function closeImagePreview() {
   showImagePreview.value = false;
-  previewImage.value = '';
+  previewImage.value = "";
 }
 
 // 图片加载错误处理
 function onImageError(e: any) {
-  console.log('图片加载失败:', e);
+  console.log("图片加载失败:", e);
   // 可以在这里设置默认图片或其他处理
 }
 
@@ -173,7 +173,7 @@ async function testImageAccess() {
 
   try {
     console.log(
-      '开始测试图片访问，Token:',
+      "开始测试图片访问，Token:",
       `${token.value.substring(0, 20)}...`
     );
 
@@ -181,39 +181,39 @@ async function testImageAccess() {
     const testMethods = [
       // 方式1: 使用Bearer Header
       {
-        name: '使用Bearer Header',
+        name: "使用Bearer Header",
         request: () =>
           uni.request({
             url: `${apiBaseUrl.value}/assets/2`,
-            method: 'GET',
+            method: "GET",
             header: {
               Authorization: `Bearer ${token.value}`,
-              'Content-Type': 'application/json'
-            }
-          })
+              "Content-Type": "application/json",
+            },
+          }),
       },
       // 方式2: 使用access_token参数
       {
-        name: '使用access_token参数',
+        name: "使用access_token参数",
         request: () =>
           uni.request({
             url: `${apiBaseUrl.value}/assets/2?access_token=${token.value}`,
-            method: 'GET'
-          })
+            method: "GET",
+          }),
       },
       // 方式3: 检查files端点
       {
-        name: '检查files端点',
+        name: "检查files端点",
         request: () =>
           uni.request({
             url: `${apiBaseUrl.value}/files/2`,
-            method: 'GET',
+            method: "GET",
             header: {
               Authorization: `Bearer ${token.value}`,
-              'Content-Type': 'application/json'
-            }
-          })
-      }
+              "Content-Type": "application/json",
+            },
+          }),
+      },
     ];
 
     const results: any[] = [];
@@ -227,34 +227,34 @@ async function testImageAccess() {
           status: res.statusCode,
           success: res.statusCode < 400,
           data:
-            typeof res.data === 'string'
+            typeof res.data === "string"
               ? res.data.substring(0, 200)
               : JSON.stringify(res.data),
-          fullResponse: res.data
+          fullResponse: res.data,
         });
       } catch (error) {
         console.log(`${method.name} 失败:`, error);
         results.push({
           method: method.name,
-          status: 'error',
+          status: "error",
           success: false,
-          error: String(error)
+          error: String(error),
         });
       }
     }
 
     contentData.value = {
       success: true,
-      testType: 'imageAccess',
+      testType: "imageAccess",
       results,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   } catch (e: any) {
     errorInfo.value = {
-      action: 'testImageAccess',
+      action: "testImageAccess",
       success: false,
       error: e?.message || String(e),
-      details: e
+      details: e,
     };
   } finally {
     loading.value = false;
@@ -269,15 +269,15 @@ async function login() {
   try {
     const res: any = await uni.request({
       url: `${apiBaseUrl.value}/auth/login`,
-      method: 'POST',
+      method: "POST",
       data: {
         email: email.value,
         password: password.value,
         // 请求较长的token有效期，适用于移动应用
         // Directus支持通过mode参数控制token类型
-        mode: 'json' // 使用JSON模式获取较长有效期的token
+        mode: "json", // 使用JSON模式获取较长有效期的token
       },
-      header: { 'Content-Type': 'application/json' }
+      header: { "Content-Type": "application/json" },
     });
 
     if (res.statusCode && res.statusCode >= 400) {
@@ -293,29 +293,29 @@ async function login() {
       // 更新Pinia store中的token，设置2小时过期时间（移动应用标准）
       userStore.login(
         {
-          id: userInfo.value.id || 'temp-user',
-          first_name: userInfo.value.first_name || 'User',
-          last_name: userInfo.value.last_name || '',
+          id: userInfo.value.id || "temp-user",
+          first_name: userInfo.value.first_name || "User",
+          last_name: userInfo.value.last_name || "",
           email: email.value,
-          community_id: userInfo.value.community_id || '',
-          community_name: userInfo.value.community_name || ''
+          community_id: userInfo.value.community_id || "",
+          community_name: userInfo.value.community_name || "",
         },
         t,
         120
       ); // 2小时 = 120分钟
-      uni.showToast({ title: '登录成功', icon: 'success' });
+      uni.showToast({ title: "登录成功", icon: "success" });
     } else {
-      throw new Error('未获取到有效Token');
+      throw new Error("未获取到有效Token");
     }
   } catch (e: any) {
     errorInfo.value = {
-      action: 'login',
+      action: "login",
       success: false,
       error: e?.message || String(e),
       details: e,
-      tips: ['检查网络连接', '确认Directus服务状态', '验证账号密码']
+      tips: ["检查网络连接", "确认Directus服务状态", "验证账号密码"],
     };
-    uni.showToast({ title: '登录失败', icon: 'error' });
+    uni.showToast({ title: "登录失败", icon: "error" });
   } finally {
     loading.value = false;
   }
@@ -326,7 +326,7 @@ async function login() {
 // 获取Content数据
 async function getContents() {
   if (!token.value) {
-    uni.showToast({ title: '请先登录获取Token', icon: 'none' });
+    uni.showToast({ title: "请先登录获取Token", icon: "none" });
     return;
   }
 
@@ -337,19 +337,19 @@ async function getContents() {
   try {
     const res: any = await uni.request({
       url: `/api/items/contents`,
-      method: 'GET',
+      method: "GET",
       data: {
         limit: 5,
         fields:
-          'id,title,body,type,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created',
+          "id,title,body,type,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created",
         filter: {
-          type: { _eq: 'post' }
-        }
+          type: { _eq: "post" },
+        },
       },
       header: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token.value}`
-      }
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token.value}`,
+      },
     });
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -358,15 +358,15 @@ async function getContents() {
         total: res.data?.data?.length || 0,
         data: res.data?.data || res.data,
         requestInfo: {
-          url: '/api/items/contents',
-          method: 'GET',
+          url: "/api/items/contents",
+          method: "GET",
           statusCode: res.statusCode,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       };
       uni.showToast({
         title: `获取成功! ${contentData.value.total}条数据`,
-        icon: 'success'
+        icon: "success",
       });
     } else {
       throw new Error(
@@ -375,31 +375,31 @@ async function getContents() {
     }
   } catch (e: any) {
     errorInfo.value = {
-      action: 'getContents',
+      action: "getContents",
       success: false,
       error: e?.message || String(e),
       details: e,
       requestInfo: {
-        url: '/api/items/contents',
-        method: 'GET',
+        url: "/api/items/contents",
+        method: "GET",
         hasToken: !!token.value,
         tokenPrefix: `${token.value?.substring(0, 10)}...`,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       possibleCauses: [
-        '用户没有contents集合的读取权限',
-        '某些字段权限被限制',
-        'Directus数据库连接问题',
-        'Token过期或无效'
+        "用户没有contents集合的读取权限",
+        "某些字段权限被限制",
+        "Directus数据库连接问题",
+        "Token过期或无效",
       ],
       tips: [
-        '检查Token是否过期',
-        '确认权限配置正确',
-        '验证Directus服务状态',
-        '检查网络连接'
-      ]
+        "检查Token是否过期",
+        "确认权限配置正确",
+        "验证Directus服务状态",
+        "检查网络连接",
+      ],
     };
-    uni.showToast({ title: '获取失败，查看错误信息', icon: 'error' });
+    uni.showToast({ title: "获取失败，查看错误信息", icon: "error" });
   } finally {
     loading.value = false;
   }
@@ -409,7 +409,7 @@ async function getContents() {
 function copyContent() {
   const text = prettyContentData.value;
   if (!text) {
-    uni.showToast({ title: '没有数据可复制', icon: 'none' });
+    uni.showToast({ title: "没有数据可复制", icon: "none" });
     return;
   }
 
@@ -418,7 +418,7 @@ function copyContent() {
       navigator.clipboard
         .writeText(text)
         .then(() => {
-          uni.showToast({ title: '数据已复制', icon: 'success' });
+          uni.showToast({ title: "数据已复制", icon: "success" });
         })
         .catch(() => {
           fallbackCopyTextToClipboard(text);
@@ -427,14 +427,14 @@ function copyContent() {
       fallbackCopyTextToClipboard(text);
     }
   } catch {
-    uni.showToast({ title: '复制失败', icon: 'error' });
+    uni.showToast({ title: "复制失败", icon: "error" });
   }
 }
 
 function copyError() {
   const text = prettyErrorInfo.value;
   if (!text) {
-    uni.showToast({ title: '没有错误信息可复制', icon: 'none' });
+    uni.showToast({ title: "没有错误信息可复制", icon: "none" });
     return;
   }
 
@@ -443,7 +443,7 @@ function copyError() {
       navigator.clipboard
         .writeText(text)
         .then(() => {
-          uni.showToast({ title: '错误信息已复制', icon: 'success' });
+          uni.showToast({ title: "错误信息已复制", icon: "success" });
         })
         .catch(() => {
           fallbackCopyTextToClipboard(text);
@@ -452,26 +452,26 @@ function copyError() {
       fallbackCopyTextToClipboard(text);
     }
   } catch {
-    uni.showToast({ title: '复制失败', icon: 'error' });
+    uni.showToast({ title: "复制失败", icon: "error" });
   }
 }
 
 // 降级复制方法
 function fallbackCopyTextToClipboard(text: string) {
-  const textArea = document.createElement('textarea');
+  const textArea = document.createElement("textarea");
   textArea.value = text;
-  textArea.style.position = 'fixed';
-  textArea.style.left = '-999999px';
-  textArea.style.top = '-999999px';
+  textArea.style.position = "fixed";
+  textArea.style.left = "-999999px";
+  textArea.style.top = "-999999px";
   document.body.appendChild(textArea);
   textArea.focus();
   textArea.select();
 
   try {
-    document.execCommand('copy');
-    uni.showToast({ title: '复制成功', icon: 'success' });
+    document.execCommand("copy");
+    uni.showToast({ title: "复制成功", icon: "success" });
   } catch {
-    uni.showToast({ title: '复制失败，请手动选择复制', icon: 'error' });
+    uni.showToast({ title: "复制失败，请手动选择复制", icon: "error" });
   }
 
   document.body.removeChild(textArea);
@@ -480,19 +480,19 @@ function fallbackCopyTextToClipboard(text: string) {
 // 获取当前用户小区的Content数据
 async function getCommunityContents() {
   if (!token.value) {
-    uni.showToast({ title: '请先获取Token', icon: 'none' });
+    uni.showToast({ title: "请先获取Token", icon: "none" });
     return;
   }
 
   if (!userInfo.value.community_id) {
     errorInfo.value = {
-      action: 'getCommunityContents',
+      action: "getCommunityContents",
       success: false,
-      error: '用户信息中没有小区ID',
+      error: "用户信息中没有小区ID",
       details: userInfo.value,
-      tips: ['请确保用户已正确登录', '检查用户信息是否包含community_id']
+      tips: ["请确保用户已正确登录", "检查用户信息是否包含community_id"],
     };
-    uni.showToast({ title: '用户信息中没有小区ID', icon: 'error' });
+    uni.showToast({ title: "用户信息中没有小区ID", icon: "error" });
     return;
   }
 
@@ -503,20 +503,20 @@ async function getCommunityContents() {
   try {
     const res: any = await uni.request({
       url: `/api/items/contents`,
-      method: 'GET',
+      method: "GET",
       data: {
         limit: 10,
         fields:
-          'id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created',
+          "id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created",
         filter: {
-          type: { _eq: 'neighbor' },
-          community_id: { _eq: userInfo.value.community_id }
-        }
+          type: { _eq: "neighbor" },
+          community_id: { _eq: userInfo.value.community_id },
+        },
       },
       header: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token.value}`
-      }
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token.value}`,
+      },
     });
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -525,16 +525,16 @@ async function getCommunityContents() {
         total: res.data?.data?.length || 0,
         data: res.data?.data || res.data,
         requestInfo: {
-          url: '/api/items/contents',
-          method: 'GET',
+          url: "/api/items/contents",
+          method: "GET",
           filter: `type=neighbor, community_id=${userInfo.value.community_id}`,
           statusCode: res.statusCode,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       };
       uni.showToast({
         title: `获取成功! ${contentData.value.total}条小区数据`,
-        icon: 'success'
+        icon: "success",
       });
     } else {
       throw new Error(
@@ -543,32 +543,32 @@ async function getCommunityContents() {
     }
   } catch (e: any) {
     errorInfo.value = {
-      action: 'getCommunityContents',
+      action: "getCommunityContents",
       success: false,
       error: e?.message || String(e),
       details: e,
       requestInfo: {
-        url: '/api/items/contents',
-        method: 'GET',
+        url: "/api/items/contents",
+        method: "GET",
         filter: `type=neighbor, community_id=${userInfo.value.community_id}`,
         hasToken: !!token.value,
         tokenPrefix: `${token.value?.substring(0, 10)}...`,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       possibleCauses: [
-        '用户没有contents集合的读取权限',
-        '小区ID不存在或无效',
-        '没有type为neighbor的数据',
-        'Token过期或无效'
+        "用户没有contents集合的读取权限",
+        "小区ID不存在或无效",
+        "没有type为neighbor的数据",
+        "Token过期或无效",
       ],
       tips: [
-        '检查Token是否过期',
-        '确认community_id是否正确',
-        '验证Directus服务状态',
-        '检查网络连接'
-      ]
+        "检查Token是否过期",
+        "确认community_id是否正确",
+        "验证Directus服务状态",
+        "检查网络连接",
+      ],
     };
-    uni.showToast({ title: '获取失败，查看错误信息', icon: 'error' });
+    uni.showToast({ title: "获取失败，查看错误信息", icon: "error" });
   } finally {
     loading.value = false;
   }
@@ -582,7 +582,7 @@ async function testMethod1() {
 // 测试方法2: 只使用type=neighbor，不过滤小区
 async function testMethod2() {
   if (!token.value) {
-    uni.showToast({ title: '请先获取Token', icon: 'none' });
+    uni.showToast({ title: "请先获取Token", icon: "none" });
     return;
   }
 
@@ -593,19 +593,19 @@ async function testMethod2() {
   try {
     const res: any = await uni.request({
       url: `/api/items/contents`,
-      method: 'GET',
+      method: "GET",
       data: {
         limit: 10,
         fields:
-          'id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created',
+          "id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created",
         filter: {
-          type: { _eq: 'neighbor' }
-        }
+          type: { _eq: "neighbor" },
+        },
       },
       header: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token.value}`
-      }
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token.value}`,
+      },
     });
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -613,18 +613,18 @@ async function testMethod2() {
         success: true,
         total: res.data?.data?.length || 0,
         data: res.data?.data || res.data,
-        testMethod: '测试方法2: 只邻居类型',
+        testMethod: "测试方法2: 只邻居类型",
         requestInfo: {
-          url: '/api/items/contents',
-          method: 'GET',
-          filter: 'type=neighbor (所有小区)',
+          url: "/api/items/contents",
+          method: "GET",
+          filter: "type=neighbor (所有小区)",
           statusCode: res.statusCode,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       };
       uni.showToast({
         title: `测试2成功! ${contentData.value.total}条邻居数据`,
-        icon: 'success'
+        icon: "success",
       });
     } else {
       throw new Error(
@@ -633,14 +633,14 @@ async function testMethod2() {
     }
   } catch (e: any) {
     errorInfo.value = {
-      action: 'testMethod2',
+      action: "testMethod2",
       success: false,
       error: e?.message || String(e),
       details: e,
-      testMethod: '测试方法2: 只邻居类型',
-      tips: ['检查是否有type为neighbor的数据', '确认权限配置正确']
+      testMethod: "测试方法2: 只邻居类型",
+      tips: ["检查是否有type为neighbor的数据", "确认权限配置正确"],
     };
-    uni.showToast({ title: '测试2失败', icon: 'error' });
+    uni.showToast({ title: "测试2失败", icon: "error" });
   } finally {
     loading.value = false;
   }
@@ -649,19 +649,19 @@ async function testMethod2() {
 // 测试方法3: type=post + community_id过滤
 async function testMethod3() {
   if (!token.value) {
-    uni.showToast({ title: '请先获取Token', icon: 'none' });
+    uni.showToast({ title: "请先获取Token", icon: "none" });
     return;
   }
 
   if (!userInfo.value.community_id) {
     errorInfo.value = {
-      action: 'testMethod3',
+      action: "testMethod3",
       success: false,
-      error: '用户信息中没有小区ID',
-      testMethod: '测试方法3: 帖子+小区',
-      details: userInfo.value
+      error: "用户信息中没有小区ID",
+      testMethod: "测试方法3: 帖子+小区",
+      details: userInfo.value,
     };
-    uni.showToast({ title: '用户信息中没有小区ID', icon: 'error' });
+    uni.showToast({ title: "用户信息中没有小区ID", icon: "error" });
     return;
   }
 
@@ -672,20 +672,20 @@ async function testMethod3() {
   try {
     const res: any = await uni.request({
       url: `/api/items/contents`,
-      method: 'GET',
+      method: "GET",
       data: {
         limit: 10,
         fields:
-          'id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created',
+          "id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created",
         filter: {
-          type: { _eq: 'post' },
-          community_id: { _eq: userInfo.value.community_id }
-        }
+          type: { _eq: "post" },
+          community_id: { _eq: userInfo.value.community_id },
+        },
       },
       header: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token.value}`
-      }
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token.value}`,
+      },
     });
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -693,18 +693,18 @@ async function testMethod3() {
         success: true,
         total: res.data?.data?.length || 0,
         data: res.data?.data || res.data,
-        testMethod: '测试方法3: 帖子+小区',
+        testMethod: "测试方法3: 帖子+小区",
         requestInfo: {
-          url: '/api/items/contents',
-          method: 'GET',
+          url: "/api/items/contents",
+          method: "GET",
           filter: `type=post, community_id=${userInfo.value.community_id}`,
           statusCode: res.statusCode,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       };
       uni.showToast({
         title: `测试3成功! ${contentData.value.total}条小区帖子`,
-        icon: 'success'
+        icon: "success",
       });
     } else {
       throw new Error(
@@ -713,14 +713,14 @@ async function testMethod3() {
     }
   } catch (e: any) {
     errorInfo.value = {
-      action: 'testMethod3',
+      action: "testMethod3",
       success: false,
       error: e?.message || String(e),
       details: e,
-      testMethod: '测试方法3: 帖子+小区',
-      tips: ['检查是否有type为post的数据', '确认小区ID是否正确']
+      testMethod: "测试方法3: 帖子+小区",
+      tips: ["检查是否有type为post的数据", "确认小区ID是否正确"],
     };
-    uni.showToast({ title: '测试3失败', icon: 'error' });
+    uni.showToast({ title: "测试3失败", icon: "error" });
   } finally {
     loading.value = false;
   }
@@ -729,7 +729,7 @@ async function testMethod3() {
 // 测试方法4: 无过滤条件，获取所有内容
 async function testMethod4() {
   if (!token.value) {
-    uni.showToast({ title: '请先获取Token', icon: 'none' });
+    uni.showToast({ title: "请先获取Token", icon: "none" });
     return;
   }
 
@@ -740,15 +740,15 @@ async function testMethod4() {
   try {
     const res: any = await uni.request({
       url: `/api/items/contents`,
-      method: 'GET',
+      method: "GET",
       data: {
         limit: 10,
-        fields: 'id,title,body,type,community_id,attachments.*'
+        fields: "id,title,body,type,community_id,attachments.*",
       },
       header: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token.value}`
-      }
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token.value}`,
+      },
     });
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -756,18 +756,18 @@ async function testMethod4() {
         success: true,
         total: res.data?.data?.length || 0,
         data: res.data?.data || res.data,
-        testMethod: '测试方法4: 无过滤',
+        testMethod: "测试方法4: 无过滤",
         requestInfo: {
-          url: '/api/items/contents',
-          method: 'GET',
-          filter: '无过滤条件 (所有内容)',
+          url: "/api/items/contents",
+          method: "GET",
+          filter: "无过滤条件 (所有内容)",
           statusCode: res.statusCode,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       };
       uni.showToast({
         title: `测试4成功! ${contentData.value.total}条所有数据`,
-        icon: 'success'
+        icon: "success",
       });
     } else {
       throw new Error(
@@ -776,14 +776,14 @@ async function testMethod4() {
     }
   } catch (e: any) {
     errorInfo.value = {
-      action: 'testMethod4',
+      action: "testMethod4",
       success: false,
       error: e?.message || String(e),
       details: e,
-      testMethod: '测试方法4: 无过滤',
-      tips: ['检查contents集合是否有数据', '确认权限配置正确']
+      testMethod: "测试方法4: 无过滤",
+      tips: ["检查contents集合是否有数据", "确认权限配置正确"],
     };
-    uni.showToast({ title: '测试4失败', icon: 'error' });
+    uni.showToast({ title: "测试4失败", icon: "error" });
   } finally {
     loading.value = false;
   }
@@ -792,7 +792,7 @@ async function testMethod4() {
 // 检查用户信息和Token详情
 async function checkUserInfo() {
   if (!token.value) {
-    uni.showToast({ title: '请先获取Token', icon: 'none' });
+    uni.showToast({ title: "请先获取Token", icon: "none" });
     return;
   }
 
@@ -803,11 +803,11 @@ async function checkUserInfo() {
     // 获取详细的用户信息
     const userRes: any = await uni.request({
       url: `${apiBaseUrl.value}/users/me`,
-      method: 'GET',
+      method: "GET",
       header: {
         Authorization: `Bearer ${token.value}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     });
 
     if (userRes.statusCode >= 200 && userRes.statusCode < 300) {
@@ -815,20 +815,20 @@ async function checkUserInfo() {
 
       contentData.value = {
         success: true,
-        testMethod: '检查用户信息',
+        testMethod: "检查用户信息",
         userInfoFromAPI: userData,
         userInfoFromStore: userInfo.value,
         tokenInfo: {
-          storeToken: token.value ? `${token.value.substring(0, 20)}...` : '无'
+          storeToken: token.value ? `${token.value.substring(0, 20)}...` : "无",
         },
         availableFields: Object.keys(userData || {}),
         tips: [
-          '检查API返回的用户数据中是否有community相关字段',
-          '可能的字段名: community_id, community, community_name, 等'
-        ]
+          "检查API返回的用户数据中是否有community相关字段",
+          "可能的字段名: community_id, community, community_name, 等",
+        ],
       };
 
-      uni.showToast({ title: '用户信息获取成功', icon: 'success' });
+      uni.showToast({ title: "用户信息获取成功", icon: "success" });
     } else {
       throw new Error(
         `获取用户信息失败: ${userRes.statusCode} - ${JSON.stringify(
@@ -838,14 +838,14 @@ async function checkUserInfo() {
     }
   } catch (e: any) {
     errorInfo.value = {
-      action: 'checkUserInfo',
+      action: "checkUserInfo",
       success: false,
       error: e?.message || String(e),
       details: e,
       currentUserInfo: userInfo.value,
-      tips: ['检查Token是否有效', '确认网络连接正常']
+      tips: ["检查Token是否有效", "确认网络连接正常"],
     };
-    uni.showToast({ title: '检查用户信息失败', icon: 'error' });
+    uni.showToast({ title: "检查用户信息失败", icon: "error" });
   } finally {
     loading.value = false;
   }
@@ -854,7 +854,7 @@ async function checkUserInfo() {
 // 测试方法5: 获取社区列表，帮助了解有哪些小区
 async function testMethod5() {
   if (!token.value) {
-    uni.showToast({ title: '请先获取Token', icon: 'none' });
+    uni.showToast({ title: "请先获取Token", icon: "none" });
     return;
   }
 
@@ -865,15 +865,15 @@ async function testMethod5() {
   try {
     const res: any = await uni.request({
       url: `/api/items/communities`,
-      method: 'GET',
+      method: "GET",
       data: {
         limit: 20,
-        fields: 'id,name'
+        fields: "id,name",
       },
       header: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token.value}`
-      }
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token.value}`,
+      },
     });
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -881,23 +881,23 @@ async function testMethod5() {
         success: true,
         total: res.data?.data?.length || 0,
         data: res.data?.data || res.data,
-        testMethod: '测试方法5: 获取小区列表',
+        testMethod: "测试方法5: 获取小区列表",
         requestInfo: {
-          url: '/api/items/communities',
-          method: 'GET',
-          filter: '获取所有社区信息',
+          url: "/api/items/communities",
+          method: "GET",
+          filter: "获取所有社区信息",
           statusCode: res.statusCode,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         },
         tips: [
-          '这里显示系统中所有的小区',
-          '可以从中选择一个community_id进行测试',
-          '复制某个小区的ID，手动设置到用户信息中测试'
-        ]
+          "这里显示系统中所有的小区",
+          "可以从中选择一个community_id进行测试",
+          "复制某个小区的ID，手动设置到用户信息中测试",
+        ],
       };
       uni.showToast({
         title: `获取到${contentData.value.total}个小区`,
-        icon: 'success'
+        icon: "success",
       });
     } else {
       throw new Error(
@@ -906,14 +906,14 @@ async function testMethod5() {
     }
   } catch (e: any) {
     errorInfo.value = {
-      action: 'testMethod5',
+      action: "testMethod5",
       success: false,
       error: e?.message || String(e),
       details: e,
-      testMethod: '测试方法5: 获取小区列表',
-      tips: ['检查是否有communities集合', '确认权限配置正确']
+      testMethod: "测试方法5: 获取小区列表",
+      tips: ["检查是否有communities集合", "确认权限配置正确"],
     };
-    uni.showToast({ title: '获取小区列表失败', icon: 'error' });
+    uni.showToast({ title: "获取小区列表失败", icon: "error" });
   } finally {
     loading.value = false;
   }
@@ -922,12 +922,12 @@ async function testMethod5() {
 // 使用临时小区ID进行测试
 async function testWithTempId() {
   if (!token.value) {
-    uni.showToast({ title: '请先获取Token', icon: 'none' });
+    uni.showToast({ title: "请先获取Token", icon: "none" });
     return;
   }
 
   if (!tempCommunityId.value) {
-    uni.showToast({ title: '请输入临时小区ID', icon: 'none' });
+    uni.showToast({ title: "请输入临时小区ID", icon: "none" });
     return;
   }
 
@@ -938,20 +938,20 @@ async function testWithTempId() {
   try {
     const res: any = await uni.request({
       url: `/api/items/contents`,
-      method: 'GET',
+      method: "GET",
       data: {
         limit: 10,
         fields:
-          'id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created',
+          "id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created",
         filter: {
-          type: { _eq: 'neighbor' },
-          community_id: { _eq: tempCommunityId.value }
-        }
+          type: { _eq: "neighbor" },
+          community_id: { _eq: tempCommunityId.value },
+        },
       },
       header: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token.value}`
-      }
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token.value}`,
+      },
     });
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -961,16 +961,16 @@ async function testWithTempId() {
         data: res.data?.data || res.data,
         testMethod: `临时测试: 小区ID ${tempCommunityId.value}`,
         requestInfo: {
-          url: '/api/items/contents',
-          method: 'GET',
+          url: "/api/items/contents",
+          method: "GET",
           filter: `type=neighbor, community_id=${tempCommunityId.value}`,
           statusCode: res.statusCode,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       };
       uni.showToast({
         title: `临时测试成功! ${contentData.value.total}条数据`,
-        icon: 'success'
+        icon: "success",
       });
     } else {
       throw new Error(
@@ -979,18 +979,18 @@ async function testWithTempId() {
     }
   } catch (e: any) {
     errorInfo.value = {
-      action: 'testWithTempId',
+      action: "testWithTempId",
       success: false,
       error: e?.message || String(e),
       details: e,
       testCommunityId: tempCommunityId.value,
       tips: [
         `检查小区ID ${tempCommunityId.value} 是否存在`,
-        '确认该小区是否有neighbor类型的内容',
-        '尝试先用"测试5"获取可用的小区列表'
-      ]
+        "确认该小区是否有neighbor类型的内容",
+        '尝试先用"测试5"获取可用的小区列表',
+      ],
     };
-    uni.showToast({ title: '临时测试失败', icon: 'error' });
+    uni.showToast({ title: "临时测试失败", icon: "error" });
   } finally {
     loading.value = false;
   }
@@ -998,26 +998,26 @@ async function testWithTempId() {
 
 // 数据转换函数：将Directus content数据转换为社交动态格式
 function transformContentToSocialPosts(rawContentData: any) {
-  addDebugLog('开始转换content数据为社交动态格式...');
+  addDebugLog("开始转换content数据为社交动态格式...");
 
   if (!rawContentData?.data || !Array.isArray(rawContentData.data)) {
-    addDebugLog('❌ 无效的content数据结构');
+    addDebugLog("❌ 无效的content数据结构");
     return [];
   }
 
   const transformedPosts = rawContentData.data.map(
     (item: any, index: number) => {
-      addDebugLog(`转换第${index + 1}条数据: ${item.title || 'Untitled'}`);
+      addDebugLog(`转换第${index + 1}条数据: ${item.title || "Untitled"}`);
 
       // 格式化时间
       const formatTime = (dateStr: string) => {
-        if (!dateStr) return '刚刚';
+        if (!dateStr) return "刚刚";
         const date = new Date(dateStr);
         const now = new Date();
         const diffMs = now.getTime() - date.getTime();
         const diffMins = Math.floor(diffMs / 60000);
 
-        if (diffMins < 1) return '刚刚';
+        if (diffMins < 1) return "刚刚";
         if (diffMins < 60) return `${diffMins}分钟前`;
         if (diffMins < 1440) return `${Math.floor(diffMins / 60)}小时前`;
         return `${Math.floor(diffMins / 1440)}天前`;
@@ -1028,7 +1028,7 @@ function transformContentToSocialPosts(rawContentData: any) {
         item.attachments &&
         Array.isArray(item.attachments) &&
         item.attachments.length > 0;
-      const contentType = hasImages ? 'image' : 'text';
+      const contentType = hasImages ? "image" : "text";
 
       // 转换图片附件
       let images: string[] = [];
@@ -1041,7 +1041,7 @@ function transformContentToSocialPosts(rawContentData: any) {
             const url = getImageUrl(fileId);
             addDebugLog(
               `图片${imgIndex + 1}: ${
-                url ? 'URL生成成功' : '无法生成URL'
+                url ? "URL生成成功" : "无法生成URL"
               } - fileId: ${fileId} - 原始数据: ${JSON.stringify(att)}`
             );
             return url;
@@ -1054,14 +1054,14 @@ function transformContentToSocialPosts(rawContentData: any) {
       const getUserInfo = () => {
         // 打印当前item的结构用于调试
         addDebugLog(`用户信息调试 - item ${index + 1}:`);
-        addDebugLog(`- 完整字段: ${Object.keys(item).join(', ')}`);
+        addDebugLog(`- 完整字段: ${Object.keys(item).join(", ")}`);
         addDebugLog(`- author_id: ${JSON.stringify(item.author_id)}`);
         addDebugLog(`- user_created: ${JSON.stringify(item.user_created)}`);
 
         // 最优先：使用关联查询的author_id信息
-        if (item.author_id && typeof item.author_id === 'object') {
+        if (item.author_id && typeof item.author_id === "object") {
           // 优化用户名组合：优先使用first_name，如果有last_name则组合
-          let authorName = '';
+          let authorName = "";
           if (item.author_id.first_name && item.author_id.last_name) {
             authorName = `${item.author_id.first_name} ${item.author_id.last_name}`;
           } else if (item.author_id.first_name) {
@@ -1069,11 +1069,11 @@ function transformContentToSocialPosts(rawContentData: any) {
           } else if (item.author_id.last_name) {
             authorName = item.author_id.last_name;
           } else {
-            authorName = '业主用户';
+            authorName = "业主用户";
           }
-          
+
           // 处理头像URL，如果avatar是文件ID则转换为完整URL
-          let authorAvatar = '';
+          let authorAvatar = "";
           if (item.author_id.avatar) {
             authorAvatar = getImageUrl(item.author_id.avatar);
             addDebugLog(`头像URL: ${authorAvatar}`);
@@ -1082,19 +1082,19 @@ function transformContentToSocialPosts(rawContentData: any) {
           return {
             name: authorName,
             avatar: authorAvatar,
-            title: `${item.community_name || '社区'}业主`
+            title: `${item.community_name || "社区"}业主`,
           };
         }
 
         // 其次：使用user_created（Directus系统字段）
-        if (item.user_created && typeof item.user_created === 'object') {
+        if (item.user_created && typeof item.user_created === "object") {
           const userName =
             item.user_created.first_name ||
             item.user_created.name ||
             item.user_created.email;
           if (userName) {
             // 处理头像URL
-            let userAvatar = '';
+            let userAvatar = "";
             if (item.user_created.avatar) {
               userAvatar = getImageUrl(item.user_created.avatar);
               addDebugLog(`用户头像URL: ${userAvatar}`);
@@ -1103,15 +1103,15 @@ function transformContentToSocialPosts(rawContentData: any) {
             return {
               name: userName,
               avatar: userAvatar,
-              title: `${item.community_name || '社区'}业主`
+              title: `${item.community_name || "社区"}业主`,
             };
           }
-        } else if (typeof item.user_created === 'string') {
+        } else if (typeof item.user_created === "string") {
           addDebugLog(`✓ 使用user_created (字符串): ${item.user_created}`);
           return {
             name: item.user_created,
-            avatar: '',
-            title: `${item.community_name || '社区'}业主`
+            avatar: "",
+            title: `${item.community_name || "社区"}业主`,
           };
         }
 
@@ -1120,17 +1120,17 @@ function transformContentToSocialPosts(rawContentData: any) {
           addDebugLog(`✓ 使用author_name: ${item.author_name}`);
           return {
             name: item.author_name,
-            avatar: '',
-            title: `${item.community_name || '社区'}业主`
+            avatar: "",
+            title: `${item.community_name || "社区"}业主`,
           };
         }
 
         // 默认显示
-        addDebugLog('⚠️ 使用默认用户信息');
+        addDebugLog("⚠️ 使用默认用户信息");
         return {
-          name: '社区用户',
-          avatar: '',
-          title: `${item.community_name || '社区'}业主`
+          name: "社区用户",
+          avatar: "",
+          title: `${item.community_name || "社区"}业主`,
         };
       };
 
@@ -1144,13 +1144,13 @@ function transformContentToSocialPosts(rawContentData: any) {
           name: userInfo.name,
           title: userInfo.title,
           avatar: userInfo.avatar, // 现在支持头像了
-          time: formatTime(item.date_created)
+          time: formatTime(item.date_created),
         },
-        content: `${item.title || ''}\n\n${item.body || ''}`.trim(),
-        likes: '0', // 后续可以扩展点赞功能
-        comments: '0', // 后续可以扩展评论功能
+        content: `${item.title || ""}\n\n${item.body || ""}`.trim(),
+        likes: "0", // 后续可以扩展点赞功能
+        comments: "0", // 后续可以扩展评论功能
         type: contentType,
-        images
+        images,
       };
 
       addDebugLog(`✓ 转换完成: ${socialPost.user.name} - ${contentType}类型`);
@@ -1164,11 +1164,11 @@ function transformContentToSocialPosts(rawContentData: any) {
 
 // 测试真实数据转换
 function testRealDataTransform() {
-  addDebugLog('开始测试真实数据转换...');
+  addDebugLog("开始测试真实数据转换...");
 
   if (!contentData.value || !contentData.value.success) {
-    addDebugLog('❌ 没有可用的content数据，请先获取content数据');
-    uni.showToast({ title: '请先获取content数据', icon: 'none' });
+    addDebugLog("❌ 没有可用的content数据，请先获取content数据");
+    uni.showToast({ title: "请先获取content数据", icon: "none" });
     return;
   }
 
@@ -1177,8 +1177,8 @@ function testRealDataTransform() {
     const transformedPosts = transformContentToSocialPosts(contentData.value);
 
     if (transformedPosts.length === 0) {
-      addDebugLog('⚠️ 转换结果为空，可能content数据格式不符合预期');
-      uni.showToast({ title: '转换结果为空', icon: 'none' });
+      addDebugLog("⚠️ 转换结果为空，可能content数据格式不符合预期");
+      uni.showToast({ title: "转换结果为空", icon: "none" });
       return;
     }
 
@@ -1191,11 +1191,11 @@ function testRealDataTransform() {
 
     uni.showToast({
       title: `转换成功！${transformedPosts.length}条动态`,
-      icon: 'success'
+      icon: "success",
     });
   } catch (error) {
     addDebugLog(`❌ 数据转换发生错误: ${error}`);
-    uni.showToast({ title: '数据转换失败', icon: 'error' });
+    uni.showToast({ title: "数据转换失败", icon: "error" });
   }
 }
 
@@ -1206,14 +1206,14 @@ function addDebugLog(message: string) {
 }
 
 function clearDebugLog() {
-  debugLog.value = '=== 社交动态Props集成调试日志 ===\n';
-  addDebugLog('日志已清空');
+  debugLog.value = "=== 社交动态Props集成调试日志 ===\n";
+  addDebugLog("日志已清空");
 }
 
 function copyDebugLog() {
   const text = debugLog.value;
   if (!text) {
-    uni.showToast({ title: '没有日志可复制', icon: 'none' });
+    uni.showToast({ title: "没有日志可复制", icon: "none" });
     return;
   }
 
@@ -1222,7 +1222,7 @@ function copyDebugLog() {
       navigator.clipboard
         .writeText(text)
         .then(() => {
-          uni.showToast({ title: '调试日志已复制', icon: 'success' });
+          uni.showToast({ title: "调试日志已复制", icon: "success" });
         })
         .catch(() => {
           fallbackCopyTextToClipboard(text);
@@ -1231,58 +1231,58 @@ function copyDebugLog() {
       fallbackCopyTextToClipboard(text);
     }
   } catch {
-    uni.showToast({ title: '复制失败', icon: 'error' });
+    uni.showToast({ title: "复制失败", icon: "error" });
   }
 }
 
 // 测试Props集成
 function testPropsIntegration() {
-  addDebugLog('开始测试Props集成...');
+  addDebugLog("开始测试Props集成...");
 
   // 创建测试数据
   const testPosts = [
     {
-      id: 'test-1',
+      id: "test-1",
       user: {
-        name: '测试用户1',
-        title: '业主 | 测试小区',
-        avatar: '',
-        time: '刚刚'
+        name: "测试用户1",
+        title: "业主 | 测试小区",
+        avatar: "",
+        time: "刚刚",
       },
-      content: '这是一条测试动态，用于验证Props集成是否正常工作 🚀',
-      likes: '0',
-      comments: '0',
-      type: 'text'
+      content: "这是一条测试动态，用于验证Props集成是否正常工作 🚀",
+      likes: "0",
+      comments: "0",
+      type: "text",
     },
     {
-      id: 'test-2',
+      id: "test-2",
       user: {
-        name: '测试用户2',
-        title: '业主 | 测试小区',
-        avatar: '',
-        time: '1分钟前'
+        name: "测试用户2",
+        title: "业主 | 测试小区",
+        avatar: "",
+        time: "1分钟前",
       },
-      content: '这是第二条测试动态，包含图片展示功能测试 📷',
-      likes: '5',
-      comments: '2',
-      type: 'image',
-      images: ['test1.jpg', 'test2.jpg']
-    }
+      content: "这是第二条测试动态，包含图片展示功能测试 📷",
+      likes: "5",
+      comments: "2",
+      type: "image",
+      images: ["test1.jpg", "test2.jpg"],
+    },
   ];
 
   // 设置测试数据
   socialFeedPosts.value = testPosts;
   addDebugLog(`已设置测试数据，包含 ${testPosts.length} 条动态`);
   addDebugLog(`测试数据结构: ${JSON.stringify(testPosts[0], null, 2)}`);
-  addDebugLog('Props集成测试完成！请查看下方社交动态区域');
+  addDebugLog("Props集成测试完成！请查看下方社交动态区域");
 
-  uni.showToast({ title: '测试数据已设置', icon: 'success' });
+  uni.showToast({ title: "测试数据已设置", icon: "success" });
 }
 
 // 测试原始数据获取 - 专门用于查看API返回的完整数据结构
 async function testRawDataFetch() {
   if (!token.value) {
-    uni.showToast({ title: '请先获取Token', icon: 'none' });
+    uni.showToast({ title: "请先获取Token", icon: "none" });
     return;
   }
 
@@ -1291,57 +1291,60 @@ async function testRawDataFetch() {
   rawDataDisplay.value = null;
 
   try {
-    addDebugLog('开始获取原始API数据...');
-    
+    addDebugLog("开始获取原始API数据...");
+
     // 测试1: 获取邻居类型数据（包含关联查询）
     const neighborRes: any = await uni.request({
       url: `/api/items/posts`,
-      method: 'GET', 
+      method: "GET",
       data: {
         limit: 3,
-        fields: 'id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created',
+        fields:
+          "id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created",
         filter: {
-          type: { _eq: 'neighbor' }
-        }
+          type: { _eq: "neighbor" },
+        },
       },
       header: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         // Authorization: `Bearer ${token.value}`
-        Authorization: `Bearer sfXUxkm3bEwOKO8fDKrZoClDQ4N08D0n`
-      }
+        Authorization: `Bearer sfXUxkm3bEwOKO8fDKrZoClDQ4N08D0n`,
+      },
     });
 
     // 测试2: 获取post类型数据
     const postRes: any = await uni.request({
       url: `/api/items/posts`,
-      method: 'GET',
+      method: "GET",
       data: {
         limit: 3,
-        fields: 'id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created',
+        fields:
+          "id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created",
         filter: {
-          type: { _eq: 'post' }
-        }
+          type: { _eq: "post" },
+        },
       },
       header: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         // Authorization: `Bearer ${token.value}`
-        Authorization: `Bearer sfXUxkm3bEwOKO8fDKrZoClDQ4N08D0n`
-      }
+        Authorization: `Bearer sfXUxkm3bEwOKO8fDKrZoClDQ4N08D0n`,
+      },
     });
 
     // 测试3: 获取所有数据（无过滤）
     const allRes: any = await uni.request({
       url: `/api/items/posts`,
-      method: 'GET',
+      method: "GET",
       data: {
         limit: 5,
-        fields: 'id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created'
+        fields:
+          "id,title,body,type,community_id,attachments.*,user_created.*,author_id.id,author_id.first_name,author_id.last_name,author_id.avatar,date_created",
       },
       header: {
-        'Content-Type': 'application/json', 
+        "Content-Type": "application/json",
         // Authorization: `Bearer ${token.value}`
-        Authorization: `Bearer sfXUxkm3bEwOKO8fDKrZoClDQ4N08D0n`
-      }
+        Authorization: `Bearer sfXUxkm3bEwOKO8fDKrZoClDQ4N08D0n`,
+      },
     });
 
     rawDataDisplay.value = {
@@ -1350,43 +1353,44 @@ async function testRawDataFetch() {
         neighborData: {
           status: neighborRes.statusCode,
           data: neighborRes.data,
-          count: neighborRes.data?.data?.length || 0
+          count: neighborRes.data?.data?.length || 0,
         },
         postData: {
           status: postRes.statusCode,
           data: postRes.data,
-          count: postRes.data?.data?.length || 0
+          count: postRes.data?.data?.length || 0,
         },
         allData: {
           status: allRes.statusCode,
           data: allRes.data,
-          count: allRes.data?.data?.length || 0
-        }
+          count: allRes.data?.data?.length || 0,
+        },
       },
       summary: {
         totalNeighbor: neighborRes.data?.data?.length || 0,
         totalPost: postRes.data?.data?.length || 0,
-        totalAll: allRes.data?.data?.length || 0
-      }
+        totalAll: allRes.data?.data?.length || 0,
+      },
     };
-    
-    showRawData.value = true;
-    addDebugLog(`✅ 原始数据获取完成：邻居${rawDataDisplay.value.summary.totalNeighbor}条，帖子${rawDataDisplay.value.summary.totalPost}条，全部${rawDataDisplay.value.summary.totalAll}条`);
-    
-    uni.showToast({ 
-      title: '原始数据获取成功！请查看原始数据区域', 
-      icon: 'success' 
-    });
 
+    showRawData.value = true;
+    addDebugLog(
+      `✅ 原始数据获取完成：邻居${rawDataDisplay.value.summary.totalNeighbor}条，帖子${rawDataDisplay.value.summary.totalPost}条，全部${rawDataDisplay.value.summary.totalAll}条`
+    );
+
+    uni.showToast({
+      title: "原始数据获取成功！请查看原始数据区域",
+      icon: "success",
+    });
   } catch (e: any) {
     errorInfo.value = {
-      action: 'testRawDataFetch',
+      action: "testRawDataFetch",
       success: false,
       error: e?.message || String(e),
-      details: e
+      details: e,
     };
     addDebugLog(`❌ 原始数据获取失败: ${e?.message || String(e)}`);
-    uni.showToast({ title: '获取原始数据失败', icon: 'error' });
+    uni.showToast({ title: "获取原始数据失败", icon: "error" });
   } finally {
     loading.value = false;
   }
@@ -1395,7 +1399,7 @@ async function testRawDataFetch() {
 // 复制原始数据
 function copyRawData() {
   if (!rawDataDisplay.value) {
-    uni.showToast({ title: '没有原始数据可复制', icon: 'none' });
+    uni.showToast({ title: "没有原始数据可复制", icon: "none" });
     return;
   }
 
@@ -1405,7 +1409,7 @@ function copyRawData() {
       navigator.clipboard
         .writeText(text)
         .then(() => {
-          uni.showToast({ title: '原始数据已复制', icon: 'success' });
+          uni.showToast({ title: "原始数据已复制", icon: "success" });
         })
         .catch(() => {
           fallbackCopyTextToClipboard(text);
@@ -1414,51 +1418,56 @@ function copyRawData() {
       fallbackCopyTextToClipboard(text);
     }
   } catch {
-    uni.showToast({ title: '复制失败', icon: 'error' });
+    uni.showToast({ title: "复制失败", icon: "error" });
   }
 }
 
 // 测试post数据转换（基于已获取的原始数据）
 function testPostDataTransform() {
-  addDebugLog('开始测试post数据转换...');
-  
+  addDebugLog("开始测试post数据转换...");
+
   if (!rawDataDisplay.value || !rawDataDisplay.value.tests.postData.data.data) {
     addDebugLog('❌ 没有可用的post原始数据，请先点击"获取原始数据"');
-    uni.showToast({ title: '请先获取原始数据', icon: 'none' });
+    uni.showToast({ title: "请先获取原始数据", icon: "none" });
     return;
   }
-  
+
   try {
     // 使用post数据进行转换
     const postData = {
       success: true,
-      data: rawDataDisplay.value.tests.postData.data.data
+      data: rawDataDisplay.value.tests.postData.data.data,
     };
-    
+
     const transformedPosts = transformContentToSocialPosts(postData);
-    
+
     if (transformedPosts.length === 0) {
-      addDebugLog('⚠️ post数据转换结果为空');
-      uni.showToast({ title: 'post数据转换结果为空', icon: 'none' });
+      addDebugLog("⚠️ post数据转换结果为空");
+      uni.showToast({ title: "post数据转换结果为空", icon: "none" });
       return;
     }
-    
+
     // 设置转换后的数据
     socialFeedPosts.value = transformedPosts;
-    addDebugLog(`✅ post数据转换完成，已设置${transformedPosts.length}条社交动态`);
-    addDebugLog('转换结果预览:');
+    addDebugLog(
+      `✅ post数据转换完成，已设置${transformedPosts.length}条社交动态`
+    );
+    addDebugLog("转换结果预览:");
     transformedPosts.forEach((post, index) => {
-      addDebugLog(`${index + 1}. ${post.user.name} - ${post.type}类型 - 图片${post.images?.length || 0}张`);
+      addDebugLog(
+        `${index + 1}. ${post.user.name} - ${post.type}类型 - 图片${
+          post.images?.length || 0
+        }张`
+      );
     });
-    
-    uni.showToast({ 
-      title: `post数据转换成功！${transformedPosts.length}条动态`, 
-      icon: 'success' 
+
+    uni.showToast({
+      title: `post数据转换成功！${transformedPosts.length}条动态`,
+      icon: "success",
     });
-    
   } catch (error) {
     addDebugLog(`❌ post数据转换发生错误: ${error}`);
-    uni.showToast({ title: 'post数据转换失败', icon: 'error' });
+    uni.showToast({ title: "post数据转换失败", icon: "error" });
   }
 }
 
@@ -1487,7 +1496,7 @@ function testPostDataTransform() {
           {{
             token
               ? `Token已获取 (${token.substring(0, 15)}...)`
-              : '需要获取Token'
+              : "需要获取Token"
           }}
         </text>
       </view>
@@ -1584,7 +1593,7 @@ function testPostDataTransform() {
       <view class="account-info">
         <text class="label">预设账户: {{ email }}</text>
         <text class="token-status" :class="{ 'has-token': token }">
-          {{ token ? 'Token已获取' : '未登录' }}
+          {{ token ? "Token已获取" : "未登录" }}
         </text>
       </view>
 
@@ -1595,7 +1604,7 @@ function testPostDataTransform() {
           :disabled="loading"
           @click="login"
         >
-          {{ loading ? '登录中...' : '获取Token' }}
+          {{ loading ? "登录中..." : "获取Token" }}
         </button>
       </view>
 
@@ -1641,11 +1650,11 @@ function testPostDataTransform() {
           class="content-card"
         >
           <view class="card-header">
-            <text class="post-title">{{ item.title || '无标题' }}</text>
+            <text class="post-title">{{ item.title || "无标题" }}</text>
             <text class="post-type">{{ item.type }}</text>
           </view>
           <view class="card-body">
-            <text class="post-content">{{ item.body || '无内容' }}</text>
+            <text class="post-content">{{ item.body || "无内容" }}</text>
 
             <!-- 图片提示信息 -->
             <!-- 实际图片显示 -->
@@ -1759,27 +1768,29 @@ function testPostDataTransform() {
           复制原始数据
         </button>
       </view>
-      
+
       <view class="raw-data-summary">
         <text class="summary-text">
-          📊 数据统计: 邻居类型{{ rawDataDisplay.summary.totalNeighbor }}条 | 
-          帖子类型{{ rawDataDisplay.summary.totalPost }}条 | 
-          全部{{ rawDataDisplay.summary.totalAll }}条
+          📊 数据统计: 邻居类型{{ rawDataDisplay.summary.totalNeighbor }}条 |
+          帖子类型{{ rawDataDisplay.summary.totalPost }}条 | 全部{{
+            rawDataDisplay.summary.totalAll
+          }}条
         </text>
-        <text class="summary-time">获取时间: {{ new Date(rawDataDisplay.timestamp).toLocaleString() }}</text>
+        <text class="summary-time"
+          >获取时间:
+          {{ new Date(rawDataDisplay.timestamp).toLocaleString() }}</text
+        >
       </view>
-      
+
       <scroll-view class="raw-data-box" scroll-y>
         <text selectable>{{ JSON.stringify(rawDataDisplay, null, 2) }}</text>
       </scroll-view>
-      
+
       <view class="raw-data-actions">
         <button class="btn-debug" @click="showRawData = false">
           隐藏原始数据
         </button>
-        <button class="btn-debug" @click="testRawDataFetch">
-          重新获取
-        </button>
+        <button class="btn-debug" @click="testRawDataFetch">重新获取</button>
       </view>
     </view>
 
@@ -2174,9 +2185,9 @@ function testPostDataTransform() {
   border: 1px solid #007aff;
   border-radius: 4px;
   background-color: #f0f8ff;
+  text-align: center;
   font-size: 10px;
   color: #007aff;
-  text-align: center;
   white-space: nowrap;
 }
 .btn-debug:active {
@@ -2222,21 +2233,18 @@ function testPostDataTransform() {
   border-radius: 6px;
   background: #f8f9fa;
 }
-
 .summary-text {
   display: block;
   margin-bottom: 4px;
+  font-weight: 500;
   font-size: 14px;
   color: #333;
-  font-weight: 500;
 }
-
 .summary-time {
   display: block;
   font-size: 12px;
   color: #666;
 }
-
 .raw-data-box {
   margin-bottom: 12px;
   padding: 12px;
@@ -2244,17 +2252,15 @@ function testPostDataTransform() {
   border-radius: 6px;
   height: 300px;
   background: #fafafa;
+  line-height: 1.4;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 11px;
-  line-height: 1.4;
   white-space: pre-wrap;
 }
-
 .raw-data-actions {
   display: flex;
   gap: 8px;
 }
-
 /* 加载动画 */
 @keyframes pulse {
   0%,

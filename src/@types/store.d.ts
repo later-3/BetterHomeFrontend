@@ -3,7 +3,7 @@ declare namespace User {
     token: string;
     user_id: Number;
   }
-  
+
   interface CurrentUser {
     id: string;
     first_name: string;
