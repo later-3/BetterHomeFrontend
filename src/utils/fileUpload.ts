@@ -10,19 +10,24 @@ export const uploadFileToDirectus = async (
   filePath: string
 ): Promise<string> => {
   const userStore = useUserStore();
-  const token = userStore.token;
+  let hasRetried = false;
 
-  if (!token) {
-    throw new Error("用户未登录");
-  }
+  const uploadOnce = async () => {
+    const active = await userStore.ensureActiveSession({
+      refreshIfNearExpiry: true,
+      force: hasRetried,
+    });
 
-  try {
+    if (!active || !userStore.token) {
+      throw new Error("用户未登录");
+    }
+
     const uploadRes = await uni.uploadFile({
       url: `${env.directusUrl}/files`,
-      filePath: filePath,
+      filePath,
       name: "file",
       header: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${userStore.token}`,
       },
     });
 
@@ -35,9 +40,18 @@ export const uploadFileToDirectus = async (
       }
 
       return fileId;
-    } else {
-      throw new Error(`文件上传失败：HTTP ${uploadRes.statusCode}`);
     }
+
+    if (uploadRes.statusCode === 401 && !hasRetried) {
+      hasRetried = true;
+      return uploadOnce();
+    }
+
+    throw new Error(`文件上传失败：HTTP ${uploadRes.statusCode}`);
+  };
+
+  try {
+    return await uploadOnce();
   } catch (error: any) {
     console.error("文件上传错误:", error);
     throw new Error(error?.message || "文件上传失败");

@@ -2,12 +2,13 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { storeToRefs } from "pinia";
 import { useUserStore } from "@/store/user";
-import { workOrdersApi } from "@/utils/directus";
 import {
-  uploadMultipleFiles,
-  getFilePath,
-  uploadFileToDirectus,
-} from "@/utils/fileUpload";
+  workOrdersApi,
+  handleDirectusError,
+  directusClient,
+} from "@/utils/directus";
+import { uploadMultipleFiles, getFilePath } from "@/utils/fileUpload";
+import { uploadFiles } from "@directus/sdk";
 import UserStatusCard from "../../components/UserStatusCard.vue";
 import type { WorkOrder } from "@/@types/directus-schema";
 
@@ -24,6 +25,19 @@ interface UploadPreviewItem {
   size?: number;
   filePath?: string; // 添加真实文件路径
   fileId?: string; // 添加上传后的文件ID
+  source?:
+    | File
+    | Blob
+    | {
+        path?: string;
+        tempFilePath?: string;
+        uri?: string;
+        name?: string;
+        size?: number;
+        type?: string;
+        file?: File | Blob;
+      }
+    | null;
 }
 
 // 用户状态管理
@@ -206,6 +220,7 @@ function handleAfterRead(payload: any) {
       status: "success", // 本地文件选择成功
       size: fileItem.size,
       filePath,
+      source: fileItem?.file ?? fileItem ?? null,
     });
 
     console.log(`handleAfterRead - 文件已添加到列表，等待提交时上传:`, name);
@@ -225,6 +240,139 @@ function handleFileDelete(event: { index: number; file: UploadPreviewItem }) {
     URL.revokeObjectURL(removed.url);
     objectUrlPool.delete(removed.url);
   }
+}
+
+function extractUploadableFile(
+  item: UploadPreviewItem
+): { file: File | Blob; name?: string } | null {
+  const source = item.source;
+
+  if (typeof File !== "undefined" && source instanceof File) {
+    return { file: source, name: item.name };
+  }
+
+  if (source instanceof Blob) {
+    return { file: source, name: item.name };
+  }
+
+  if (source && typeof source === "object") {
+    const nested: any = source;
+    if (
+      nested.file &&
+      (nested.file instanceof File || nested.file instanceof Blob)
+    ) {
+      return { file: nested.file, name: item.name || nested.file.name };
+    }
+  }
+
+  return null;
+}
+
+async function uploadAttachments(): Promise<string[]> {
+  if (!fileList.value.length) return [];
+
+  const availableFilePaths = fileList.value
+    .map((item) => item.filePath)
+    .filter((path): path is string => Boolean(path));
+
+  if (availableFilePaths.length === fileList.value.length) {
+    try {
+      return await uploadMultipleFiles(availableFilePaths);
+    } catch (error) {
+      console.warn(
+        "uploadAttachments - 使用 uni.uploadFile 上传失败，尝试回退方案",
+        error
+      );
+    }
+  }
+
+  if (typeof FormData === "undefined") {
+    throw new Error("当前环境暂不支持附件上传");
+  }
+
+  const uploadable = fileList.value
+    .map((item) => extractUploadableFile(item))
+    .filter((value): value is { file: File | Blob; name?: string } => Boolean(value));
+
+  if (!uploadable.length) {
+    throw new Error("无法读取附件内容，请重新选择文件");
+  }
+
+  const createFormData = () => {
+    const formData = new FormData();
+    uploadable.forEach(({ file, name }, index) => {
+      const fallbackName =
+        file instanceof File && file.name ? file.name : `attachment-${index + 1}`;
+      formData.append("file", file, name || fallbackName);
+    });
+    return formData;
+  };
+
+  try {
+    const executeUpload = async () => {
+      const response = await directusClient.request(uploadFiles(createFormData()));
+      const uploaded = Array.isArray(response) ? response : [response];
+      const fileIds = uploaded
+        .map((item) =>
+          item && typeof item === "object" && "id" in item
+            ? ((item as { id?: string }).id ?? "")
+            : ""
+        )
+        .filter(Boolean);
+
+      if (!fileIds.length) {
+        throw new Error("附件上传失败：未返回文件ID");
+      }
+
+      return fileIds;
+    };
+
+    let triedRefresh = false;
+
+    try {
+      await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
+      return await executeUpload();
+    } catch (error: any) {
+      const status =
+        error?.response?.status ??
+        error?.errors?.[0]?.extensions?.status ??
+        (error?.errors?.[0]?.extensions?.code === "INVALID_CREDENTIALS"
+          ? 401
+          : undefined);
+
+      if (status === 401 && !triedRefresh) {
+        triedRefresh = true;
+        await userStore.ensureActiveSession({ force: true });
+        return await executeUpload();
+      }
+
+      throw error;
+    }
+  } catch (error) {
+    handleDirectusError(error);
+  }
+
+  return [];
+}
+
+function resetAttachments() {
+  if (typeof URL !== "undefined") {
+    fileList.value.forEach((item) => {
+      if (item.url && objectUrlPool.has(item.url)) {
+        URL.revokeObjectURL(item.url);
+        objectUrlPool.delete(item.url);
+      }
+    });
+  }
+  fileList.value = [];
+  objectUrlPool.clear();
+}
+
+function resetForm() {
+  form.title = "";
+  form.description = "";
+  form.category = null;
+  resetAttachments();
 }
 
 function selectCategory(value: WorkOrder["category"]) {
@@ -260,6 +408,14 @@ async function handleSubmit() {
     return;
   }
 
+  try {
+    await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
+  } catch (error) {
+    console.error("handleSubmit - ensureActiveSession failed", error);
+    showToast("登录状态失效，请重新登录", "error");
+    return;
+  }
+
   isSubmitting.value = true;
 
   try {
@@ -275,9 +431,7 @@ async function handleSubmit() {
       });
 
       try {
-        // 批量上传文件
-        const filePaths = fileList.value.map((file) => file.filePath!);
-        fileIds = await uploadMultipleFiles(filePaths);
+        fileIds = await uploadAttachments();
 
         // 更新文件状态和ID
         fileList.value.forEach((file, index) => {
@@ -343,10 +497,7 @@ async function handleSubmit() {
     showToast("工单提交成功！", "success");
 
     // 重置表单
-    form.title = "";
-    form.description = "";
-    form.category = null;
-    fileList.value = [];
+    resetForm();
 
     // 可选：跳转到工单列表或详情页
     setTimeout(() => {
@@ -364,6 +515,7 @@ async function handleSubmit() {
 }
 
 function handleSaveDraft() {
+  if (isSubmitting.value) return;
   if (!isLoggedIn.value) {
     handleLoginRequired();
     return;
@@ -394,9 +546,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
-  if (typeof URL === "undefined") return;
-  objectUrlPool.forEach((url) => URL.revokeObjectURL(url));
-  objectUrlPool.clear();
+  resetAttachments();
 });
 </script>
 
@@ -498,7 +648,7 @@ onBeforeUnmount(() => {
         type="info"
         plain
         text="保存草稿"
-        :disabled="!isLoggedIn"
+        :disabled="!isLoggedIn || isSubmitting"
         @click="handleSaveDraft"
       />
       <u-button
