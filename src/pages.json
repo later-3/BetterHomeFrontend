@@ -19,6 +19,15 @@
       }
     },
     {
+      "name": "task-detail",
+      "path": "pages/task/detail",
+      "style": {
+        "navigationBarTitleText": "工单详情",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
       "name": "profile",
       "path": "pages/profile/profile",
       "style": {

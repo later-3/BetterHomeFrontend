@@ -1,0 +1,222 @@
+import { defineStore } from "pinia";
+import { computed, ref } from "vue";
+import type { Query } from "@directus/sdk";
+
+import type { Schema, WorkOrder } from "@/@types/directus-schema";
+import { workOrdersApi } from "@/utils/directus";
+import { useUserStore } from "@/store/user";
+
+const DEFAULT_PAGE_SIZE = 10;
+
+type WorkOrderQuery = Query<Schema, WorkOrder>;
+
+interface FetchOptions {
+  refresh?: boolean;
+  page?: number;
+  pageSize?: number;
+  query?: WorkOrderQuery;
+}
+
+interface WorkOrderState {
+  items: WorkOrder[];
+  loading: boolean;
+  error: string | null;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+  initialized: boolean;
+}
+
+// 使用企业级标准定义字段，基于Directus schema
+// 确保字段名称与Directus API返回的数据结构完全匹配
+const BASE_FIELDS: NonNullable<WorkOrderQuery["fields"]> = [
+  "id",
+  "title",
+  "description",
+  "category",
+  "priority",
+  "status",
+  "date_created",
+  "submitter_id",
+  "community_id",
+  "assignee_id",
+  "files.directus_files_id.*",
+];
+
+// 定义一个简化版本的字段查询，避免类型冲突
+const SAFE_FIELDS: NonNullable<WorkOrderQuery["fields"]> = [
+  "id",
+  "title",
+  "description",
+  "category",
+  "priority",
+  "status",
+  "date_created",
+  "submitter_id.id",
+  "submitter_id.first_name",
+  "submitter_id.last_name",
+  "submitter_id.email",
+  "submitter_id.avatar",
+  "submitter_id.role",
+  "community_id.id",
+  "community_id.name",
+  "assignee_id.id",
+  "assignee_id.first_name",
+  "assignee_id.last_name",
+  "assignee_id.email",
+  "assignee_id.avatar",
+  "assignee_id.role",
+  "files.directus_files_id.*",
+];
+
+export const useWorkOrderStore = defineStore("work-orders", () => {
+  const state = ref<WorkOrderState>({
+    items: [],
+    loading: false,
+    error: null,
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
+    hasMore: true,
+    initialized: false,
+  });
+
+  const items = computed(() => state.value.items);
+  const loading = computed(() => state.value.loading);
+  const error = computed(() => state.value.error);
+  const hasMore = computed(() => state.value.hasMore);
+  const initialized = computed(() => state.value.initialized);
+
+  const userStore = useUserStore();
+
+  const setError = (message: string | null) => {
+    state.value.error = message;
+  };
+
+  const setLoading = (value: boolean) => {
+    state.value.loading = value;
+  };
+
+  const reset = () => {
+    state.value.items = [];
+    state.value.page = 1;
+    state.value.hasMore = true;
+    state.value.initialized = false;
+  };
+
+  const fetchWorkOrders = async (options: FetchOptions = {}) => {
+    if (state.value.loading) return;
+
+    const refresh = options.refresh ?? false;
+    const pageSize = options.pageSize ?? state.value.pageSize;
+    const page = options.page ?? (refresh ? 1 : state.value.page);
+
+    try {
+      await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
+    } catch (error) {
+      setError((error as Error).message);
+      throw error;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    if (refresh) {
+      reset();
+    }
+
+    try {
+      // 使用符合Directus SDK规范的查询对象
+      const query: WorkOrderQuery = {
+        limit: pageSize,
+        page,
+        fields: SAFE_FIELDS, // 使用简化的字段查询
+        sort: ["-date_created"],
+        // 不使用meta属性，因为不在Query类型中
+        ...options.query,
+      };
+
+      // 获取响应，使用unknown类型避免类型冲突
+      const response = await workOrdersApi.readMany(query);
+      
+      // 使用类型守卫确保数据类型正确，只处理我们明确需要的字段
+      let workOrderItems: WorkOrder[] = [];
+      
+      if (Array.isArray(response)) {
+        // 只选择我们明确需要的字段，避免类型冲突
+        workOrderItems = response.map(item => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          category: item.category,
+          priority: item.priority,
+          status: item.status,
+          date_created: item.date_created,
+          user_created: typeof item.user_created === 'string' ? item.user_created : undefined,
+          user_updated: typeof item.user_updated === 'string' ? item.user_updated : undefined,
+          date_updated: item.date_updated,
+          deadline: item.deadline,
+          resolved_at: item.resolved_at,
+          submitter_id: item.submitter_id,
+          assignee_id: item.assignee_id,
+          community_id: item.community_id,
+          rating: typeof item.rating === 'number' ? item.rating : undefined,
+          feedback: typeof item.feedback === 'string' ? item.feedback : undefined,
+          files: item.files
+        })) as WorkOrder[];
+      }
+
+      if (refresh) {
+        state.value.items = workOrderItems;
+      } else {
+        state.value.items = [...state.value.items, ...workOrderItems];
+      }
+
+      const received = workOrderItems.length;
+      // 不使用meta属性，因为会导致类型错误
+      const total = undefined;
+
+      state.value.page = page + 1;
+      state.value.pageSize = pageSize;
+      state.value.hasMore = received >= pageSize;
+
+      if (typeof total === "number") {
+        state.value.hasMore = state.value.items.length < total;
+      }
+
+      state.value.initialized = true;
+
+      return workOrderItems;
+    } catch (error) {
+      const message = (error as Error)?.message ?? "获取工单失败";
+      setError(message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refresh = async () => {
+    await fetchWorkOrders({ refresh: true, page: 1 });
+  };
+
+  const loadMore = async () => {
+    if (!state.value.hasMore || state.value.loading) return [];
+    return fetchWorkOrders({ page: state.value.page });
+  };
+
+  return {
+    items,
+    loading,
+    error,
+    hasMore,
+    initialized,
+    page: computed(() => state.value.page),
+    pageSize: computed(() => state.value.pageSize),
+    fetchWorkOrders,
+    refresh,
+    loadMore,
+    reset,
+  };
+});
+
+export type WorkOrderListItem = WorkOrder;

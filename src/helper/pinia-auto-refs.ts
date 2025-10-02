@@ -9,6 +9,7 @@ import navigationStore from '@/store/navigation'
 import setupStore from '@/store/setup'
 import testStore from '@/store/test'
 import userStore from '@/store/user'
+import workOrdersStore from '@/store/workOrders'
 
 import store from '@/store'
 
@@ -24,6 +25,7 @@ const storeExports = {
   setup: setupStore,
   test: testStore,
   user: userStore,
+  workOrders: workOrdersStore,
 }
 
 export function useStore<T extends keyof typeof storeExports>(storeName: T) {
