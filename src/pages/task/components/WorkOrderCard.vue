@@ -29,10 +29,6 @@ const priority = computed(() =>
   workOrderDisplay.getPriorityDisplay(workOrder.value.priority)
 );
 
-const status = computed(() =>
-  workOrderDisplay.getStatusDisplay(workOrder.value.status)
-);
-
 const createdAt = computed(() =>
   workOrderDisplay.formatRelativeTime(workOrder.value.date_created)
 );
@@ -191,13 +187,6 @@ const handleClick = () => {
         </view>
 
         <view class="meta-row">
-          <up-tag
-            v-if="status"
-            :text="status.label"
-            :type="status.type || 'info'"
-            size="mini"
-            effect="dark"
-          />
           <up-tag
             v-if="priority"
             :text="priority.label"
