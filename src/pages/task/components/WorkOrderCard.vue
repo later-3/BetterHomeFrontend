@@ -2,7 +2,7 @@
 import { computed } from "vue";
 import type { WorkOrderListItem } from "@/store/workOrders";
 import workOrderDisplay from "@/utils/workOrderDisplay";
-import { getFileUrl, getThumbnailUrl, isImageFile } from "@/utils/fileUtils";
+import { getFileUrl, getThumbnailUrl, isImageFile, isVideoFile } from "@/utils/fileUtils";
 import type { DirectusFile } from "@/@types/directus-schema";
 import env from "@/config/env";
 
@@ -45,10 +45,6 @@ const communityName = computed(() =>
   workOrderDisplay.getCommunityName(workOrder.value.community_id)
 );
 
-const attachmentCount = computed(() =>
-  workOrderDisplay.getAttachmentCount(workOrder.value.files)
-);
-
 // 获取创建人头像URL
 const avatarUrl = computed(() => {
   // 直接从 workOrder 获取 submitter_id.avatar，跳过中间层
@@ -63,13 +59,20 @@ const avatarUrl = computed(() => {
   return `${env.directusUrl}/assets/${fileId}`;
 });
 
-// 获取图片附件的缩略图URL（列表页使用缩略图提升性能）
-const imageUrls = computed(() => {
+// 媒体项类型定义
+interface MediaItem {
+  type: 'image' | 'video';
+  url?: string;
+  label?: string;
+}
+
+// 获取媒体附件（图片缩略图 + 视频图标）
+const mediaItems = computed(() => {
   if (!workOrder.value.files || !Array.isArray(workOrder.value.files)) {
     return [];
   }
 
-  const urls: string[] = [];
+  const items: MediaItem[] = [];
 
   // 遍历所有附件
   for (const fileRelation of workOrder.value.files) {
@@ -77,22 +80,26 @@ const imageUrls = computed(() => {
     if (fileRelation && typeof fileRelation === 'object' && 'directus_files_id' in fileRelation) {
       const file = fileRelation.directus_files_id;
 
-      // 检查文件是否为图片
+      // 检查文件类型
       if (file && typeof file === 'object' && 'id' in file) {
         const directusFile = file as DirectusFile;
+
         if (isImageFile(directusFile)) {
-          // 使用缩略图（100x100）而不是原图，提升列表页加载速度
+          // 图片：使用缩略图（100x100）提升列表页加载速度
           const thumbnailUrl = getThumbnailUrl(directusFile, 100, 100);
           if (thumbnailUrl) {
-            urls.push(thumbnailUrl);
+            items.push({ type: 'image', url: thumbnailUrl });
           }
+        } else if (isVideoFile(directusFile)) {
+          // 视频：显示播放图标
+          items.push({ type: 'video', label: '视频' });
         }
       }
     }
   }
 
-  // 限制最多显示4个图片
-  return urls.slice(0, 4);
+  // 限制最多显示4个媒体项
+  return items.slice(0, 4);
 });
 
 const handleClick = () => {
@@ -157,18 +164,29 @@ const handleClick = () => {
           custom-style="margin-top: 8px;"
         />
 
-        <!-- 图片显示区域 -->
-        <view v-if="imageUrls.length > 0" class="images-container">
-          <view class="images-grid">
-            <up-image
-              v-for="(imageUrl, index) in imageUrls"
-              :key="index"
-              :src="imageUrl"
-              width="100px"
-              height="100px"
-              mode="aspectFill"
-              radius="8"
-            />
+        <!-- 媒体显示区域（图片 + 视频） -->
+        <view v-if="mediaItems.length > 0" class="media-container">
+          <view class="media-grid">
+            <template v-for="(item, index) in mediaItems" :key="index">
+              <!-- 图片缩略图 -->
+              <up-image
+                v-if="item.type === 'image'"
+                :src="item.url"
+                width="100px"
+                height="100px"
+                mode="aspectFill"
+                radius="8"
+              />
+              <!-- 视频播放图标 -->
+              <view
+                v-else-if="item.type === 'video'"
+                class="video-placeholder"
+              >
+                <view class="video-icon-wrapper">
+                  <up-icon name="play-circle-fill" size="48" color="#FFFFFF" />
+                </view>
+              </view>
+            </template>
           </view>
         </view>
 
@@ -192,13 +210,6 @@ const handleClick = () => {
             <up-text :text="communityName" size="12" type="info" />
           </view>
         </view>
-      </view>
-    </template>
-
-    <template v-if="attachmentCount > 0" #foot>
-      <view class="card-foot">
-        <up-icon name="attach" size="18" color="#64748B" />
-        <up-text :text="`${attachmentCount} 个附件`" size="12" type="info" />
       </view>
     </template>
   </up-card>
@@ -241,14 +252,45 @@ const handleClick = () => {
   gap: 12px;
 }
 
-.images-container {
+.media-container {
   margin-top: 8px;
 }
 
-.images-grid {
+.media-grid {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.video-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.video-placeholder::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.video-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .meta-row {
@@ -263,11 +305,5 @@ const handleClick = () => {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.card-foot {
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 </style>
