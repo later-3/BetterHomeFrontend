@@ -4,18 +4,14 @@
       "name": "create",
       "path": "pages/create/create",
       "style": {
-        "navigationBarTitleText": "创建",
-        "navigationBarBackgroundColor": "#ffffff",
-        "navigationBarTextStyle": "black"
+        "navigationStyle": "custom"
       }
     },
     {
       "name": "task",
       "path": "pages/task/task",
       "style": {
-        "navigationBarTitleText": "事项",
-        "navigationBarBackgroundColor": "#ffffff",
-        "navigationBarTextStyle": "black"
+        "navigationStyle": "custom"
       }
     },
     {
@@ -31,9 +27,7 @@
       "name": "profile",
       "path": "pages/profile/profile",
       "style": {
-        "navigationBarTitleText": "我",
-        "navigationBarBackgroundColor": "#ffffff",
-        "navigationBarTextStyle": "black"
+        "navigationStyle": "custom"
       }
     },
     {

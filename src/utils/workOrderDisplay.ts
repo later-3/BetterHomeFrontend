@@ -35,6 +35,14 @@ const WORK_ORDER_STATUS_DISPLAY: Record<WorkOrderStatus, DisplayToken> = {
   closed: { label: "已关闭", type: "info", icon: "close-circle" },
 };
 
+// Role 英文到中文的映射
+const ROLE_DISPLAY_MAP: Record<string, string> = {
+  'resident': '业主',
+  'admin': '管理员',
+  'property_manager': '物业人员',
+  'Administrator': '管理员', // Directus 默认管理员角色
+};
+
 export interface WorkOrderAssigneeDisplay {
   name: string;
   role?: string | null;
@@ -86,8 +94,8 @@ export function getAssigneeDisplay(
     };
   }
 
-  const names = [user.first_name, user.last_name].filter(Boolean);
-  const displayName = names.length ? names.join(" ") : user.email || "未命名用户";
+  // 只使用 first_name，不显示 last_name
+  const displayName = user.first_name || user.email || "未命名用户";
   const initials = displayName
     .replace(/\s+/g, "")
     .slice(0, 2)
@@ -104,12 +112,17 @@ export function getAssigneeDisplay(
     avatarId = (user.avatar as DirectusFile).id ?? undefined;
   }
 
+  // 获取角色名称并映射为中文
+  let roleName: string | null = null;
+  if (typeof user.role === "object" && user.role && "name" in user.role) {
+    const roleNameRaw = String((user.role as { name?: string }).name ?? "");
+    // 使用映射表转换，如果映射表中没有则保持原值
+    roleName = ROLE_DISPLAY_MAP[roleNameRaw] || roleNameRaw;
+  }
+
   return {
     name: displayName,
-    role:
-      typeof user.role === "object" && user.role && "name" in user.role
-        ? String((user.role as { name?: string }).name ?? "")
-        : null,
+    role: roleName,
     avatar,
     avatarId,
     initials: initials || "?",

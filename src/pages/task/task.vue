@@ -505,7 +505,7 @@ const handleCalendarConfirm = async (value: any) => {
         <view class="refresh-icon-wrapper">
           <up-icon
             name="reload"
-            size="20"
+            size="18"
             :color="hasNewWorkOrders ? '#ff6b6b' : '#cbd5e0'"
           />
           <view v-if="hasNewWorkOrders" class="red-dot"></view>
@@ -556,8 +556,8 @@ const handleCalendarConfirm = async (value: any) => {
 
 <style scoped>
 .page-container {
-  padding: 16px;
-  padding-bottom: 80px;
+  padding: 0 16px 80px;
+  padding-top: calc(var(--status-bar-height) + 0px); /* NavigationBar已隐藏，只需状态栏高度 */
   min-height: 100vh;
   background-color: #f4f5f7;
   font-size: 14px;
@@ -585,12 +585,16 @@ const handleCalendarConfirm = async (value: any) => {
 
 /* 筛选按钮栏 */
 .filter-bar {
+  position: sticky;
+  top: var(--status-bar-height);
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 8px 12px;
+  gap: 8px; /* 从12px优化到8px */
+  padding: 6px 12px; /* 从8px优化到6px */
   margin-bottom: 16px;
+  margin-top: 8px; /* 与顶部保持间距 */
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
@@ -600,12 +604,12 @@ const handleCalendarConfirm = async (value: any) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: 4px; /* 从6px优化到4px */
+  padding: 6px 12px; /* 从8px 16px优化到6px 12px */
   cursor: pointer;
   border-radius: 8px;
   transition: background-color 0.2s;
-  min-width: 100px;
+  min-width: 90px; /* 从100px优化到90px */
 }
 
 .filter-btn:active {
@@ -624,8 +628,8 @@ const handleCalendarConfirm = async (value: any) => {
 
 .refresh-btn {
   min-width: auto;
-  width: 40px;
-  height: 40px;
+  width: 36px; /* 从40px优化到36px */
+  height: 36px; /* 从40px优化到36px */
   padding: 0;
   border: 1px solid #e0e0e0;
   border-radius: 50%;
@@ -688,7 +692,7 @@ const handleCalendarConfirm = async (value: any) => {
 }
 
 .list-section {
-  padding: 20px 0; /* 只保留上下padding，左右间距由page-container统一控制 */
+  padding: 16px 0; /* 从20px优化到16px，符合8pt网格 */
 }
 
 .result-header {
