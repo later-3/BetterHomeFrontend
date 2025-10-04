@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { ref, computed } from "vue";
 import type { WorkOrderListItem } from "@/store/workOrders";
 import WorkOrderCard from "./WorkOrderCard.vue";
 
@@ -20,6 +20,9 @@ const isEmpty = computed(
   () => !props.loading && props.tasks.length === 0 && !props.error
 );
 
+// 下拉刷新状态
+const refreshing = ref(false);
+
 const handleSelect = (workOrder: WorkOrderListItem) => {
   emit("select", workOrder);
 };
@@ -29,63 +32,90 @@ const handleLoadMore = () => {
   emit("load-more");
 };
 
-const handleRefresh = () => {
-  emit("refresh");
+const handleRefresh = async () => {
+  if (refreshing.value) return;
+  refreshing.value = true;
+
+  try {
+    emit("refresh");
+    // 等待一段时间让刷新动画完成
+    await new Promise(resolve => setTimeout(resolve, 500));
+  } finally {
+    refreshing.value = false;
+  }
+};
+
+// scroll-view下拉刷新触发
+const handleScrollRefresh = () => {
+  void handleRefresh();
 };
 </script>
 
 <template>
-  <view class="task-list">
-    <view v-if="error" class="list-error">
-      <text class="error-text">{{ error }}</text>
-      <up-button
-        size="small"
-        type="primary"
-        plain
-        text="重试"
-        @click="handleRefresh"
-      />
-    </view>
+  <scroll-view
+    class="task-list-scroll"
+    scroll-y
+    refresher-enabled
+    :refresher-triggered="refreshing"
+    @refresherrefresh="handleScrollRefresh"
+  >
+    <view class="task-list">
+      <view v-if="error" class="list-error">
+        <text class="error-text">{{ error }}</text>
+        <up-button
+          size="small"
+          type="primary"
+          plain
+          text="重试"
+          @click="handleRefresh"
+        />
+      </view>
 
-    <view v-else-if="isEmpty" class="list-empty">
-      <text class="empty-icon">📭</text>
-      <text class="empty-title">还没有工单</text>
-      <text class="empty-desc">创建一个新的事项，让团队开始处理吧</text>
-      <up-button
-        size="small"
-        type="primary"
-        plain
-        text="刷新"
-        @click="handleRefresh"
-      />
-    </view>
+      <view v-else-if="isEmpty" class="list-empty">
+        <text class="empty-icon">📭</text>
+        <text class="empty-title">还没有工单</text>
+        <text class="empty-desc">创建一个新的事项，让团队开始处理吧</text>
+        <up-button
+          size="small"
+          type="primary"
+          plain
+          text="刷新"
+          @click="handleRefresh"
+        />
+      </view>
 
-    <view v-else class="list-content">
-      <WorkOrderCard
-        v-for="item in tasks"
-        :key="item.id"
-        :work-order="item"
-        @select="handleSelect"
-      />
-    </view>
+      <view v-else class="list-content">
+        <WorkOrderCard
+          v-for="item in tasks"
+          :key="item.id"
+          :work-order="item"
+          @select="handleSelect"
+        />
+      </view>
 
-    <view v-if="loading" class="list-loading">
-      <text class="loading-text">加载中...</text>
-    </view>
+      <view v-if="loading" class="list-loading">
+        <text class="loading-text">加载中...</text>
+      </view>
 
-    <view v-else-if="hasMore" class="list-more">
-      <up-button
-        size="small"
-        type="primary"
-        plain
-        text="加载更多"
-        @click="handleLoadMore"
-      />
+      <view v-else-if="hasMore" class="list-more">
+        <up-button
+          size="small"
+          type="primary"
+          plain
+          text="加载更多"
+          @click="handleLoadMore"
+        />
+      </view>
     </view>
-  </view>
+  </scroll-view>
 </template>
 
 <style scoped>
+.task-list-scroll {
+  height: 100%;
+  width: 100%;
+}
+
 .task-list {
   display: flex;
   flex-direction: column;
