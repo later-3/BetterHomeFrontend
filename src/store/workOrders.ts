@@ -327,6 +327,73 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
     }
   };
 
+  // 获取最新的一条工单（用于检测新工单）
+  const fetchLatestWorkOrder = async (category?: string, date?: string) => {
+    try {
+      await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
+    } catch (error) {
+      throw error;
+    }
+
+    try {
+      const query: WorkOrderQuery = {
+        limit: 1,
+        fields: ["id", "date_created"],
+        sort: ["-date_created"],
+      };
+
+      // 构建筛选条件
+      const filters: any[] = [];
+
+      // 如果有日期筛选
+      if (date) {
+        const localStart = new Date(`${date}T00:00:00`);
+        const localEnd = new Date(`${date}T23:59:59`);
+        const startDate = localStart.toISOString();
+        const endDate = localEnd.toISOString();
+
+        filters.push(
+          {
+            date_created: {
+              _gte: startDate
+            }
+          },
+          {
+            date_created: {
+              _lte: endDate
+            }
+          }
+        );
+      }
+
+      // 如果有类别筛选
+      if (category) {
+        filters.push({
+          category: {
+            _eq: category
+          }
+        });
+      }
+
+      // 应用筛选条件
+      if (filters.length > 0) {
+        query.filter = {
+          _and: filters
+        };
+      }
+
+      const response = await workOrdersApi.readMany(query);
+      const workOrderItems: WorkOrder[] = Array.isArray(response)
+        ? response.map(normalizeWorkOrder)
+        : [];
+
+      return workOrderItems.length > 0 ? workOrderItems[0] : null;
+    } catch (error) {
+      console.error("获取最新工单失败", error);
+      throw error;
+    }
+  };
+
   return {
     items,
     loading,
@@ -338,6 +405,7 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
     fetchWorkOrders,
     fetchWorkOrdersByDate,
     fetchWorkOrdersByCategory,
+    fetchLatestWorkOrder,
     refresh,
     loadMore,
     reset,

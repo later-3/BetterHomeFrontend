@@ -1,6 +1,7 @@
 <script setup lang="ts" name="task">
 import { ref } from "vue";
 import { computed, onMounted, watch } from "vue";
+import { onShow } from "@dcloudio/uni-app";
 import { storeToRefs } from "pinia";
 import TaskList from "./components/TaskList.vue";
 import { useUserStore } from "@/store/user";
@@ -87,6 +88,11 @@ onMounted(() => {
   void fetchInitial();
 });
 
+// 页面显示时检测新工单（Tab切换或应用切回前台）
+onShow(() => {
+  void checkForNewWorkOrders();
+});
+
 watch(
   loggedIn,
   async (value) => {
@@ -125,16 +131,39 @@ const handleRefresh = async () => {
   }
 
   try {
+    // 记录刷新前的第一条工单ID（用于判断是否有新数据）
+    const oldFirstId = items.value.length > 0 ? items.value[0].id : null;
+
     // 重置筛选条件
     selectedCategory.value = "";
     selectedDate.value = "";
 
     await workOrderStore.refresh();
+
+    // 检查是否有新数据
+    const newFirstId = items.value.length > 0 ? items.value[0].id : null;
+    const hasNewData = oldFirstId !== newFirstId;
+
     // 更新缓存
     allWorkOrdersCache.value = [...items.value];
     // 重置日历的日期缓存，下次打开时会重新计算
     workOrderDates.value = [];
     forbidDays.value = [];
+
+    // 刷新后更新最新工单ID并清除红点提示（无论是点击按钮还是下拉刷新）
+    if (items.value.length > 0) {
+      latestWorkOrderId.value = items.value[0].id;
+    }
+    hasNewWorkOrders.value = false;
+
+    // 如果没有新数据，提示用户
+    if (!hasNewData && oldFirstId !== null) {
+      uni.showToast({
+        title: "暂无新工单",
+        icon: "none",
+        duration: 1500
+      });
+    }
   } catch (err) {
     console.error("刷新工单时出错", err);
   }
@@ -182,6 +211,55 @@ const calendarDefaultDate = ref<string | string[]>([]); // 空数组表示不选
 const workOrderDates = ref<string[]>([]); // 有工单的日期列表（缓存，不会被筛选影响）
 const forbidDays = ref<string[]>([]); // 禁用的日期列表
 const allWorkOrdersCache = ref<WorkOrderListItem[]>([]); // 缓存所有工单，用于日期提取
+
+// ==================== 新工单检测 ====================
+const hasNewWorkOrders = ref(false); // 是否有新工单
+const latestWorkOrderId = ref<string | number | null>(null); // 最新工单ID（用于检测）
+
+// 检测是否有新工单
+const checkForNewWorkOrders = async () => {
+  if (!loggedIn.value) return;
+
+  try {
+    // 获取当前筛选条件下的最新工单（只取第一条）
+    const latestWorkOrder = await workOrderStore.fetchLatestWorkOrder(
+      selectedCategory.value,
+      selectedDate.value
+    );
+
+    if (!latestWorkOrder) return;
+
+    // 如果是首次加载，记录最新工单ID，不显示提示
+    if (latestWorkOrderId.value === null) {
+      latestWorkOrderId.value = latestWorkOrder.id;
+      return;
+    }
+
+    // 对比ID，如果不同说明有新工单
+    if (latestWorkOrder.id !== latestWorkOrderId.value) {
+      hasNewWorkOrders.value = true;
+    }
+  } catch (err) {
+    console.error("检测新工单失败", err);
+  }
+};
+
+// 刷新按钮点击处理
+const handleRefreshClick = async () => {
+  if (!loggedIn.value) {
+    uni.showToast({ title: "请先登录", icon: "none" });
+    return;
+  }
+
+  // 如果没有新工单，阻止刷新
+  if (!hasNewWorkOrders.value) {
+    uni.showToast({ title: "暂无新工单", icon: "none" });
+    return;
+  }
+
+  // 调用统一的刷新逻辑（会自动清除红点）
+  await handleRefresh();
+};
 
 // ==================== 类别筛选功能 ====================
 const showCategoryPicker = ref(false);
@@ -417,6 +495,22 @@ const handleCalendarConfirm = async (value: any) => {
         <up-icon name="calendar" size="20" color="#28a745" />
         <text class="filter-text">日历筛选</text>
       </view>
+
+      <!-- 刷新按钮 -->
+      <view
+        class="filter-btn refresh-btn"
+        :class="{ 'refresh-btn--disabled': !hasNewWorkOrders }"
+        @click="handleRefreshClick"
+      >
+        <view class="refresh-icon-wrapper">
+          <up-icon
+            name="reload"
+            size="20"
+            :color="hasNewWorkOrders ? '#ff6b6b' : '#cbd5e0'"
+          />
+          <view v-if="hasNewWorkOrders" class="red-dot"></view>
+        </view>
+      </view>
     </view>
 
     <!-- 类别选择器 -->
@@ -447,18 +541,6 @@ const handleCalendarConfirm = async (value: any) => {
     />
 
     <view class="section list-section">
-      <view class="result-header">
-        <text class="section-title">📋 工单列表</text>
-        <up-button
-          size="mini"
-          type="primary"
-          plain
-          :loading="loading"
-          text="刷新"
-          @click="handleRefresh"
-        />
-      </view>
-
       <TaskList
         :tasks="items"
         :loading="loading"
@@ -538,6 +620,45 @@ const handleCalendarConfirm = async (value: any) => {
 
 .calendar-btn {
   border: 1px solid #e0e0e0;
+}
+
+.refresh-btn {
+  min-width: auto;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 50%;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.refresh-btn--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f5f5f5;
+}
+
+.refresh-btn--disabled:active {
+  background-color: #f5f5f5;
+}
+
+.refresh-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.red-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background-color: #ff6b6b;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
 }
 
 .filter-text {
