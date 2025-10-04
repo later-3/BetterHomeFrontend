@@ -567,7 +567,7 @@ const handleCalendarConfirm = async (value: any) => {
 }
 
 .list-section {
-  padding: 20px 16px;
+  padding: 20px 0; /* 只保留上下padding，左右间距由page-container统一控制 */
 }
 
 .result-header {
