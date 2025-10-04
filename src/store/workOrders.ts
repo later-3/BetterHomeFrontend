@@ -59,7 +59,7 @@ const SAFE_FIELDS: NonNullable<WorkOrderQuery["fields"]> = [
   "submitter_id.last_name",
   "submitter_id.email",
   "submitter_id.avatar",
-  "submitter_id.role",
+  "submitter_id.role.name", // 获取角色名称而不是ID
   "community_id.id",
   "community_id.name",
   "assignee_id.id",
@@ -67,7 +67,7 @@ const SAFE_FIELDS: NonNullable<WorkOrderQuery["fields"]> = [
   "assignee_id.last_name",
   "assignee_id.email",
   "assignee_id.avatar",
-  "assignee_id.role",
+  "assignee_id.role.name", // 获取角色名称而不是ID
   "files.directus_files_id.*",
 ];
 
