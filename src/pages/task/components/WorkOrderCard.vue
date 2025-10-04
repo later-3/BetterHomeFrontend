@@ -41,6 +41,14 @@ const communityName = computed(() =>
   workOrderDisplay.getCommunityName(workOrder.value.community_id)
 );
 
+const status = computed(() =>
+  workOrderDisplay.getStatusDisplay(workOrder.value.status)
+);
+
+const assignee = computed(() =>
+  workOrderDisplay.getAssigneeDisplay(workOrder.value.assignee_id)
+);
+
 // 获取创建人头像URL
 const avatarUrl = computed(() => {
   // 直接从 workOrder 获取 submitter_id.avatar，跳过中间层
@@ -106,7 +114,7 @@ const handleClick = () => {
 <template>
   <up-card
     :border="false"
-    :padding="24"
+    :padding="16"
     class="work-order-card"
     @click="handleClick"
   >
@@ -135,15 +143,6 @@ const handleClick = () => {
             :text="createdAt"
             size="12"
             type="info"
-            custom-style="margin-right: 8px;"
-          />
-          <up-tag
-            v-if="category"
-            shape="circle"
-            size="mini"
-            :text="category.label"
-            :type="category.type || 'primary'"
-            plain
           />
         </view>
       </view>
@@ -157,7 +156,6 @@ const handleClick = () => {
           :text="description"
           size="14"
           type="info"
-          custom-style="margin-top: 8px;"
         />
 
         <!-- 媒体显示区域（图片 + 视频） -->
@@ -186,7 +184,15 @@ const handleClick = () => {
           </view>
         </view>
 
-        <view class="meta-row">
+        <!-- 状态行：类别、优先级、负责人、社区 -->
+        <view class="status-row">
+          <up-tag
+            v-if="category"
+            :text="category.label"
+            :type="category.type || 'primary'"
+            size="mini"
+            plain
+          />
           <up-tag
             v-if="priority"
             :text="priority.label"
@@ -194,8 +200,12 @@ const handleClick = () => {
             size="mini"
             plain
           />
-          <view v-if="communityName" class="meta-location">
-            <up-icon name="map" size="18" color="#64748B" />
+          <view v-if="assignee" class="status-item">
+            <up-icon name="account" size="16" color="#64748B" />
+            <up-text :text="assignee.name" size="12" type="info" />
+          </view>
+          <view v-if="communityName" class="status-item">
+            <up-icon name="map" size="16" color="#64748B" />
             <up-text :text="communityName" size="12" type="info" />
           </view>
         </view>
@@ -207,7 +217,7 @@ const handleClick = () => {
 <style scoped>
 .work-order-card {
   width: 100%;
-  margin-bottom: 16px;
+  margin: 0 !important; /* 覆盖 uview-plus 默认 margin: 15px */
 }
 
 .card-head {
@@ -215,6 +225,9 @@ const handleClick = () => {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+  /* 确保与 body 左对齐 */
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 .submitter {
@@ -238,11 +251,14 @@ const handleClick = () => {
 .card-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  /* 确保与 head 左对齐 */
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 .media-container {
-  margin-top: 8px;
+  /* margin removed - controlled by card-body gap */
 }
 
 .media-grid {
@@ -282,15 +298,16 @@ const handleClick = () => {
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
-.meta-row {
+.status-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid #f1f5f9;
 }
 
-.meta-location {
+.status-item {
   display: flex;
   align-items: center;
   gap: 4px;

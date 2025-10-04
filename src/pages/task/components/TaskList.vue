@@ -128,6 +128,7 @@ const handleRefresh = () => {
 .list-content {
   display: flex;
   flex-direction: column;
+  gap: 16px;
 }
 
 .list-loading,
