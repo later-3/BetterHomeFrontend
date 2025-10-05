@@ -21,9 +21,9 @@
 基础单位: 8px
 
 间距令牌:
-  space-050: 4px    # 0.5x - 紧密元素（图标↔文字）
-  space-100: 8px    # 1x   - 小间距（标签之间）
-  space-200: 16px   # 2x   - 标准间距 ⭐ 最常用
+  space-050: 4px    # 0.5x - 紧密元素（图标↔文字、head↔body padding）
+  space-100: 8px    # 1x   - 小间距（标签之间、head↔body总间距）
+  space-200: 16px   # 2x   - 标准间距 ⭐ 最常用（卡片间距）
   space-300: 24px   # 3x   - 中等间距（区块分隔）
   space-400: 32px   # 4x   - 大间距（页面级）
   space-500: 40px   # 5x   - 超大间距
@@ -184,7 +184,7 @@ Screen (视口)
   name_to_role: 4px              # 姓名 → 角色
 
   # head 和 body 分隔
-  head_to_body: 16px             # 由 up-card 自动处理
+  head_to_body: 8px              # head padding-bottom: 4px + body padding-top: 4px
 
   # body 内部（统一 gap）
   body_gap: 8px                  # 所有子元素统一间距
@@ -393,7 +393,8 @@ BEM 命名法:
   - [ ] 卡片距屏幕边缘 = 16px
   - [ ] 内容距屏幕边缘 = 32px
   - [ ] 卡片之间间距 = 16px
-  - [ ] 卡片内边距 = 16px
+  - [ ] head 到 body 间距 = 8px
+  - [ ] 卡片内边距 = 16px（左右上下）
   - [ ] 所有元素左对齐于 32px 基准线
   - [ ] 使用 gap 而非 margin 控制间距
   - [ ] 无间距叠加问题
@@ -441,6 +442,13 @@ BEM 命名法:
 ---
 
 ## 📝 九、变更日志
+
+### v1.1.0 (2025-01-05)
+
+- ✅ 优化 head 和 body 间距从 16px 调整为 8px
+  - 符合亲密性法则：卡片内部间距 (8px) < 卡片之间间距 (16px)
+  - 实现方式：head padding-bottom: 4px + body padding-top: 4px
+  - 增强卡片整体性，更好区分不同卡片
 
 ### v1.0.0 (2025-01-04)
 
