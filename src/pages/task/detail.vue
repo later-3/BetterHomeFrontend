@@ -1,41 +1,366 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { computed, ref } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
+import dayjs from "dayjs";
+
+import type { WorkOrder, WorkOrdersDirectusFile } from "@/@types/directus-schema";
+import { useWorkOrderStore } from "@/store/workOrders";
+import workOrderDisplay from "@/utils/workOrderDisplay";
+import {
+  getFileUrl,
+  getThumbnailUrl,
+  isImageFile,
+  isVideoFile,
+} from "@/utils/fileUtils";
+import env from "@/config/env";
+
+const workOrderStore = useWorkOrderStore();
 
 const workOrderId = ref<string>("");
+const detail = ref<WorkOrder | null>(null);
 const loading = ref(true);
+const error = ref<string | null>(null);
 
-onLoad((options) => {
-  if (options?.id) {
-    workOrderId.value = options.id as string;
+const loadDetail = async (id: string) => {
+  if (!id) {
+    error.value = "工单编号缺失";
+    loading.value = false;
+    return;
+  }
+
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const data = await workOrderStore.fetchWorkOrderDetail(id);
+    detail.value = data;
+  } catch (err) {
+    console.error("加载工单详情失败", err);
+    error.value = (err as Error)?.message ?? "加载失败，请稍后重试";
+  } finally {
+    loading.value = false;
+  }
+};
+
+type DisplayToken = ReturnType<typeof workOrderDisplay.getCategoryDisplay>;
+
+const resolveFileRelations = (
+  files: WorkOrder["files"] | null | undefined,
+): WorkOrdersDirectusFile[] => {
+  if (!Array.isArray(files)) return [];
+
+  return files.filter((item): item is WorkOrdersDirectusFile => {
+    return Boolean(item && typeof item === "object" && "directus_files_id" in item);
+  });
+};
+
+const submitterDisplay = computed(() => {
+  if (!detail.value) return null;
+  return workOrderDisplay.getAssigneeDisplay(detail.value.submitter_id);
+});
+
+const assigneeDisplay = computed(() => {
+  if (!detail.value) return null;
+  return workOrderDisplay.getAssigneeDisplay(detail.value.assignee_id);
+});
+
+const submitterAvatarUrl = computed(() => {
+  const avatarId = submitterDisplay.value?.avatarId;
+  if (!avatarId) return null;
+  return `${env.directusUrl}/assets/${avatarId}`;
+});
+
+const submitterRoleLabel = computed(() => {
+  return submitterDisplay.value?.role ?? "身份信息";
+});
+
+const categoryToken = computed<DisplayToken>(() => {
+  if (!detail.value) return null;
+  return workOrderDisplay.getCategoryDisplay(detail.value.category);
+});
+
+const priorityToken = computed<DisplayToken>(() => {
+  if (!detail.value) return null;
+  return workOrderDisplay.getPriorityDisplay(detail.value.priority);
+});
+
+const priorityIconName = computed(() => {
+  const priority = detail.value?.priority;
+  switch (priority) {
+    case "urgent":
+      return "warning-fill";
+    case "high":
+      return "warning";
+    case "medium":
+      return "star-fill";
+    case "low":
+      return "arrow-down";
+    default:
+      return "info-circle";
   }
 });
 
-onMounted(() => {
-  // 简单模拟加载完成
-  loading.value = false;
+const createdAtDisplay = computed(() => {
+  if (!detail.value?.date_created) return "";
+  const absolute = dayjs(detail.value.date_created).format("YYYY-MM-DD HH:mm");
+  const relative = workOrderDisplay.formatRelativeTime(detail.value.date_created);
+  return relative ? `${absolute} · ${relative}` : absolute;
 });
 
-const handleBack = () => {
-  uni.navigateBack();
+const deadlineDisplay = computed(() => {
+  if (!detail.value?.deadline) return "";
+  return dayjs(detail.value.deadline).format("YYYY-MM-DD HH:mm");
+});
+
+const communityName = computed(() => {
+  if (!detail.value) return "";
+  return workOrderDisplay.getCommunityName(detail.value.community_id);
+});
+
+const imageUrls = computed(() => {
+  const relations = resolveFileRelations(detail.value?.files ?? null);
+  const urls: string[] = [];
+
+  for (const relation of relations) {
+    const file = relation.directus_files_id;
+    if (!file || typeof file !== "object" || !isImageFile(file)) continue;
+
+    const url = getThumbnailUrl(file, 500, 500) ?? getFileUrl(file);
+    if (url) {
+      urls.push(url);
+    }
+  }
+  return urls;
+});
+
+interface VideoResource {
+  id: string;
+  url: string;
+  duration?: number | null;
+  title?: string | null;
+}
+
+const videoResources = computed<VideoResource[]>(() => {
+  const relations = resolveFileRelations(detail.value?.files ?? null);
+  const videos: VideoResource[] = [];
+  for (const relation of relations) {
+    const file = relation.directus_files_id;
+    if (!file || typeof file !== "object" || !isVideoFile(file)) continue;
+
+    const url = getFileUrl(file);
+    if (!url) continue;
+
+    videos.push({
+      id: file.id,
+      url,
+      duration: file.duration ?? null,
+      title: file.filename_download ?? file.title ?? null,
+    });
+  }
+  return videos;
+});
+
+const handleRetry = () => {
+  if (workOrderId.value) {
+    void loadDetail(workOrderId.value);
+  }
 };
+
+const handleImagePreview = (currentIndex: number) => {
+  if (!imageUrls.value.length) return;
+  uni.previewImage({
+    current: imageUrls.value[currentIndex],
+    urls: imageUrls.value,
+  });
+};
+
+onLoad((options) => {
+  const id = typeof options?.id === "string" ? options.id : "";
+  workOrderId.value = id;
+  void loadDetail(id);
+});
 </script>
 
 <template>
   <view class="detail-page">
-    <view v-if="loading" class="loading-container">
-      <text>加载中...</text>
+    <view v-if="loading" class="loading-state">
+      <u-loading-page :loading="true" loading-text="加载中..." />
     </view>
 
-    <view v-else class="content">
-      <view class="header">
-        <text class="title">工单详情</text>
-        <u-button size="small" type="primary" text="返回" @click="handleBack" />
+    <view v-else-if="error" class="error-state">
+      <up-empty mode="error" :text="error" text-size="14" />
+      <up-button class="retry-btn" type="primary" size="small" text="重试" @click="handleRetry" />
+    </view>
+
+    <scroll-view
+      v-else
+      class="detail-scroll"
+      scroll-y
+      :show-scrollbar="false"
+    >
+      <view class="card overview-card">
+        <view class="overview-header">
+          <view class="overview-avatar">
+            <up-avatar
+              size="48"
+              shape="circle"
+              :src="submitterAvatarUrl || undefined"
+              :text="submitterAvatarUrl ? '' : submitterDisplay?.initials"
+            />
+            <view class="overview-meta">
+              <up-text
+                :text="submitterDisplay?.name || '访客用户'"
+                size="15"
+                bold
+              />
+              <!-- 角色标签已通过身份 chip 显示，此处不再重复 -->
+              <up-text
+                v-if="createdAtDisplay"
+                :text="createdAtDisplay"
+                size="12"
+                type="info"
+              />
+            </view>
+          </view>
+          <up-tag
+            size="mini"
+            type="info"
+            plain
+            class="identity-tag"
+            :text="submitterRoleLabel"
+          />
+        </view>
+
+        <view class="overview-body">
+          <up-text
+            class="overview-title"
+            :text="detail?.title || '未命名事项'"
+            size="17"
+            bold
+          />
+          <up-text
+            v-if="detail?.description"
+            class="overview-description"
+            :text="detail.description"
+            size="14"
+            type="info"
+          />
+
+          <view class="info-tags">
+            <view v-if="categoryToken" class="info-tag info-tag--primary">
+              <up-icon name="grid" size="14" color="#166534" />
+              <text>{{ categoryToken.label }}</text>
+            </view>
+            <view v-if="priorityToken" class="info-tag info-tag--warning">
+              <up-icon :name="priorityIconName" size="14" color="#B45309" />
+              <text>{{ priorityToken.label }}</text>
+            </view>
+            <view v-if="communityName" class="info-tag">
+              <up-icon name="map" size="14" color="#475569" />
+              <text>{{ communityName }}</text>
+            </view>
+            <view v-if="deadlineDisplay" class="info-tag">
+              <up-icon name="calendar" size="14" color="#475569" />
+              <text>截止：{{ deadlineDisplay }}</text>
+            </view>
+            <view v-if="assigneeDisplay" class="info-tag">
+              <up-icon name="account" size="14" color="#475569" />
+              <text>负责人：{{ assigneeDisplay.name }}</text>
+            </view>
+          </view>
+        </view>
       </view>
 
-      <view class="info-section">
-        <text class="info-text">工单ID: {{ workOrderId }}</text>
-        <text class="placeholder">详情内容待实现...</text>
+      <view v-if="imageUrls.length" class="media-stream">
+        <view class="media-list">
+          <view
+            v-for="(url, index) in imageUrls"
+            :key="`${url}-${index}`"
+            class="media-card"
+            @click="handleImagePreview(index)"
+          >
+            <up-image
+              :src="url"
+              width="100%"
+              height="auto"
+              mode="widthFix"
+              radius="12"
+              :show-loading="true"
+              :show-error="true"
+            />
+          </view>
+        </view>
+      </view>
+
+      <view v-if="videoResources.length" class="media-stream">
+        <view class="media-list">
+          <view
+            v-for="video in videoResources"
+            :key="video.id"
+            class="media-card"
+          >
+            <view class="video-wrapper">
+              <video
+                class="video-player"
+                :src="video.url"
+                controls
+                :show-fullscreen-btn="true"
+                show-mute-btn
+                :enable-progress-gesture="true"
+              />
+              <view class="video-badge" v-if="video.duration">
+                <up-icon name="play-circle-fill" size="16" color="#FFFFFF" />
+                <text>{{ Math.round(video.duration) }}s</text>
+              </view>
+            </view>
+            <up-text
+              v-if="video.title"
+              class="video-caption"
+              :text="video.title"
+              size="13"
+            />
+          </view>
+        </view>
+      </view>
+
+      <view class="card placeholder-card">
+        <view class="placeholder-header">
+          <text class="section-title">处理进度</text>
+          <up-tag size="mini" type="warning" text="开发中" plain />
+        </view>
+        <view class="placeholder-body">
+          <text class="placeholder-text">时间轴功能即将上线</text>
+          <view class="placeholder-divider" />
+        </view>
+      </view>
+
+      <view class="card placeholder-card">
+        <view class="placeholder-header">
+          <text class="section-title">留言沟通</text>
+          <up-tag size="mini" type="info" text="待开放" plain />
+        </view>
+        <view class="placeholder-body">
+          <text class="placeholder-text">评论功能筹备中</text>
+          <view class="placeholder-divider" />
+        </view>
+      </view>
+
+      <view class="scroll-spacer" />
+    </scroll-view>
+
+    <view class="action-bar">
+      <view class="action-buttons">
+        <up-button
+          class="action-button"
+          type="primary"
+          text="联系物业"
+        />
+        <up-button
+          class="action-button"
+          type="success"
+          plain
+          text="再次报修"
+        />
       </view>
     </view>
   </view>
@@ -45,56 +370,216 @@ const handleBack = () => {
 .detail-page {
   min-height: 100vh;
   background-color: #f4f5f7;
-  padding: 16px;
+  display: flex;
+  flex-direction: column;
 }
 
-.loading-container {
+.loading-state,
+.error-state {
+  flex: 1;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  gap: 16px;
+  padding: 32px;
 }
 
-.content {
+.retry-btn {
+  width: 96px;
+}
+
+.detail-scroll {
+  flex: 1;
+  padding: 16px 16px 120px;
+  box-sizing: border-box;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.overview-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.overview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.overview-avatar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.overview-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.identity-tag {
+  align-self: flex-start;
+}
+
+.overview-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.overview-title {
+  color: #0f172a;
+}
+
+.overview-description {
+  color: #475569;
+  line-height: 1.6;
+}
+
+.info-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.info-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+}
+
+.info-tag--primary {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.info-tag--warning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.media-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.media-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.header {
+.media-card {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+
+.media-card :deep(image) {
+  width: 100%;
+  display: block;
+}
+
+.video-wrapper {
+  position: relative;
+  background: #000;
+}
+
+.video-player {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+
+.video-badge {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.75);
+  color: #fff;
+  font-size: 12px;
+}
+
+.video-caption {
+  padding: 12px 0 0;
+  color: #0f172a;
+}
+
+.placeholder-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.placeholder-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #111827;
-}
-
-.info-section {
+.placeholder-body {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 12px;
-  padding: 20px;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 24px 0;
 }
 
-.info-text {
+.placeholder-text {
+  color: #64748b;
   font-size: 14px;
-  color: #374151;
 }
 
-.placeholder {
-  font-size: 14px;
-  color: #9ca3af;
-  font-style: italic;
+.placeholder-divider {
+  width: 64px;
+  height: 4px;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.action-bar {
+  position: sticky;
+  bottom: 0;
+  padding: 12px 16px calc(env(safe-area-inset-bottom, 16px) + 12px);
+  background: rgba(244, 245, 247, 0.98);
+  box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.action-button {
+  flex: 1;
+}
+
+.scroll-spacer {
+  height: 32px;
 }
 </style>

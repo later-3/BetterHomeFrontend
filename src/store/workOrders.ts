@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
-import type { Query } from "@directus/sdk";
+import type { Query, QueryItem } from "@directus/sdk";
 
 import type { Schema, WorkOrder } from "@/@types/directus-schema";
 import { workOrdersApi } from "@/utils/directus";
@@ -11,6 +11,7 @@ const CALENDAR_HISTORY_MONTHS = 6; // 日历显示的历史月份数
 const DAILY_WORK_ORDER_LIMIT = 100; // 单日工单查询数量限制
 
 type WorkOrderQuery = Query<Schema, WorkOrder>;
+type WorkOrderItemQuery = QueryItem<Schema, WorkOrder>;
 
 interface FetchOptions {
   refresh?: boolean;
@@ -31,7 +32,7 @@ interface WorkOrderState {
 
 // 使用企业级标准定义字段，基于Directus schema
 // 确保字段名称与Directus API返回的数据结构完全匹配
-const BASE_FIELDS: NonNullable<WorkOrderQuery["fields"]> = [
+const BASE_FIELDS = [
   "id",
   "title",
   "description",
@@ -43,10 +44,10 @@ const BASE_FIELDS: NonNullable<WorkOrderQuery["fields"]> = [
   "community_id",
   "assignee_id",
   "files.directus_files_id.*",
-];
+] as unknown as NonNullable<WorkOrderQuery["fields"]>;
 
 // 定义一个简化版本的字段查询，避免类型冲突
-const SAFE_FIELDS: NonNullable<WorkOrderQuery["fields"]> = [
+const SAFE_FIELDS = [
   "id",
   "title",
   "description",
@@ -69,7 +70,17 @@ const SAFE_FIELDS: NonNullable<WorkOrderQuery["fields"]> = [
   "assignee_id.avatar",
   "assignee_id.role.name", // 获取角色名称而不是ID
   "files.directus_files_id.*",
-];
+  "files.id",
+] as unknown as NonNullable<WorkOrderQuery["fields"]>;
+
+const DETAIL_FIELDS = [
+  ...SAFE_FIELDS,
+  "deadline",
+  "resolved_at",
+  "rating",
+  "feedback",
+  "community_id.address",
+] as unknown as NonNullable<WorkOrderQuery["fields"]>;
 
 // 规范化工单数据，确保类型安全
 const normalizeWorkOrder = (item: any): WorkOrder => ({
@@ -303,9 +314,9 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
       if (category) {
         query.filter = {
           category: {
-            _eq: category
-          }
-        };
+            _eq: category as WorkOrder["category"],
+          },
+        } as any;
       }
 
       const response = await workOrdersApi.readMany(query);
@@ -370,8 +381,8 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
       if (category) {
         filters.push({
           category: {
-            _eq: category
-          }
+            _eq: category as WorkOrder["category"],
+          },
         });
       }
 
@@ -394,6 +405,26 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
     }
   };
 
+  const fetchWorkOrderDetail = async (id: string) => {
+    try {
+      await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
+    } catch (error) {
+      throw error;
+    }
+
+    try {
+      const query: WorkOrderItemQuery = {
+        fields: DETAIL_FIELDS,
+      };
+
+      const response = await workOrdersApi.readOne(id, query);
+      return normalizeWorkOrder(response);
+    } catch (error) {
+      console.error("获取工单详情失败", error);
+      throw error;
+    }
+  };
+
   return {
     items,
     loading,
@@ -406,6 +437,7 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
     fetchWorkOrdersByDate,
     fetchWorkOrdersByCategory,
     fetchLatestWorkOrder,
+    fetchWorkOrderDetail,
     refresh,
     loadMore,
     reset,
