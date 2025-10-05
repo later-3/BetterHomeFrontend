@@ -220,6 +220,15 @@ const handleClick = () => {
   margin: 0 !important; /* 覆盖 uview-plus 默认 margin: 15px */
 }
 
+/* 覆盖 up-card 默认的 head/body padding，实现 8px 间距 */
+.work-order-card :deep(.u-card__head) {
+  padding: 16px 16px 4px 16px !important; /* head bottom: 4px */
+}
+
+.work-order-card :deep(.u-card__body) {
+  padding: 4px 16px 16px 16px !important; /* body top: 4px */
+}
+
 .card-head {
   display: flex;
   justify-content: space-between;
