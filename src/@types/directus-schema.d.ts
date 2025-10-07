@@ -171,7 +171,14 @@ export interface WorkOrder {
   title: string;
   /** @required */
   description: string;
-  category?: "repair" | "complaint" | "suggestion" | "inquiry" | "other" | null;
+  category?:
+    | "repair"
+    | "complaint"
+    | "suggestion"
+    | "inquiry"
+    | "maintenance_fund_application"
+    | "other"
+    | null;
   priority?: "low" | "medium" | "high" | "urgent" | null;
   status?:
     | "submitted"
@@ -197,6 +204,12 @@ export interface WorkOrdersDirectusFile {
   directus_files_id?: DirectusFile | string | null;
   sort?: number | null;
 }
+
+// ============================================================
+// Finance v2.0 Interfaces (will be added in Phase 2, Task 2.1)
+// ============================================================
+// Note: Old Billing and Expense interfaces removed
+// New interfaces for 9 tables will be added after table creation
 
 export interface DirectusAccess {
   /** @primaryKey */
@@ -695,6 +708,16 @@ export interface Schema {
   work_order_nodes_directus_files: WorkOrderNodesDirectusFile[];
   work_orders: WorkOrder[];
   work_orders_directus_files: WorkOrdersDirectusFile[];
+  // Finance v2.0 tables (will be added in Phase 2, Task 2.1)
+  // billings: Billing[];
+  // billing_payments: BillingPayment[];
+  // incomes: Income[];
+  // expenses: Expense[];
+  // employees: Employee[];
+  // salary_records: SalaryRecord[];
+  // maintenance_fund_accounts: MaintenanceFundAccount[];
+  // maintenance_fund_payments: MaintenanceFundPayment[];
+  // maintenance_fund_usage: MaintenanceFundUsage[];
   directus_access: DirectusAccess[];
   directus_activity: DirectusActivity[];
   directus_collections: DirectusCollection[];
@@ -738,6 +761,8 @@ export enum CollectionNames {
   work_order_nodes_directus_files = "work_order_nodes_directus_files",
   work_orders = "work_orders",
   work_orders_directus_files = "work_orders_directus_files",
+  billings = "billings",
+  expenses = "expenses",
   directus_access = "directus_access",
   directus_activity = "directus_activity",
   directus_collections = "directus_collections",

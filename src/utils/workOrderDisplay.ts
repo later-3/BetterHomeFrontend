@@ -17,6 +17,11 @@ const WORK_ORDER_CATEGORY_DISPLAY: Record<WorkOrderCategory, DisplayToken> = {
   complaint: { label: "投诉建议", type: "warning", icon: "feedback" },
   suggestion: { label: "优化建议", type: "success", icon: "lightbulb" },
   inquiry: { label: "咨询", type: "info", icon: "question-circle" },
+  maintenance_fund_application: {
+    label: "维修基金申请",
+    type: "warning",
+    icon: "money-collect",
+  },
   other: { label: "其他事项", type: "info", icon: "more" },
 };
 

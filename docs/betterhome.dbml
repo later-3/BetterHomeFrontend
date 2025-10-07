@@ -188,6 +188,12 @@ Table WorkOrderNodes {
 }
 
 // -----------------------------------------------------------
+// 财务管理（v2.0）
+// -----------------------------------------------------------
+// 注: v2.0 财务表结构见 docs/tasks/billing/finance-schema-v2.dbml
+// 待 Phase 1 完成后合并到此文件
+
+// -----------------------------------------------------------
 // 通用互动
 // -----------------------------------------------------------
 
@@ -263,11 +269,12 @@ Enum user_type {
 }
 
 Enum work_order_category {
-  repair       // 维修
-  complaint    // 投诉
-  suggestion   // 建议
-  inquiry      // 咨询
-  other        // 其他
+  repair                      // 维修
+  complaint                   // 投诉
+  suggestion                  // 建议
+  inquiry                     // 咨询
+  maintenance_fund_application // 维修基金申请（v2.0 新增）
+  other                       // 其他
 }
 
 Enum work_order_status {
@@ -311,6 +318,10 @@ Enum reaction_parent_type {
   comment
 }
 
+// 财务枚举（v2.0）
+// 注: v2.0 枚举定义见 docs/tasks/billing/finance-schema-v2.dbml
+// 待 Phase 1 完成后合并到此文件
+
 // -----------------------------------------------------------
 // 关系
 // -----------------------------------------------------------
@@ -333,6 +344,10 @@ Ref: WorkOrders.community_id > Communities.id
 
 Ref: WorkOrderNodes.work_order_id > WorkOrders.id
 Ref: WorkOrderNodes.actor_id > Users.id
+
+// 财务关系（v2.0）
+// 注: v2.0 关系定义见 docs/tasks/billing/finance-schema-v2.dbml
+// 待 Phase 1 完成后合并到此文件
 
 Ref: Comments.author_id > Users.id
 Ref: Reactions.author_id > Users.id

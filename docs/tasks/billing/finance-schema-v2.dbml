@@ -1,0 +1,567 @@
+// ===========================================================
+// 财务透明功能 - 完整表结构设计 v2.0
+// ===========================================================
+// 设计原则：
+// 1. 应收与实收分离（billings vs payments）
+// 2. 完整的凭证支持
+// 3. 多角色权限（业主/物业/业委会）
+// 4. 可扩展的收入/支出类型
+// 5. 集成工单系统（维修基金审批）
+// ===========================================================
+
+// -----------------------------------------------------------
+// 收入管理
+// -----------------------------------------------------------
+
+// 物业费账单（应收）
+Table billings {
+  id uuid [pk]
+  user_created uuid
+  date_created timestamp [default: `now()`]
+  user_updated uuid
+  date_updated timestamp [default: `now()`]
+
+  // 账单基本信息
+  community_id uuid [not null]
+  building_id uuid              // 楼栋
+  owner_id uuid [not null]      // 业主
+
+  // 计费信息
+  period varchar(7) [not null]  // 账期：2024-01
+  billing_amount decimal(10,2) [not null]  // 应收金额
+  area decimal(10,2)            // 计费面积（m²）
+  unit_price decimal(10,2)      // 单价（元/m²）
+
+  // 缴费状态
+  status billing_status [not null, default: 'unpaid']
+  paid_amount decimal(10,2) [default: 0]  // 已缴金额（支持部分缴费）
+
+  // 逾期管理
+  due_date timestamp            // 应缴截止日期
+  late_fee decimal(10,2) [default: 0]  // 滞纳金
+
+  notes text
+  date_deleted timestamp
+
+  indexes {
+    (community_id, period, status, date_created, id) [name: 'idx_billings_community_period']
+    (owner_id, period, date_created, id) [name: 'idx_billings_owner_period']
+    (status, due_date) [name: 'idx_billings_status_due']
+  }
+}
+
+// 物业费收款记录（实收）
+Table billing_payments {
+  id uuid [pk]
+  user_created uuid
+  date_created timestamp [default: `now()`]
+  user_updated uuid
+  date_updated timestamp [default: `now()`]
+
+  // 关联账单
+  billing_id uuid [not null]
+  community_id uuid [not null]
+  owner_id uuid [not null]
+
+  // 缴费信息
+  amount decimal(10,2) [not null]  // 实收金额
+  paid_at timestamp [not null]     // 缴费时间
+  payment_method payment_method [not null]
+
+  // 缴费人信息（可能是代缴）
+  payer_name varchar(100)          // 缴费人姓名
+  payer_phone varchar(20)          // 缴费人电话
+  transaction_no varchar(100)      // 交易流水号
+
+  // 凭证
+  proof_files json                 // 凭证文件ID数组
+  notes text
+
+  date_deleted timestamp
+
+  indexes {
+    (billing_id, paid_at) [name: 'idx_payments_billing']
+    (community_id, paid_at desc, id) [name: 'idx_payments_community_time']
+    (owner_id, paid_at desc) [name: 'idx_payments_owner_time']
+  }
+}
+
+// 其他收入（公共收益）
+Table incomes {
+  id uuid [pk]
+  user_created uuid
+  date_created timestamp [default: `now()`]
+  user_updated uuid
+  date_updated timestamp [default: `now()`]
+
+  // 收入基本信息
+  community_id uuid [not null]
+  income_type income_type [not null]  // 收入类型
+
+  title varchar(255) [not null]       // 收入标题
+  description text                    // 详细说明
+  amount decimal(10,2) [not null]     // 收入金额
+
+  // 收入时间
+  income_date timestamp [not null]    // 收入日期
+  period varchar(7)                   // 所属月份：2024-01（用于汇总）
+
+  // 收款信息
+  payment_method payment_method [not null]
+  transaction_no varchar(100)         // 交易流水号
+
+  // 关联实体（JSON存储，灵活扩展）
+  // 广告：{"advertiser": "XX公司", "location": "东门广告牌", "contract_no": "AD202401"}
+  // 停车：{"space_no": "A-101", "renter": "李四", "rental_type": "monthly"}
+  // 场地：{"venue": "会议室", "renter": "XX公司", "purpose": "活动"}
+  related_info json
+
+  // 凭证
+  proof_files json                    // 合同、收款凭证
+  notes text
+
+  date_deleted timestamp
+
+  indexes {
+    (community_id, income_date desc, id) [name: 'idx_incomes_community_time']
+    (community_id, income_type, income_date desc) [name: 'idx_incomes_type_time']
+    (period, community_id) [name: 'idx_incomes_period']
+  }
+}
+
+// 维修基金账户（每户）
+Table maintenance_fund_accounts {
+  id uuid [pk]
+  user_created uuid
+  date_created timestamp [default: `now()`]
+  user_updated uuid
+  date_updated timestamp [default: `now()`]
+
+  // 账户归属
+  community_id uuid [not null]
+  building_id uuid [not null]
+  owner_id uuid [not null]
+
+  // 房屋信息
+  house_area decimal(10,2)            // 房屋面积（m²）
+  unit_number varchar(50)             // 房号：1-101
+
+  // 资金信息
+  total_paid decimal(10,2) [not null, default: 0]    // 累计缴纳
+  total_used decimal(10,2) [not null, default: 0]    // 累计使用
+  balance decimal(10,2) [not null, default: 0]       // 当前余额
+
+  last_payment_date timestamp         // 最后缴纳日期
+
+  date_deleted timestamp
+
+  indexes {
+    (community_id, owner_id) [name: 'idx_mf_accounts_community_owner', unique]
+    (owner_id) [name: 'idx_mf_accounts_owner']
+  }
+}
+
+// 维修基金缴纳记录
+Table maintenance_fund_payments {
+  id uuid [pk]
+  user_created uuid
+  date_created timestamp [default: `now()`]
+  user_updated uuid
+  date_updated timestamp [default: `now()`]
+
+  // 关联账户
+  account_id uuid [not null]
+  community_id uuid [not null]
+  owner_id uuid [not null]
+
+  // 缴纳信息
+  payment_type mf_payment_type [not null]  // 首次缴纳/续筹
+  amount decimal(10,2) [not null]
+  paid_at timestamp [not null]
+  payment_method payment_method [not null]
+
+  // 计算依据
+  house_area decimal(10,2)            // 房屋面积
+  unit_price decimal(10,2)            // 单价（元/m²）
+
+  // 凭证
+  proof_files json
+  notes text
+
+  date_deleted timestamp
+
+  indexes {
+    (account_id, paid_at desc) [name: 'idx_mf_payments_account']
+    (community_id, paid_at desc) [name: 'idx_mf_payments_community']
+  }
+}
+
+// -----------------------------------------------------------
+// 支出管理
+// -----------------------------------------------------------
+
+// 支出记录（通用）
+Table expenses {
+  id uuid [pk]
+  user_created uuid
+  date_created timestamp [default: `now()`]
+  user_updated uuid
+  date_updated timestamp [default: `now()`]
+
+  // 支出基本信息
+  community_id uuid [not null]
+  expense_type expense_type [not null]  // 支出类型
+
+  title varchar(255) [not null]         // 支出标题
+  description text                      // 详细说明
+  amount decimal(10,2) [not null]       // 支出金额
+
+  // 支付信息
+  paid_at timestamp [not null]          // 支付时间
+  period varchar(7)                     // 所属月份：2024-01（用于汇总）
+  payment_method payment_method [not null]
+
+  // 分类（可选，用于更细粒度的分类）
+  category varchar(50)                  // 如：工资-保安、维护-电梯、活动-春节
+
+  // 关联实体（JSON存储，灵活扩展）
+  // 工资：{"salary_record_ids": ["uuid1", "uuid2"]}
+  // 维修基金：{"mf_usage_id": "uuid"}
+  // 维护：{"contractor": "XX公司", "contract_no": "MNT202401"}
+  related_info json
+
+  // 审核流程
+  status expense_status [not null, default: 'approved']
+  approved_by uuid
+  approved_at timestamp
+
+  // 凭证
+  proof_files json                      // 发票、合同、转账记录等
+  notes text
+
+  created_by uuid [not null]
+  date_deleted timestamp
+
+  indexes {
+    (community_id, paid_at desc, id) [name: 'idx_expenses_community_time']
+    (community_id, expense_type, paid_at desc) [name: 'idx_expenses_type_time']
+    (period, community_id) [name: 'idx_expenses_period']
+    (status, approved_at desc) [name: 'idx_expenses_status']
+  }
+}
+
+// 员工信息
+Table employees {
+  id uuid [pk]
+  user_created uuid
+  date_created timestamp [default: `now()`]
+  user_updated uuid
+  date_updated timestamp [default: `now()`]
+
+  // 基本信息
+  community_id uuid [not null]
+  name varchar(100) [not null]
+  phone varchar(20)
+  id_card_last4 varchar(4)              // 身份证后4位（隐私保护）
+
+  // 岗位信息
+  position_type position_type [not null]  // 岗位类型
+  position_title varchar(100)           // 岗位名称：如"保安队长"
+
+  // 雇佣信息
+  employment_status employment_status [not null, default: 'active']
+  hire_date date [not null]             // 入职日期
+  resignation_date date                 // 离职日期
+
+  // 薪资信息
+  base_salary decimal(10,2)             // 基本工资
+
+  // 其他信息
+  notes text
+  date_deleted timestamp
+
+  indexes {
+    (community_id, employment_status, hire_date) [name: 'idx_employees_community_status']
+    (position_type, employment_status) [name: 'idx_employees_position']
+  }
+}
+
+// 工资发放记录
+Table salary_records {
+  id uuid [pk]
+  user_created uuid
+  date_created timestamp [default: `now()`]
+  user_updated uuid
+  date_updated timestamp [default: `now()`]
+
+  // 关联员工
+  employee_id uuid [not null]
+  community_id uuid [not null]
+
+  // 工资期间
+  period varchar(7) [not null]          // 工资月份：2024-01
+
+  // 工资明细
+  base_salary decimal(10,2) [not null]  // 基本工资
+  bonus decimal(10,2) [default: 0]      // 奖金/绩效
+  subsidy decimal(10,2) [default: 0]    // 补贴
+  deduction decimal(10,2) [default: 0]  // 扣款
+  social_security decimal(10,2) [default: 0]  // 社保（个人部分）
+  housing_fund decimal(10,2) [default: 0]     // 公积金（个人部分）
+  actual_amount decimal(10,2) [not null]      // 实发金额
+
+  // 发放信息
+  payment_date timestamp [not null]     // 发放日期
+  payment_method payment_method [not null]
+
+  // 关联支出记录
+  expense_id uuid                       // 关联到expenses表
+
+  // 凭证
+  proof_files json                      // 工资表、转账记录
+  notes text
+
+  date_deleted timestamp
+
+  indexes {
+    (employee_id, period) [name: 'idx_salaries_employee_period', unique]
+    (community_id, period, payment_date) [name: 'idx_salaries_community_period']
+    (expense_id) [name: 'idx_salaries_expense']
+  }
+}
+
+// 维修基金使用记录
+Table maintenance_fund_usage {
+  id uuid [pk]
+  user_created uuid
+  date_created timestamp [default: `now()`]
+  user_updated uuid
+  date_updated timestamp [default: `now()`]
+
+  // 关联工单（审批流程）
+  work_order_id uuid [not null]         // 关联工单（类型：maintenance_fund_application）
+  community_id uuid [not null]
+
+  // 项目信息
+  project_name varchar(255) [not null]  // 项目名称
+  project_type mf_usage_type [not null] // 项目类型
+  description text [not null]           // 详细说明
+
+  // 施工信息
+  contractor varchar(255)               // 施工单位
+  contract_no varchar(100)              // 合同编号
+
+  // 金额信息
+  estimated_amount decimal(10,2)        // 预算金额
+  actual_amount decimal(10,2)           // 实际使用金额
+
+  // 审批流程
+  approval_status mf_approval_status [not null, default: 'pending']
+  approved_by uuid                      // 审批人（业委会）
+  approved_at timestamp                 // 审批时间
+  rejection_reason text                 // 拒绝原因
+
+  // 使用信息
+  usage_date timestamp                  // 实际使用日期（审批通过后）
+
+  // 关联支出记录
+  expense_id uuid                       // 关联到expenses表
+
+  // 凭证
+  proof_files json                      // 申请单、审批单、合同、发票、施工记录
+  notes text
+
+  date_deleted timestamp
+
+  indexes {
+    (work_order_id) [name: 'idx_mf_usage_work_order', unique]
+    (community_id, usage_date desc) [name: 'idx_mf_usage_community_time']
+    (approval_status, date_created) [name: 'idx_mf_usage_status']
+    (expense_id) [name: 'idx_mf_usage_expense']
+  }
+}
+
+// -----------------------------------------------------------
+// 枚举类型
+// -----------------------------------------------------------
+
+// 账单状态
+Enum billing_status {
+  unpaid      // 未缴
+  paid        // 已缴
+  partial     // 部分缴纳
+  overdue     // 逾期
+}
+
+// 收入类型
+Enum income_type {
+  advertising     // 广告收益
+  parking         // 停车收益
+  venue_rental    // 场地租赁
+  vending         // 自动售货机
+  express_locker  // 快递柜
+  recycling       // 废品回收
+  other           // 其他
+}
+
+// 支出类型
+Enum expense_type {
+  salary              // 员工工资
+  maintenance         // 设施维护
+  utilities           // 公共能耗
+  materials           // 耗材采购
+  activity            // 社区活动
+  committee_fund      // 业委会经费
+  maintenance_fund    // 维修基金使用
+  other               // 其他
+}
+
+// 支付方式
+Enum payment_method {
+  wechat      // 微信
+  alipay      // 支付宝
+  bank        // 银行转账
+  cash        // 现金
+  pos         // POS机刷卡
+  other       // 其他
+}
+
+// 支出状态
+Enum expense_status {
+  pending     // 待审核
+  approved    // 已审核
+  rejected    // 已拒绝
+}
+
+// 岗位类型
+Enum position_type {
+  security        // 保安
+  cleaning        // 保洁
+  management      // 管理人员
+  electrician     // 水电工
+  plumber         // 管道工
+  gardener        // 绿化工
+  temp_worker     // 临时工
+  other           // 其他
+}
+
+// 在职状态
+Enum employment_status {
+  active      // 在职
+  resigned    // 离职
+  on_leave    // 休假
+  suspended   // 停职
+}
+
+// 维修基金缴纳类型
+Enum mf_payment_type {
+  initial         // 首次缴纳
+  replenishment   // 续筹
+  supplement      // 补缴
+}
+
+// 维修基金使用类型
+Enum mf_usage_type {
+  elevator        // 电梯更换/维修
+  exterior_wall   // 外墙维修
+  roof            // 屋顶防水
+  pipeline        // 管道更换
+  fire_system     // 消防系统
+  security_system // 安防系统
+  road            // 道路维修
+  other           // 其他
+}
+
+// 维修基金审批状态
+Enum mf_approval_status {
+  pending     // 待审批
+  approved    // 已批准
+  rejected    // 已拒绝
+  completed   // 已完成
+}
+
+// -----------------------------------------------------------
+// 关系定义
+// -----------------------------------------------------------
+
+// 物业费相关
+Ref: billings.community_id > Communities.id
+Ref: billings.building_id > Buildings.id
+Ref: billings.owner_id > Users.id
+
+Ref: billing_payments.billing_id > billings.id
+Ref: billing_payments.community_id > Communities.id
+Ref: billing_payments.owner_id > Users.id
+
+// 其他收入
+Ref: incomes.community_id > Communities.id
+
+// 维修基金
+Ref: maintenance_fund_accounts.community_id > Communities.id
+Ref: maintenance_fund_accounts.building_id > Buildings.id
+Ref: maintenance_fund_accounts.owner_id > Users.id
+
+Ref: maintenance_fund_payments.account_id > maintenance_fund_accounts.id
+Ref: maintenance_fund_payments.community_id > Communities.id
+Ref: maintenance_fund_payments.owner_id > Users.id
+
+// 支出相关
+Ref: expenses.community_id > Communities.id
+Ref: expenses.created_by > Users.id
+Ref: expenses.approved_by > Users.id
+
+// 员工相关
+Ref: employees.community_id > Communities.id
+
+Ref: salary_records.employee_id > employees.id
+Ref: salary_records.community_id > Communities.id
+Ref: salary_records.expense_id > expenses.id
+
+// 维修基金使用
+Ref: maintenance_fund_usage.work_order_id > WorkOrders.id
+Ref: maintenance_fund_usage.community_id > Communities.id
+Ref: maintenance_fund_usage.approved_by > Users.id
+Ref: maintenance_fund_usage.expense_id > expenses.id
+
+// -----------------------------------------------------------
+// 设计说明
+// -----------------------------------------------------------
+
+/*
+核心设计原则：
+
+1. **应收与实收分离**
+   - billings: 记录应收账单
+   - billing_payments: 记录实际收款（支持部分缴费、代缴）
+
+2. **完整的凭证支持**
+   - 所有收入/支出都有 proof_files 字段
+   - 存储 Directus 文件ID数组
+
+3. **灵活的关联设计**
+   - related_info: JSON 字段存储灵活的关联信息
+   - 避免为每种收入/支出类型创建单独的表
+
+4. **员工管理**
+   - employees: 员工档案（支持离职/入职）
+   - salary_records: 工资发放记录（关联到 expenses）
+
+5. **维修基金审批流程**
+   - 复用 work_orders 表（新增类型 maintenance_fund_application）
+   - maintenance_fund_usage 记录详细使用信息
+   - 审批通过后才能实际使用
+
+6. **隐私保护**
+   - 业主：只能看自己的账单 + 汇总数据
+   - 物业：可以看所有数据
+   - 业委会：可以看所有数据 + 审批维修基金
+
+7. **月度汇总**
+   - period 字段（YYYY-MM）便于按月统计
+   - 索引优化支持高效查询
+
+8. **可扩展性**
+   - 枚举类型可随时扩展
+   - JSON 字段支持灵活的业务数据
+   - 关联支出记录（expense_id）便于追溯
+*/

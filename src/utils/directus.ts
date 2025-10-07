@@ -156,6 +156,17 @@ export const commentsApi = createCollectionApi("comments");
 export const communitiesApi = createCollectionApi("communities");
 export const buildingsApi = createCollectionApi("buildings");
 
+// Finance v2.0 API (will be added in Phase 2, Task 2.2)
+// export const billingsApi = createCollectionApi("billings");
+// export const billingPaymentsApi = createCollectionApi("billing_payments");
+// export const incomesApi = createCollectionApi("incomes");
+// export const expensesApi = createCollectionApi("expenses");
+// export const employeesApi = createCollectionApi("employees");
+// export const salaryRecordsApi = createCollectionApi("salary_records");
+// export const maintenanceFundAccountsApi = createCollectionApi("maintenance_fund_accounts");
+// export const maintenanceFundPaymentsApi = createCollectionApi("maintenance_fund_payments");
+// export const maintenanceFundUsageApi = createCollectionApi("maintenance_fund_usage");
+
 export function setAuthToken(token: string | null) {
   persistToken(token);
   return directus.setToken(token ?? null);
@@ -179,4 +190,14 @@ export type {
   Post,
   WorkOrder,
   Comment,
+  // Finance v2.0 types will be added in Phase 2
+  // Billing,
+  // BillingPayment,
+  // Income,
+  // Expense,
+  // Employee,
+  // SalaryRecord,
+  // MaintenanceFundAccount,
+  // MaintenanceFundPayment,
+  // MaintenanceFundUsage,
 } from "@/@types/directus-schema";
