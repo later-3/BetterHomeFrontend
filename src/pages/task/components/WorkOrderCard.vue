@@ -5,6 +5,14 @@ import workOrderDisplay from "@/utils/workOrderDisplay";
 import { getFileUrl, getThumbnailUrl, isImageFile, isVideoFile } from "@/utils/fileUtils";
 import type { DirectusFile } from "@/@types/directus-schema";
 import env from "@/config/env";
+import WorkOrderInfoTags, { type WorkOrderTagItem } from "./WorkOrderInfoTags.vue";
+
+const priorityVariantMap = {
+  urgent: "urgent",
+  high: "high",
+  medium: "medium",
+  low: "low",
+} as const;
 
 const props = defineProps<{
   workOrder: WorkOrderListItem;
@@ -15,6 +23,14 @@ const emit = defineEmits<{
 }>();
 
 const workOrder = computed(() => props.workOrder);
+
+const cardHeadStyle = {
+  padding: "16px 16px 4px",
+};
+
+const cardBodyStyle = {
+  padding: "4px 16px 16px",
+};
 
 // 显示创建人（submitter）而不是负责人（assignee）
 const submitter = computed(() =>
@@ -28,6 +44,21 @@ const category = computed(() =>
 const priority = computed(() =>
   workOrderDisplay.getPriorityDisplay(workOrder.value.priority)
 );
+
+const priorityIconName = computed(() => {
+  switch (workOrder.value.priority) {
+    case "urgent":
+      return "warning-fill";
+    case "high":
+      return "warning";
+    case "medium":
+      return "star-fill";
+    case "low":
+      return "arrow-down";
+    default:
+      return "info-circle";
+  }
+});
 
 const createdAt = computed(() =>
   workOrderDisplay.formatRelativeTime(workOrder.value.date_created)
@@ -109,12 +140,38 @@ const mediaItems = computed(() => {
 const handleClick = () => {
   emit("select", workOrder.value);
 };
+
+const cardInfoTags = computed<WorkOrderTagItem[]>(() => {
+  const tags: WorkOrderTagItem[] = [];
+
+  if (category.value) {
+    tags.push({ text: category.value.label, icon: "grid", variant: "primary" });
+  }
+
+  if (priority.value) {
+    const rawPriority = workOrder.value.priority;
+    const variant = rawPriority ? priorityVariantMap[rawPriority] ?? "warning" : "warning";
+    tags.push({
+      text: priority.value.label,
+      icon: priorityIconName.value,
+      variant: variant as WorkOrderTagItem["variant"],
+    });
+  }
+
+  if (assignee.value && assignee.value.name) {
+    tags.push({ text: `负责人：${assignee.value.name}`, icon: "account" });
+  }
+
+  return tags;
+});
 </script>
 
 <template>
   <up-card
     :border="false"
     :padding="16"
+    :head-style="cardHeadStyle"
+    :body-style="cardBodyStyle"
     class="work-order-card"
     @click="handleClick"
   >
@@ -185,29 +242,8 @@ const handleClick = () => {
         </view>
 
         <!-- 状态行：类别、优先级、负责人、社区 -->
-        <view class="status-row">
-          <up-tag
-            v-if="category"
-            :text="category.label"
-            :type="category.type || 'primary'"
-            size="mini"
-            plain
-          />
-          <up-tag
-            v-if="priority"
-            :text="priority.label"
-            :type="priority.type || 'info'"
-            size="mini"
-            plain
-          />
-          <view v-if="assignee" class="status-item">
-            <up-icon name="account" size="16" color="#64748B" />
-            <up-text :text="assignee.name" size="12" type="info" />
-          </view>
-          <view v-if="communityName" class="status-item">
-            <up-icon name="map" size="16" color="#64748B" />
-            <up-text :text="communityName" size="12" type="info" />
-          </view>
+        <view v-if="cardInfoTags.length" class="card-tags">
+          <WorkOrderInfoTags class="card-tags-info" :items="cardInfoTags" />
         </view>
       </view>
     </template>
@@ -216,109 +252,82 @@ const handleClick = () => {
 
 <style scoped>
 .work-order-card {
-  width: 100%;
   margin: 0 !important; /* 覆盖 uview-plus 默认 margin: 15px */
+  width: 100%;
 }
-
-/* 覆盖 up-card 默认的 head/body padding，实现 8px 间距 */
-.work-order-card :deep(.u-card__head) {
-  padding: 16px 16px 4px 16px !important; /* head bottom: 4px */
-}
-
-.work-order-card :deep(.u-card__body) {
-  padding: 4px 16px 16px 16px !important; /* body top: 4px */
-}
-
 .card-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  margin: 0 !important;
   /* 确保与 body 左对齐 */
   padding: 0 !important;
-  margin: 0 !important;
+  gap: 12px;
 }
-
 .submitter {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
 .submitter-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-
 .head-meta {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
 .card-body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  margin: 0 !important;
   /* 确保与 head 左对齐 */
   padding: 0 !important;
-  margin: 0 !important;
+  gap: 8px;
 }
-
 .media-container {
   /* margin removed - controlled by card-body gap */
 }
-
 .media-grid {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
-
 .video-placeholder {
   display: flex;
-  align-items: center;
+  overflow: hidden;
+  position: relative;
   justify-content: center;
+  align-items: center;
+  border-radius: 8px;
   width: 100px;
   height: 100px;
   background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
-  border-radius: 8px;
-  position: relative;
-  overflow: hidden;
 }
-
 .video-placeholder::before {
-  content: '';
   position: absolute;
-  top: 0;
   left: 0;
   right: 0;
+  top: 0;
   bottom: 0;
   background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2) 0%, transparent 60%);
   pointer-events: none;
+  content: '';
 }
-
 .video-icon-wrapper {
   display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 1;
+  justify-content: center;
+  align-items: center;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
-
-.status-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding-top: 4px;
+.card-tags {
+  padding-top: 8px;
   border-top: 1px solid #f1f5f9;
 }
-
-.status-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.card-tags-info {
+  margin-top: 4px;
 }
 </style>

@@ -13,6 +13,14 @@ import {
   isVideoFile,
 } from "@/utils/fileUtils";
 import env from "@/config/env";
+import WorkOrderInfoTags, { type WorkOrderTagItem } from "./components/WorkOrderInfoTags.vue";
+
+const detailPriorityVariantMap = {
+  urgent: "urgent",
+  high: "high",
+  medium: "medium",
+  low: "low",
+} as const;
 
 const workOrderStore = useWorkOrderStore();
 
@@ -70,9 +78,7 @@ const submitterAvatarUrl = computed(() => {
   return `${env.directusUrl}/assets/${avatarId}`;
 });
 
-const submitterRoleLabel = computed(() => {
-  return submitterDisplay.value?.role ?? "身份信息";
-});
+const submitterRoleLabel = computed(() => submitterDisplay.value?.role ?? "身份信息");
 
 const categoryToken = computed<DisplayToken>(() => {
   if (!detail.value) return null;
@@ -115,6 +121,38 @@ const deadlineDisplay = computed(() => {
 const communityName = computed(() => {
   if (!detail.value) return "";
   return workOrderDisplay.getCommunityName(detail.value.community_id);
+});
+
+const detailInfoTags = computed<WorkOrderTagItem[]>(() => {
+  const tags: WorkOrderTagItem[] = [];
+
+  if (categoryToken.value) {
+    tags.push({ text: categoryToken.value.label, icon: "grid", variant: "primary" });
+  }
+
+  if (priorityToken.value) {
+    const rawPriority = detail.value?.priority;
+    const variant = rawPriority ? detailPriorityVariantMap[rawPriority] ?? "warning" : "warning";
+    tags.push({
+      text: priorityToken.value.label,
+      icon: priorityIconName.value,
+      variant: variant as WorkOrderTagItem["variant"],
+    });
+  }
+
+  if (communityName.value) {
+    tags.push({ text: communityName.value, icon: "map" });
+  }
+
+  if (deadlineDisplay.value) {
+    tags.push({ text: `截止：${deadlineDisplay.value}`, icon: "calendar" });
+  }
+
+  if (assigneeDisplay.value?.name) {
+    tags.push({ text: `负责人：${assigneeDisplay.value.name}`, icon: "account" });
+  }
+
+  return tags;
 });
 
 const imageUrls = computed(() => {
@@ -246,28 +284,7 @@ onLoad((options) => {
             type="info"
           />
 
-          <view class="info-tags">
-            <view v-if="categoryToken" class="info-tag info-tag--primary">
-              <up-icon name="grid" size="14" color="#166534" />
-              <text>{{ categoryToken.label }}</text>
-            </view>
-            <view v-if="priorityToken" class="info-tag info-tag--warning">
-              <up-icon :name="priorityIconName" size="14" color="#B45309" />
-              <text>{{ priorityToken.label }}</text>
-            </view>
-            <view v-if="communityName" class="info-tag">
-              <up-icon name="map" size="14" color="#475569" />
-              <text>{{ communityName }}</text>
-            </view>
-            <view v-if="deadlineDisplay" class="info-tag">
-              <up-icon name="calendar" size="14" color="#475569" />
-              <text>截止：{{ deadlineDisplay }}</text>
-            </view>
-            <view v-if="assigneeDisplay" class="info-tag">
-              <up-icon name="account" size="14" color="#475569" />
-              <text>负责人：{{ assigneeDisplay.name }}</text>
-            </view>
-          </view>
+          <WorkOrderInfoTags :items="detailInfoTags" />
         </view>
       </view>
 
@@ -280,6 +297,7 @@ onLoad((options) => {
             @click="handleImagePreview(index)"
           >
             <up-image
+              class="media-image"
               :src="url"
               width="100%"
               height="auto"
@@ -368,180 +386,130 @@ onLoad((options) => {
 
 <style scoped>
 .detail-page {
-  min-height: 100vh;
-  background-color: #f4f5f7;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+  background-color: #f4f5f7;
 }
-
 .loading-state,
 .error-state {
-  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 16px;
+  flex: 1;
   padding: 32px;
+  gap: 16px;
 }
-
 .retry-btn {
   width: 96px;
 }
-
 .detail-scroll {
   flex: 1;
-  padding: 16px 16px 120px;
   box-sizing: border-box;
+  padding: 16px 16px 120px;
 }
-
 .card {
-  background: #ffffff;
-  border-radius: 16px;
   padding: 16px;
+  border-radius: 16px;
+  background: #fff;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
 }
-
 .overview-card {
   display: flex;
   flex-direction: column;
   gap: 16px;
   margin-bottom: 24px;
 }
-
 .overview-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
 }
-
 .overview-avatar {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
 .overview-meta {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-
 .identity-tag {
   align-self: flex-start;
 }
-
 .overview-body {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-
 .overview-title {
   color: #0f172a;
 }
-
 .overview-description {
-  color: #475569;
   line-height: 1.6;
-}
-
-.info-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.info-tag {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: #f1f5f9;
   color: #475569;
-  font-size: 12px;
 }
-
-.info-tag--primary {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.info-tag--warning {
-  background: #fef3c7;
-  color: #b45309;
-}
-
 .media-stream {
   display: flex;
   flex-direction: column;
   gap: 16px;
   margin-bottom: 24px;
 }
-
 .media-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-
 .media-card {
-  border-radius: 16px;
   overflow: hidden;
+  border-radius: 16px;
   background: #000;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
 }
-
-.media-card :deep(image) {
-  width: 100%;
+.media-image {
   display: block;
+  width: 100%;
 }
-
 .video-wrapper {
   position: relative;
   background: #000;
 }
-
 .video-player {
   width: 100%;
   aspect-ratio: 16 / 9;
   background: #000;
 }
-
 .video-badge {
+  display: flex;
   position: absolute;
   right: 12px;
   bottom: 12px;
-  display: flex;
   align-items: center;
-  gap: 6px;
   padding: 8px 12px;
   border-radius: 20px;
   background: rgba(15, 23, 42, 0.75);
-  color: #fff;
   font-size: 12px;
+  color: #fff;
+  gap: 6px;
 }
-
 .video-caption {
   padding: 12px 0 0;
   color: #0f172a;
 }
-
 .placeholder-card {
   display: flex;
   flex-direction: column;
   gap: 16px;
   margin-bottom: 24px;
 }
-
 .placeholder-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
 .placeholder-body {
   display: flex;
   flex-direction: column;
@@ -549,19 +517,16 @@ onLoad((options) => {
   gap: 12px;
   padding: 24px 0;
 }
-
 .placeholder-text {
-  color: #64748b;
   font-size: 14px;
+  color: #64748b;
 }
-
 .placeholder-divider {
+  border-radius: 999px;
   width: 64px;
   height: 4px;
-  border-radius: 999px;
   background: #e2e8f0;
 }
-
 .action-bar {
   position: sticky;
   bottom: 0;
@@ -569,16 +534,13 @@ onLoad((options) => {
   background: rgba(244, 245, 247, 0.98);
   box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);
 }
-
 .action-buttons {
   display: flex;
   gap: 12px;
 }
-
 .action-button {
   flex: 1;
 }
-
 .scroll-spacer {
   height: 32px;
 }
