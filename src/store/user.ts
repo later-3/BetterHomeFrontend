@@ -61,7 +61,9 @@ interface NormalizedProfile {
 
 let refreshSessionPromise: Promise<any> | null = null;
 
-function resolveCommunityId(value: DirectusUser["community_id"]): string {
+function resolveCommunityId(
+  value: DirectusUser["community_id"] | null | undefined
+): string {
   if (!value) return "";
   if (typeof value === "string") return value;
   const record = value as Record<string, any>;
@@ -74,7 +76,9 @@ function resolveCommunityId(value: DirectusUser["community_id"]): string {
   );
 }
 
-function resolveBuildingId(value: DirectusUser["building_id"]): string {
+function resolveBuildingId(
+  value: DirectusUser["building_id"] | null | undefined
+): string {
   if (!value) return "";
   if (typeof value === "string") return value;
   const record = value as Record<string, any>;
