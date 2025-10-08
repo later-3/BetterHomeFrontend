@@ -234,7 +234,7 @@ export default {
   width: 375px;
   height: 812px;
   background: white;
-  font-family: "Circular Std", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Circular Std', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 /* Status Bar */
 .status-bar {
@@ -248,7 +248,7 @@ export default {
   background: white;
 }
 .time {
-  font-family: "SF Pro Text", sans-serif;
+  font-family: 'SF Pro Text', sans-serif;
   font-weight: 600;
   font-size: 15px;
   color: #212121;
