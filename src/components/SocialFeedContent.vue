@@ -261,7 +261,7 @@ const handleCardClick = (post: any, event: Event) => {
   border-radius: 8px;
   width: 100%;
   background: #f5f5f5;
-  font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 /* 动态列表 */
 .feed-list {

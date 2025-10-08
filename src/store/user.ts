@@ -12,6 +12,12 @@ import type {
   DirectusUser,
 } from "@/@types/directus-schema";
 
+export type SessionState =
+  | "unauthenticated"
+  | "active"
+  | "near_expiry"
+  | "expired";
+
 type UserFieldSelection =
   | keyof DirectusUser
   | "*"
@@ -218,6 +224,21 @@ export const useUserStore = defineStore("user", {
     tokenExpired: (state) => {
       if (!state.tokenExpiry) return false;
       return Date.now() >= state.tokenExpiry;
+    },
+    sessionState(): SessionState {
+      if (!this.token || !this.profile?.id) {
+        return "unauthenticated";
+      }
+
+      if (this.tokenExpired) {
+        return "expired";
+      }
+
+      if (this.tokenNearExpiry) {
+        return "near_expiry";
+      }
+
+      return "active";
     },
     userInfo: (
       state

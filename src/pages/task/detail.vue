@@ -149,7 +149,7 @@ const detailInfoTags = computed<WorkOrderTagItem[]>(() => {
   }
 
   if (assigneeDisplay.value?.name) {
-    tags.push({ text: `负责人：${assigneeDisplay.value.name}`, icon: "account" });
+    tags.push({ text: assigneeDisplay.value.name, icon: "account" });
   }
 
   return tags;

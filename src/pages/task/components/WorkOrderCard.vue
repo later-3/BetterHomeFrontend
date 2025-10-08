@@ -159,7 +159,7 @@ const cardInfoTags = computed<WorkOrderTagItem[]>(() => {
   }
 
   if (assignee.value && assignee.value.name) {
-    tags.push({ text: `负责人：${assignee.value.name}`, icon: "account" });
+    tags.push({ text: assignee.value.name, icon: "account" });
   }
 
   return tags;

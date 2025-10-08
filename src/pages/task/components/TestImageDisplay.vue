@@ -77,13 +77,11 @@ onMounted(async () => {
 .test-container {
   padding: 20px;
 }
-
 .title {
-  font-size: 18px;
-  font-weight: bold;
   margin-bottom: 20px;
+  font-weight: bold;
+  font-size: 18px;
 }
-
 .image-list {
   display: flex;
   flex-direction: column;

@@ -275,7 +275,7 @@ function traverseNodes(nodeList, segments) {
   padding: 16px;
   border-radius: 8px;
   background: #f6f7f9;
-  font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
   transition: background-color 0.2s ease;
   gap: 14px;
 }

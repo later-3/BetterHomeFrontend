@@ -112,62 +112,53 @@ const handleScrollRefresh = () => {
 
 <style scoped>
 .task-list-scroll {
-  height: 100%;
   width: 100%;
+  height: 100%;
 }
-
 .task-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-
 .list-error,
 .list-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
   padding: 32px 16px;
   border-radius: 16px;
   background-color: #f8fafc;
-  color: #475569;
   text-align: center;
+  color: #475569;
+  gap: 8px;
 }
-
 .error-text {
   font-size: 14px;
   color: #ef4444;
 }
-
 .empty-icon {
   font-size: 32px;
 }
-
 .empty-title {
-  font-size: 16px;
   font-weight: 600;
+  font-size: 16px;
   color: #1f2933;
 }
-
 .empty-desc {
   font-size: 13px;
   color: #64748b;
 }
-
 .list-content {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-
 .list-loading,
 .list-more {
   display: flex;
   justify-content: center;
   padding: 12px 0 8px;
 }
-
 .loading-text {
   font-size: 13px;
   color: #64748b;
