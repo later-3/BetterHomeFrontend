@@ -4,6 +4,7 @@ import type { Query, QueryItem } from "@directus/sdk";
 
 import type { Schema, WorkOrder } from "@/@types/directus-schema";
 import { workOrdersApi } from "@/utils/directus";
+import dayjs from "dayjs";
 import { useUserStore } from "@/store/user";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -405,6 +406,49 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
     }
   };
 
+  const fetchWorkOrderDatesByYear = async (year?: number) => {
+    try {
+      await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
+    } catch (error) {
+      throw error;
+    }
+
+    const targetYear = year ?? dayjs().year();
+    const rangeStart = dayjs()
+      .year(targetYear)
+      .startOf("year")
+      .toISOString();
+    const rangeEnd = dayjs()
+      .year(targetYear)
+      .endOf("year")
+      .toISOString();
+
+    const query: WorkOrderQuery = {
+      fields: ["date_created"],
+      filter: {
+        date_created: {
+          _between: [rangeStart, rangeEnd],
+        },
+      } as any,
+      limit: -1,
+      sort: ["date_created"],
+    };
+
+    const response = await workOrdersApi.readMany(query as any);
+    const records = Array.isArray(response)
+      ? (response as Array<{ date_created?: string | null }>)
+      : [];
+    const dateSet = new Set<string>();
+
+    for (const record of records) {
+      if (record?.date_created) {
+        dateSet.add(dayjs(record.date_created).format("YYYY-MM-DD"));
+      }
+    }
+
+    return Array.from(dateSet).sort();
+  };
+
   const fetchWorkOrderDetail = async (id: string) => {
     try {
       await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
@@ -438,6 +482,7 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
     fetchWorkOrdersByCategory,
     fetchLatestWorkOrder,
     fetchWorkOrderDetail,
+    fetchWorkOrderDatesByYear,
     refresh,
     loadMore,
     reset,
