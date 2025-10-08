@@ -1,6 +1,6 @@
 <script setup lang="ts" name="task">
 import { ref } from "vue";
-import { computed, onMounted, watch } from "vue";
+import { computed, onMounted, watch, nextTick } from "vue";
 import { onShow } from "@dcloudio/uni-app";
 import { storeToRefs } from "pinia";
 import TaskList from "./components/TaskList.vue";
@@ -10,7 +10,17 @@ import type { WorkOrderListItem } from "@/store/workOrders";
 import dayjs from "dayjs";
 
 // 常量定义
-const CALENDAR_HISTORY_MONTHS = 6; // 日历显示的历史月份数
+const getCalendarRange = () => {
+  const start = dayjs().startOf("year");
+  const end = dayjs();
+  return { start, end };
+};
+
+const calendarMonthNum = computed(() => {
+  const { start, end } = getCalendarRange();
+  const diff = end.diff(start, "month");
+  return Math.max(diff + 1, 1);
+});
 
 const userStore = useUserStore();
 const { loggedIn, displayName } = storeToRefs(userStore);
@@ -70,6 +80,7 @@ const todayIndex = initialDateList.findIndex(d => d.isToday);
 const dateList = ref<DateItem[]>(initialDateList);
 const currentDateIndex = ref(todayIndex >= 0 ? todayIndex : 15);
 const selectedDate = ref(""); // 默认不选中任何日期
+const calendarRef = ref<any>(null);
 
 const fetchInitial = async () => {
   if (!loggedIn.value) return;
@@ -207,7 +218,7 @@ const handleDateChange = async (index: number) => {
 const showCalendar = ref(false);
 const calendarMinDate = ref<number>(0);
 const calendarMaxDate = ref<number>(0);
-const calendarDefaultDate = ref<string | string[]>([]); // 空数组表示不选中任何日期
+const calendarDefaultDate = ref<number | number[]>(dayjs().startOf("day").valueOf());
 const workOrderDates = ref<string[]>([]); // 有工单的日期列表（缓存，不会被筛选影响）
 const forbidDays = ref<string[]>([]); // 禁用的日期列表
 const allWorkOrdersCache = ref<WorkOrderListItem[]>([]); // 缓存所有工单，用于日期提取
@@ -322,26 +333,31 @@ const applyFilters = async () => {
 };
 
 // 打开日历筛选
-const handleFilter = () => {
+const handleFilter = async () => {
   if (!loggedIn.value) {
     uni.showToast({ title: "请先登录", icon: "none" });
     return;
   }
 
-  // 设置日历的日期范围
-  const today = dayjs();
-  calendarMinDate.value = today.subtract(CALENDAR_HISTORY_MONTHS, "month").valueOf();
-  calendarMaxDate.value = today.valueOf();
+  // 设置日历的日期范围（当前年份）
+  const { start, end } = getCalendarRange();
+  calendarMinDate.value = start.valueOf();
+  calendarMaxDate.value = end.valueOf();
 
   // 如果有选中的日期，显示选中日期；否则为空数组（不选中任何日期）
-  calendarDefaultDate.value = selectedDate.value || [];
+  calendarDefaultDate.value = selectedDate.value
+    ? dayjs(selectedDate.value).startOf("day").valueOf()
+    : dayjs().startOf("day").valueOf();
 
   // 只在首次打开或缓存为空时加载日期
   if (workOrderDates.value.length === 0) {
-    loadWorkOrderDates();
+    await loadWorkOrderDates();
   }
 
   showCalendar.value = true;
+
+  await nextTick();
+  syncCalendarSelection();
 };
 
 // 关闭日历
@@ -352,42 +368,45 @@ const handleCalendarClose = () => {
 // 加载有工单的日期列表
 const loadWorkOrderDates = async () => {
   try {
-    // 查询往前6个月到今天的所有有工单的日期
-    const minDate = dayjs().subtract(CALENDAR_HISTORY_MONTHS, "month").format("YYYY-MM-DD");
-    const maxDate = dayjs().format("YYYY-MM-DD");
+    const { start, end } = getCalendarRange();
 
-    // 从缓存中提取日期（不从 items 中提取，避免被筛选影响）
-    const dates = new Set<string>();
+    let dateList: string[] = [];
 
-    // 使用缓存的完整工单列表
-    const sourceList = allWorkOrdersCache.value.length > 0
-      ? allWorkOrdersCache.value
-      : items.value;
-
-    sourceList.forEach((order) => {
-      if (order.date_created) {
-        const dateStr = dayjs(order.date_created).format("YYYY-MM-DD");
-        const orderDate = dayjs(dateStr);
-
-        // 只添加在日历范围内的日期
-        if (orderDate.isAfter(dayjs(minDate).subtract(1, 'day')) &&
-            orderDate.isBefore(dayjs(maxDate).add(1, 'day'))) {
-          dates.add(dateStr);
-        }
+    if (typeof workOrderStore.fetchWorkOrderDatesByYear === "function") {
+      try {
+        dateList = await workOrderStore.fetchWorkOrderDatesByYear(start.year());
+      } catch (err) {
+        console.error("按年聚合工单日期失败，回退本地缓存", err);
       }
-    });
+    }
 
-    workOrderDates.value = Array.from(dates);
+    // 回退：使用本地缓存/当前列表生成日期集合
+    if (!dateList.length) {
+      const dates = new Set<string>();
+      const sourceList = allWorkOrdersCache.value.length > 0
+        ? allWorkOrdersCache.value
+        : items.value;
+
+      sourceList.forEach((order) => {
+        if (order.date_created) {
+          dates.add(dayjs(order.date_created).format("YYYY-MM-DD"));
+        }
+      });
+
+      dateList = Array.from(dates);
+    }
+
+    workOrderDates.value = dateList;
 
     // 生成禁用日期列表（日历范围内没有工单的日期）
     const allDatesInRange: string[] = [];
-    const start = dayjs(minDate);
-    const end = dayjs(maxDate);
-    let current = start;
+    const dateSet = new Set(dateList);
+    let current = start.startOf("day");
+    const endOfRange = end.startOf("day");
 
-    while (current.isBefore(end) || current.isSame(end)) {
+    while (current.isBefore(endOfRange) || current.isSame(endOfRange)) {
       const dateStr = current.format("YYYY-MM-DD");
-      if (!dates.has(dateStr)) {
+      if (!dateSet.has(dateStr)) {
         allDatesInRange.push(dateStr);
       }
       current = current.add(1, "day");
@@ -411,12 +430,23 @@ const calendarFormatter = (day: any) => {
   return day;
 };
 
+const syncCalendarSelection = () => {
+  const calendar = calendarRef.value as any;
+  const monthRef = calendar?.$refs?.month;
+  if (!monthRef || typeof monthRef.setSelected !== "function") return;
+  const selected = selectedDate.value ? [selectedDate.value] : [];
+  monthRef.setSelected(selected, false);
+};
+
 // 日历日期选择确认
 const handleCalendarConfirm = async (value: any) => {
   if (!loggedIn.value) return;
 
   // value 是一个数组，单选模式下只有一个元素
-  const selectedDateStr = Array.isArray(value) ? value[0] : value;
+  const rawValue = Array.isArray(value) ? value[0] : value;
+  const selectedDateStr = rawValue
+    ? dayjs(rawValue).format("YYYY-MM-DD")
+    : "";
 
   if (selectedDateStr) {
     showCalendar.value = false;
@@ -424,6 +454,7 @@ const handleCalendarConfirm = async (value: any) => {
     // Toggle 逻辑：如果点击的是同一个日期，则取消筛选
     if (selectedDate.value === selectedDateStr) {
       selectedDate.value = "";
+      calendarDefaultDate.value = dayjs().startOf("day").valueOf();
 
       try {
         // 只按类别筛选（如果有类别的话）
@@ -438,6 +469,7 @@ const handleCalendarConfirm = async (value: any) => {
     } else {
       // 选择新日期
       selectedDate.value = selectedDateStr;
+      calendarDefaultDate.value = dayjs(selectedDateStr).startOf("day").valueOf();
 
       try {
         await workOrderStore.fetchWorkOrdersByDate(
@@ -524,6 +556,7 @@ const handleCalendarConfirm = async (value: any) => {
 
     <!-- 日历弹窗 -->
     <up-calendar
+      ref="calendarRef"
       :show="showCalendar"
       :min-date="calendarMinDate"
       :max-date="calendarMaxDate"
@@ -533,7 +566,7 @@ const handleCalendarConfirm = async (value: any) => {
       forbid-days-toast="该日期暂无工单"
       mode="single"
       color="#28a745"
-      :month-num="7"
+      :month-num="calendarMonthNum"
       :show-confirm="false"
       :close-on-click-overlay="true"
       @confirm="handleCalendarConfirm"
@@ -562,115 +595,101 @@ const handleCalendarConfirm = async (value: any) => {
   background-color: #f4f5f7;
   font-size: 14px;
 }
-
 .section {
   margin-bottom: 16px;
   padding: 20px;
   border-radius: 20px;
-  background: #ffffff;
+  background: #fff;
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
 }
-
 /* 日期筛选条 */
 .date-filter-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
   margin-bottom: 16px;
-  background: #ffffff;
+  padding: 8px 12px;
   border-radius: 12px;
+  background: #fff;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  gap: 12px;
 }
-
 /* 筛选按钮栏 */
 .filter-bar {
+  display: flex;
   position: sticky;
   top: var(--status-bar-height);
   z-index: 100;
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 8px; /* 从12px优化到8px */
-  padding: 6px 12px; /* 从8px优化到6px */
-  margin-bottom: 16px;
+  align-items: center;
   margin-top: 8px; /* 与顶部保持间距 */
-  background: #ffffff;
+  margin-bottom: 16px;
+  padding: 6px 12px; /* 从8px优化到6px */
   border-radius: 12px;
+  background: #fff;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  gap: 8px; /* 从12px优化到8px */
 }
-
 .filter-btn {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 4px; /* 从6px优化到4px */
+  align-items: center;
   padding: 6px 12px; /* 从8px 16px优化到6px 12px */
-  cursor: pointer;
   border-radius: 8px;
-  transition: background-color 0.2s;
   min-width: 90px; /* 从100px优化到90px */
+  cursor: pointer;
+  transition: background-color 0.2s;
+  gap: 4px; /* 从6px优化到4px */
 }
-
 .filter-btn:active {
   background-color: #f0f0f0;
 }
-
 .category-btn {
-  flex: 1;
   justify-content: space-between;
+  flex: 1;
   border: 1px solid #e0e0e0;
 }
-
 .calendar-btn {
   border: 1px solid #e0e0e0;
 }
-
 .refresh-btn {
-  min-width: auto;
-  width: 36px; /* 从40px优化到36px */
-  height: 36px; /* 从40px优化到36px */
+  position: relative;
   padding: 0;
   border: 1px solid #e0e0e0;
   border-radius: 50%;
-  position: relative;
+  width: 36px; /* 从40px优化到36px */
+  min-width: auto;
+  height: 36px; /* 从40px优化到36px */
   transition: all 0.3s ease;
 }
-
 .refresh-btn--disabled {
+  background-color: #f5f5f5;
   opacity: 0.5;
   cursor: not-allowed;
-  background-color: #f5f5f5;
 }
-
 .refresh-btn--disabled:active {
   background-color: #f5f5f5;
 }
-
 .refresh-icon-wrapper {
-  position: relative;
   display: flex;
-  align-items: center;
+  position: relative;
   justify-content: center;
+  align-items: center;
 }
-
 .red-dot {
   position: absolute;
-  top: -2px;
   right: -2px;
+  top: -2px;
+  border: 2px solid #fff;
+  border-radius: 50%;
   width: 8px;
   height: 8px;
   background-color: #ff6b6b;
-  border-radius: 50%;
-  border: 2px solid #ffffff;
 }
-
 .filter-text {
+  font-weight: 500;
   font-size: 14px;
   color: #28a745;
-  font-weight: 500;
 }
-
 .login-hint {
   display: flex;
   flex-direction: column;
@@ -679,29 +698,24 @@ const handleCalendarConfirm = async (value: any) => {
   text-align: center;
   color: #475569;
 }
-
 .hint-title {
-  font-size: 16px;
   font-weight: 600;
+  font-size: 16px;
   color: #0f172a;
 }
-
 .hint-desc {
   font-size: 13px;
   color: #64748b;
 }
-
 .list-section {
   padding: 16px 0; /* 从20px优化到16px，符合8pt网格 */
 }
-
 .result-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
 }
-
 .section-title {
   font-weight: 600;
   font-size: 16px;
