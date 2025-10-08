@@ -22,6 +22,14 @@ const detailPriorityVariantMap = {
   low: "low",
 } as const;
 
+const detailStatusVariantMap: Record<NonNullable<WorkOrder["status"]>, WorkOrderTagItem["variant"]> = {
+  submitted: "warning",
+  accepted: "primary",
+  in_progress: "primary",
+  resolved: "medium",
+  closed: "default",
+};
+
 const workOrderStore = useWorkOrderStore();
 
 const workOrderId = ref<string>("");
@@ -90,6 +98,11 @@ const priorityToken = computed<DisplayToken>(() => {
   return workOrderDisplay.getPriorityDisplay(detail.value.priority);
 });
 
+const statusToken = computed<DisplayToken>(() => {
+  if (!detail.value) return null;
+  return workOrderDisplay.getStatusDisplay(detail.value.status);
+});
+
 const priorityIconName = computed(() => {
   const priority = detail.value?.priority;
   switch (priority) {
@@ -136,6 +149,15 @@ const detailInfoTags = computed<WorkOrderTagItem[]>(() => {
     tags.push({
       text: priorityToken.value.label,
       icon: priorityIconName.value,
+      variant: variant as WorkOrderTagItem["variant"],
+    });
+  }
+
+  if (detail.value?.status) {
+    const rawStatus = detail.value.status;
+    const variant = detailStatusVariantMap[rawStatus] ?? "primary";
+    tags.push({
+      text: rawStatus,
       variant: variant as WorkOrderTagItem["variant"],
     });
   }

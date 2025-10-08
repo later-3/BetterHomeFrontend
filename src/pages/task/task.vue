@@ -23,7 +23,7 @@ const calendarMonthNum = computed(() => {
 });
 
 const userStore = useUserStore();
-const { loggedIn, displayName } = storeToRefs(userStore);
+const { loggedIn, displayName, userId } = storeToRefs(userStore);
 
 const workOrderStore = useWorkOrderStore();
 const { items, loading, error, hasMore, initialized } = storeToRefs(
@@ -81,6 +81,7 @@ const dateList = ref<DateItem[]>(initialDateList);
 const currentDateIndex = ref(todayIndex >= 0 ? todayIndex : 15);
 const selectedDate = ref(""); // 默认不选中任何日期
 const calendarRef = ref<any>(null);
+const onlyMine = ref(false); // 是否仅查看我的工单
 
 const fetchInitial = async () => {
   if (!loggedIn.value) return;
@@ -124,6 +125,7 @@ watch(
       allWorkOrdersCache.value = [];
       workOrderDates.value = [];
       forbidDays.value = [];
+      onlyMine.value = false;
     }
   },
   { immediate: false }
@@ -148,6 +150,7 @@ const handleRefresh = async () => {
     // 重置筛选条件
     selectedCategory.value = "";
     selectedDate.value = "";
+    onlyMine.value = false;
 
     await workOrderStore.refresh();
 
@@ -208,7 +211,12 @@ const handleDateChange = async (index: number) => {
   selectedDate.value = selectedDateItem.date;
 
   try {
-    await workOrderStore.fetchWorkOrdersByDate(selectedDateItem.date);
+    const submitterId = onlyMine.value && userId.value ? userId.value : undefined;
+    await workOrderStore.fetchWorkOrdersByDate(
+      selectedDateItem.date,
+      selectedCategory.value,
+      submitterId
+    );
   } catch (err) {
     console.error("按日期查询工单失败", err);
   }
@@ -232,10 +240,12 @@ const checkForNewWorkOrders = async () => {
   if (!loggedIn.value) return;
 
   try {
+    const submitterId = onlyMine.value && userId.value ? userId.value : undefined;
     // 获取当前筛选条件下的最新工单（只取第一条）
     const latestWorkOrder = await workOrderStore.fetchLatestWorkOrder(
       selectedCategory.value,
-      selectedDate.value
+      selectedDate.value,
+      submitterId
     );
 
     if (!latestWorkOrder) return;
@@ -310,18 +320,50 @@ const handleCategorySelect = async (item: any) => {
   await applyFilters();
 };
 
+// 切换只看我的工单
+const toggleMyWorkOrders = async () => {
+  if (!loggedIn.value) {
+    uni.showToast({ title: "请先登录", icon: "none" });
+    return;
+  }
+
+  if (!userId.value) {
+    uni.showToast({ title: "用户信息缺失", icon: "none" });
+    return;
+  }
+
+  onlyMine.value = !onlyMine.value;
+  workOrderDates.value = [];
+  forbidDays.value = [];
+  await applyFilters();
+};
+
 // 应用筛选（类别 + 日期）
 const applyFilters = async () => {
   if (!loggedIn.value) return;
 
   try {
+    const submitterId = onlyMine.value && userId.value ? userId.value : undefined;
+
     // 如果有日期筛选，按日期和类别查询
     if (selectedDate.value) {
-      await workOrderStore.fetchWorkOrdersByDate(selectedDate.value, selectedCategory.value);
+      await workOrderStore.fetchWorkOrdersByDate(
+        selectedDate.value,
+        selectedCategory.value,
+        submitterId
+      );
     } else {
       // 没有日期筛选：按类别查询所有（如果类别为空则显示全部）
       if (selectedCategory.value) {
-        await workOrderStore.fetchWorkOrdersByCategory(selectedCategory.value);
+        await workOrderStore.fetchWorkOrdersByCategory(
+          selectedCategory.value,
+          submitterId
+        );
+      } else if (submitterId) {
+        await workOrderStore.fetchWorkOrders({
+          refresh: true,
+          filters: { submitterId },
+        });
       } else {
         // 类别和日期都为空，显示所有工单
         await workOrderStore.refresh();
@@ -372,9 +414,14 @@ const loadWorkOrderDates = async () => {
 
     let dateList: string[] = [];
 
+    const submitterId = onlyMine.value && userId.value ? userId.value : undefined;
+
     if (typeof workOrderStore.fetchWorkOrderDatesByYear === "function") {
       try {
-        dateList = await workOrderStore.fetchWorkOrderDatesByYear(start.year());
+        dateList = await workOrderStore.fetchWorkOrderDatesByYear(
+          start.year(),
+          submitterId
+        );
       } catch (err) {
         console.error("按年聚合工单日期失败，回退本地缓存", err);
       }
@@ -383,9 +430,11 @@ const loadWorkOrderDates = async () => {
     // 回退：使用本地缓存/当前列表生成日期集合
     if (!dateList.length) {
       const dates = new Set<string>();
-      const sourceList = allWorkOrdersCache.value.length > 0
-        ? allWorkOrdersCache.value
-        : items.value;
+      const forceFilteredSource =
+        onlyMine.value || Boolean(selectedCategory.value) || Boolean(selectedDate.value);
+      const sourceList = forceFilteredSource || allWorkOrdersCache.value.length === 0
+        ? items.value
+        : allWorkOrdersCache.value;
 
       sourceList.forEach((order) => {
         if (order.date_created) {
@@ -457,9 +506,18 @@ const handleCalendarConfirm = async (value: any) => {
       calendarDefaultDate.value = dayjs().startOf("day").valueOf();
 
       try {
+        const submitterId = onlyMine.value && userId.value ? userId.value : undefined;
         // 只按类别筛选（如果有类别的话）
         if (selectedCategory.value) {
-          await workOrderStore.fetchWorkOrdersByCategory(selectedCategory.value);
+          await workOrderStore.fetchWorkOrdersByCategory(
+            selectedCategory.value,
+            submitterId
+          );
+        } else if (submitterId) {
+          await workOrderStore.fetchWorkOrders({
+            refresh: true,
+            filters: { submitterId },
+          });
         } else {
           await workOrderStore.refresh();
         }
@@ -474,7 +532,8 @@ const handleCalendarConfirm = async (value: any) => {
       try {
         await workOrderStore.fetchWorkOrdersByDate(
           selectedDateStr,
-          selectedCategory.value
+          selectedCategory.value,
+          onlyMine.value && userId.value ? userId.value : undefined
         );
       } catch (err) {
         console.error("按日期查询工单失败", err);
@@ -518,14 +577,32 @@ const handleCalendarConfirm = async (value: any) => {
       <!-- 类别筛选 -->
       <view class="filter-btn category-btn" @click="handleCategoryClick">
         <up-icon name="list" size="20" color="#28a745" />
-        <text class="filter-text">{{ selectedCategoryLabel }}</text>
-        <up-icon name="arrow-down" size="16" color="#28a745" />
+        <text class="filter-chip-text">类别</text>
       </view>
 
       <!-- 日历筛选 -->
       <view class="filter-btn calendar-btn" @click="handleFilter">
         <up-icon name="calendar" size="20" color="#28a745" />
-        <text class="filter-text">日历筛选</text>
+        <text class="filter-chip-text">日历</text>
+      </view>
+
+      <!-- 我的工单筛选 -->
+      <view
+        class="filter-btn my-filter-btn"
+        :class="{ 'filter-btn--active': onlyMine }"
+        @click="toggleMyWorkOrders"
+      >
+        <up-icon
+          name="account"
+          size="20"
+          :color="onlyMine ? '#ffffff' : '#28a745'"
+        />
+        <text
+          class="filter-chip-text"
+          :class="{ 'filter-chip-text--invert': onlyMine }"
+        >
+          我的
+        </text>
       </view>
 
       <!-- 刷新按钮 -->
@@ -633,23 +710,38 @@ const handleCalendarConfirm = async (value: any) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 6px 12px; /* 从8px 16px优化到6px 12px */
+  padding: 8px 10px;
   border-radius: 8px;
-  min-width: 90px; /* 从100px优化到90px */
+  min-width: 56px;
   cursor: pointer;
   transition: background-color 0.2s;
-  gap: 4px; /* 从6px优化到4px */
+  gap: 6px;
 }
 .filter-btn:active {
   background-color: #f0f0f0;
 }
 .category-btn {
-  justify-content: space-between;
-  flex: 1;
+  justify-content: center;
   border: 1px solid #e0e0e0;
 }
 .calendar-btn {
   border: 1px solid #e0e0e0;
+}
+.my-filter-btn {
+  border: 1px solid #e0e0e0;
+}
+.filter-btn--active {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+.filter-chip-text {
+  font-weight: 600;
+  font-size: 13px;
+  color: #28a745;
+}
+.filter-chip-text--invert,
+.filter-btn--active .filter-chip-text {
+  color: #ffffff;
 }
 .refresh-btn {
   position: relative;
@@ -684,11 +776,6 @@ const handleCalendarConfirm = async (value: any) => {
   width: 8px;
   height: 8px;
   background-color: #ff6b6b;
-}
-.filter-text {
-  font-weight: 500;
-  font-size: 14px;
-  color: #28a745;
 }
 .login-hint {
   display: flex;
