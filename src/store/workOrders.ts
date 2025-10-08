@@ -14,11 +14,16 @@ const DAILY_WORK_ORDER_LIMIT = 100; // 单日工单查询数量限制
 type WorkOrderQuery = Query<Schema, WorkOrder>;
 type WorkOrderItemQuery = QueryItem<Schema, WorkOrder>;
 
+interface WorkOrderFilters {
+  submitterId?: string;
+}
+
 interface FetchOptions {
   refresh?: boolean;
   page?: number;
   pageSize?: number;
   query?: WorkOrderQuery;
+  filters?: WorkOrderFilters;
 }
 
 interface WorkOrderState {
@@ -29,6 +34,7 @@ interface WorkOrderState {
   pageSize: number;
   hasMore: boolean;
   initialized: boolean;
+  filters: WorkOrderFilters;
 }
 
 // 使用企业级标准定义字段，基于Directus schema
@@ -105,6 +111,43 @@ const normalizeWorkOrder = (item: any): WorkOrder => ({
   files: item.files
 });
 
+const resolveSubmitterId = (
+  submitter: WorkOrder["submitter_id"]
+): string | null => {
+  if (!submitter) return null;
+  if (typeof submitter === "string") return submitter;
+  if (typeof submitter === "object" && submitter !== null) {
+    const candidate = (submitter as Record<string, any>).id;
+    if (typeof candidate === "string" && candidate) {
+      return candidate;
+    }
+  }
+  return null;
+};
+
+const filterBySubmitter = (items: WorkOrder[], submitterId?: string) => {
+  if (!submitterId) return items;
+  return items.filter(
+    (item) => resolveSubmitterId(item.submitter_id) === submitterId
+  );
+};
+
+const combineFilters = (existing: any, additions: any[]): any => {
+  if (!additions.length) return existing;
+
+  const additionFilter = additions.length === 1
+    ? additions[0]
+    : { _and: additions };
+
+  if (!existing) {
+    return additionFilter;
+  }
+
+  return {
+    _and: [existing, additionFilter],
+  };
+};
+
 export const useWorkOrderStore = defineStore("work-orders", () => {
   const state = ref<WorkOrderState>({
     items: [],
@@ -114,6 +157,7 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
     pageSize: DEFAULT_PAGE_SIZE,
     hasMore: true,
     initialized: false,
+    filters: {},
   });
 
   const items = computed(() => state.value.items);
@@ -137,6 +181,7 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
     state.value.page = 1;
     state.value.hasMore = true;
     state.value.initialized = false;
+    state.value.filters = {};
   };
 
   const fetchWorkOrders = async (options: FetchOptions = {}) => {
@@ -145,6 +190,11 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
     const refresh = options.refresh ?? false;
     const pageSize = options.pageSize ?? state.value.pageSize;
     const page = options.page ?? (refresh ? 1 : state.value.page);
+    const requestedFilters: WorkOrderFilters = options.filters
+      ? { ...options.filters }
+      : refresh
+        ? {}
+        : { ...state.value.filters };
 
     try {
       await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
@@ -158,6 +208,7 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
 
     if (refresh) {
       reset();
+      state.value.filters = { ...requestedFilters };
     }
 
     try {
@@ -171,18 +222,43 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
         ...options.query,
       };
 
+      // 组合筛选条件
+      const additions: any[] = [];
+
+      if (requestedFilters.submitterId) {
+        additions.push({
+          submitter_id: {
+            _eq: requestedFilters.submitterId,
+          },
+        });
+      }
+
+      if (additions.length) {
+        const combined = combineFilters(query.filter, additions);
+        if (combined) {
+          query.filter = combined;
+        } else {
+          delete (query as Record<string, any>).filter;
+        }
+      }
+
       const response = await workOrdersApi.readMany(query);
       const workOrderItems: WorkOrder[] = Array.isArray(response)
         ? response.map(normalizeWorkOrder)
         : [];
 
+      const filteredItems = filterBySubmitter(
+        workOrderItems,
+        requestedFilters.submitterId
+      );
+
       if (refresh) {
-        state.value.items = workOrderItems;
+        state.value.items = filteredItems;
       } else {
-        state.value.items = [...state.value.items, ...workOrderItems];
+        state.value.items = [...state.value.items, ...filteredItems];
       }
 
-      const received = workOrderItems.length;
+      const received = filteredItems.length;
       // 不使用meta属性，因为会导致类型错误
       const total = undefined;
 
@@ -196,7 +272,11 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
 
       state.value.initialized = true;
 
-      return workOrderItems;
+      if (!refresh && options.filters) {
+        state.value.filters = { ...requestedFilters };
+      }
+
+      return filteredItems;
     } catch (error) {
       const message = (error as Error)?.message ?? "获取工单失败";
       setError(message);
@@ -212,11 +292,18 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
 
   const loadMore = async () => {
     if (!state.value.hasMore || state.value.loading) return [];
-    return fetchWorkOrders({ page: state.value.page });
+    return fetchWorkOrders({
+      page: state.value.page,
+      filters: { ...state.value.filters },
+    });
   };
 
   // 按日期查询工单（支持类别筛选）
-  const fetchWorkOrdersByDate = async (date: string, category?: string) => {
+  const fetchWorkOrdersByDate = async (
+    date: string,
+    category?: string,
+    submitterId?: string
+  ) => {
     if (state.value.loading) return;
 
     try {
@@ -261,13 +348,21 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
         });
       }
 
+      if (submitterId) {
+        filters.push({
+          submitter_id: {
+            _eq: submitterId,
+          },
+        });
+      }
+
       const query: WorkOrderQuery = {
         limit: DAILY_WORK_ORDER_LIMIT,
         fields: SAFE_FIELDS,
         sort: ["-date_created"],
         filter: {
-          _and: filters
-        }
+          _and: filters,
+        },
       };
 
       const response = await workOrdersApi.readMany(query);
@@ -275,12 +370,14 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
         ? response.map(normalizeWorkOrder)
         : [];
 
+      const filteredItems = filterBySubmitter(workOrderItems, submitterId);
+
       // 替换当前列表
-      state.value.items = workOrderItems;
+      state.value.items = filteredItems;
       state.value.hasMore = false; // 单日查询不分页
       state.value.initialized = true;
 
-      return workOrderItems;
+      return filteredItems;
     } catch (error) {
       const message = (error as Error)?.message ?? "获取工单失败";
       setError(message);
@@ -291,7 +388,10 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
   };
 
   // 按类别查询工单
-  const fetchWorkOrdersByCategory = async (category?: string) => {
+  const fetchWorkOrdersByCategory = async (
+    category?: string,
+    submitterId?: string
+  ) => {
     if (state.value.loading) return;
 
     try {
@@ -312,12 +412,28 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
       };
 
       // 如果有类别筛选，添加过滤条件
+      const filters: any[] = [];
+
       if (category) {
-        query.filter = {
+        filters.push({
           category: {
             _eq: category as WorkOrder["category"],
           },
-        } as any;
+        });
+      }
+
+      if (submitterId) {
+        filters.push({
+          submitter_id: {
+            _eq: submitterId,
+          },
+        });
+      }
+
+      if (filters.length === 1) {
+        query.filter = filters[0] as any;
+      } else if (filters.length > 1) {
+        query.filter = { _and: filters } as any;
       }
 
       const response = await workOrdersApi.readMany(query);
@@ -325,11 +441,13 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
         ? response.map(normalizeWorkOrder)
         : [];
 
-      state.value.items = workOrderItems;
+      const filteredItems = filterBySubmitter(workOrderItems, submitterId);
+
+      state.value.items = filteredItems;
       state.value.hasMore = false;
       state.value.initialized = true;
 
-      return workOrderItems;
+      return filteredItems;
     } catch (error) {
       const message = (error as Error)?.message ?? "获取工单失败";
       setError(message);
@@ -340,7 +458,11 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
   };
 
   // 获取最新的一条工单（用于检测新工单）
-  const fetchLatestWorkOrder = async (category?: string, date?: string) => {
+  const fetchLatestWorkOrder = async (
+    category?: string,
+    date?: string,
+    submitterId?: string
+  ) => {
     try {
       await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
     } catch (error) {
@@ -350,7 +472,7 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
     try {
       const query: WorkOrderQuery = {
         limit: 1,
-        fields: ["id", "date_created"],
+        fields: ["id", "date_created", "submitter_id"],
         sort: ["-date_created"],
       };
 
@@ -387,6 +509,14 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
         });
       }
 
+      if (submitterId) {
+        filters.push({
+          submitter_id: {
+            _eq: submitterId,
+          },
+        });
+      }
+
       // 应用筛选条件
       if (filters.length > 0) {
         query.filter = {
@@ -399,14 +529,19 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
         ? response.map(normalizeWorkOrder)
         : [];
 
-      return workOrderItems.length > 0 ? workOrderItems[0] : null;
+      const filteredItems = filterBySubmitter(workOrderItems, submitterId);
+
+      return filteredItems.length > 0 ? filteredItems[0] : null;
     } catch (error) {
       console.error("获取最新工单失败", error);
       throw error;
     }
   };
 
-  const fetchWorkOrderDatesByYear = async (year?: number) => {
+  const fetchWorkOrderDatesByYear = async (
+    year?: number,
+    submitterId?: string
+  ) => {
     try {
       await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
     } catch (error) {
@@ -423,13 +558,28 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
       .endOf("year")
       .toISOString();
 
-    const query: WorkOrderQuery = {
-      fields: ["date_created"],
-      filter: {
+    const filters: any[] = [
+      {
         date_created: {
           _between: [rangeStart, rangeEnd],
         },
-      } as any,
+      },
+    ];
+
+    if (submitterId) {
+      filters.push({
+        submitter_id: {
+          _eq: submitterId,
+        },
+      });
+    }
+
+    const query: WorkOrderQuery = {
+      fields: ["date_created"],
+      filter:
+        filters.length === 1
+          ? (filters[0] as any)
+          : ({ _and: filters } as any),
       limit: -1,
       sort: ["date_created"],
     };
