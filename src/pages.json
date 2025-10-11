@@ -85,20 +85,20 @@
     "list": [
       {
         "pagePath": "pages/create/create",
-        "iconPath": "static/icons/create.svg",
-        "selectedIconPath": "static/icons/create-active.svg",
+        "iconPath": "static/icons/create.png",
+        "selectedIconPath": "static/icons/create-active.png",
         "text": "创建"
       },
       {
         "pagePath": "pages/task/task",
-        "iconPath": "static/icons/task.svg",
-        "selectedIconPath": "static/icons/task-active.svg",
+        "iconPath": "static/icons/task.png",
+        "selectedIconPath": "static/icons/task-active.png",
         "text": "事项"
       },
       {
         "pagePath": "pages/profile/profile",
-        "iconPath": "static/icons/profile.svg",
-        "selectedIconPath": "static/icons/profile-active.svg",
+        "iconPath": "static/icons/profile.png",
+        "selectedIconPath": "static/icons/profile-active.png",
         "text": "我"
       }
     ]
