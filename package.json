@@ -68,6 +68,7 @@
     "@directus/sdk": "19.0.0",
     "@iconify/vue": "^5.0.0",
     "@tabler/icons-vue": "^3.34.1",
+    "axios": "^1.12.2",
     "pinia": "2.0.33",
     "pinia-auto-refs": "0.0.10",
     "pinia-plugin-persist-uni": "1.2.0",

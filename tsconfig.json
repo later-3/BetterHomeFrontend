@@ -12,7 +12,8 @@
     "esModuleInterop": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@ui/*": ["src/ui/*"]
     },
     "lib": ["esnext", "dom"],
     "types": ["@dcloudio/types", "pinia-plugin-persist-uni"]
