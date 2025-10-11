@@ -16,6 +16,7 @@ import {
 import type { Schema } from "@/@types/directus-schema";
 import env from "@/config/env";
 import { createUniFetch } from "./uni-fetch";
+import { MiniURL, MiniURLSearchParams } from "./url-polyfill-miniprogram";
 
 const DIRECTUS_TOKEN_STORAGE_KEY = "directus_token";
 const isUniAvailable = typeof uni !== "undefined";
@@ -37,9 +38,48 @@ function readPersistedToken(): string | null {
 
 const uniFetch = createUniFetch();
 
+// ============================================
+// 全局 Polyfill 注入（关键！）
+// 必须同时注入到全局对象，因为其他库可能也需要这些 API
+// ============================================
+if (typeof globalThis !== "undefined") {
+  if (!globalThis.URL) {
+    (globalThis as any).URL = MiniURL;
+  }
+  if (!globalThis.URLSearchParams) {
+    (globalThis as any).URLSearchParams = MiniURLSearchParams;
+  }
+}
+
+// @ts-ignore - 微信小程序环境
+if (typeof global !== "undefined") {
+  if (!global.URL) {
+    (global as any).URL = MiniURL;
+  }
+  if (!global.URLSearchParams) {
+    (global as any).URLSearchParams = MiniURLSearchParams;
+  }
+}
+
+// @ts-ignore - 可能存在的 window 对象
+if (typeof window !== "undefined") {
+  if (!window.URL) {
+    (window as any).URL = MiniURL;
+  }
+  if (!window.URLSearchParams) {
+    (window as any).URLSearchParams = MiniURLSearchParams;
+  }
+}
+// ============================================
+
+// 使用 Directus 官方推荐的 globals 选项传递 polyfills
+// 参考：https://directus.io/docs/guides/connect/sdk
+// 注意：这个 globals 只对 Directus SDK 内部有效，所以上面的全局注入仍然必要
 const directus = createDirectus<Schema>(env.directusUrl, {
   globals: {
     fetch: uniFetch,
+    URL: MiniURL as any, // 传递我们的 URL polyfill
+    URLSearchParams: MiniURLSearchParams as any, // 传递 URLSearchParams polyfill
   },
 })
   .with(rest())

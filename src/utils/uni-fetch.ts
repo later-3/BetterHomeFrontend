@@ -1,3 +1,5 @@
+import { MiniResponse } from "./MiniResponse";
+
 function normalizeHeaders(
   headers?: HeadersInit
 ): Record<string, string> | undefined {
@@ -53,10 +55,10 @@ export function createUniFetch() {
 
           if (!hasBody) {
             resolve(
-              new Response(undefined, {
+              new MiniResponse(undefined, {
                 status,
                 headers: headersInit,
-              })
+              }) as Response
             );
             return;
           }
@@ -69,10 +71,10 @@ export function createUniFetch() {
               : JSON.stringify(res.data);
 
           resolve(
-            new Response(responseBody, {
+            new MiniResponse(responseBody, {
               status,
               headers: headersInit,
-            })
+            }) as Response
           );
         },
         fail: (error) => {
