@@ -180,8 +180,8 @@ import {
   createCommentReaction,
   deleteCommentReaction,
 } from "@/services/comments/api";
-import BasicCommentItem from "../../../ui/comment/components/BasicCommentItem.vue";
-import ReplyInput from "../../../ui/comment/components/ReplyInput.vue";
+import BasicCommentItem from "@ui/comment/components/BasicCommentItem.vue";
+import ReplyInput from "@ui/comment/components/ReplyInput.vue";
 
 const BASE_COMMENT_FIELDS = [
   "id",
