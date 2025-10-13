@@ -20,8 +20,16 @@ function reject(err: { errno: number; errmsg: string }) {
   }
 }
 
-// h5环境开启代理
-const apiBaseUrl = isH5 && isDevelopment ? "/api" : env.apiBaseUrl;
+const isBrowser = typeof window !== "undefined";
+const isLocalOrigin = (): boolean => {
+  if (!isBrowser) return false;
+  return /^https?:\/\/(localhost|127\.0\.0\.1|::1)/.test(window.location.origin);
+};
+
+// 浏览器本地开发时通过 Vite 代理避免跨域
+const shouldUseProxy =
+  (isH5 || isBrowser) && (isDevelopment || isLocalOrigin());
+const apiBaseUrl = shouldUseProxy ? "/api" : env.apiBaseUrl;
 
 function baseRequest(
   method:

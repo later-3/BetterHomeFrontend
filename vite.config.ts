@@ -13,7 +13,8 @@ import env from './src/config/env';
 export default defineConfig({
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src')
+      '@': resolve(__dirname, 'src'),
+      '@ui': resolve(__dirname, 'src/ui')
     }
   },
   plugins: [

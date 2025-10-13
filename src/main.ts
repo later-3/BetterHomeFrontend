@@ -1,3 +1,27 @@
+// ============================================
+// 微信小程序 Polyfills - 必须在所有 import 之前注入到全局
+// ============================================
+import { MiniURL, MiniURLSearchParams } from "@/utils/url-polyfill-miniprogram";
+
+// 注入到全局对象（所有库都能访问）
+if (typeof globalThis !== "undefined") {
+  if (!globalThis.URL) (globalThis as any).URL = MiniURL;
+  if (!globalThis.URLSearchParams) (globalThis as any).URLSearchParams = MiniURLSearchParams;
+}
+if (typeof global !== "undefined") {
+  // @ts-ignore
+  if (!global.URL) global.URL = MiniURL;
+  // @ts-ignore
+  if (!global.URLSearchParams) global.URLSearchParams = MiniURLSearchParams;
+}
+if (typeof window !== "undefined") {
+  // @ts-ignore
+  if (!window.URL) window.URL = MiniURL;
+  // @ts-ignore
+  if (!window.URLSearchParams) window.URLSearchParams = MiniURLSearchParams;
+}
+// ============================================
+
 import "uno.css";
 import { createSSRApp } from "vue";
 import { createPinia } from "pinia"; // 导入 createPinia
