@@ -171,7 +171,14 @@ export interface WorkOrder {
   title: string;
   /** @required */
   description: string;
-  category?: "repair" | "complaint" | "suggestion" | "inquiry" | "other" | null;
+  category?:
+    | "repair"
+    | "complaint"
+    | "suggestion"
+    | "inquiry"
+    | "maintenance_fund_application"
+    | "other"
+    | null;
   priority?: "low" | "medium" | "high" | "urgent" | null;
   status?:
     | "submitted"
@@ -196,6 +203,304 @@ export interface WorkOrdersDirectusFile {
   work_orders_id?: WorkOrder | string | null;
   directus_files_id?: DirectusFile | string | null;
   sort?: number | null;
+}
+
+// ============================================================
+// Finance v2.0 Interfaces
+// ============================================================
+
+// 物业费账单 (应收)
+export interface Billing {
+  /** @primaryKey */
+  id: string;
+  user_created?: DirectusUser | string | null;
+  date_created?: string | null;
+  user_updated?: DirectusUser | string | null;
+  date_updated?: string | null;
+  /** @required */
+  community_id: Community | string;
+  building_id?: Building | string | null;
+  /** @required */
+  owner_id: DirectusUser | string;
+  /** @required */
+  period: string;
+  /** @required */
+  billing_amount: number;
+  area?: number | null;
+  unit_price?: number | null;
+  /** @required */
+  status: "unpaid" | "paid" | "partial" | "overdue";
+  paid_amount?: number | null;
+  due_date?: string | null;
+  late_fee?: number | null;
+  notes?: string | null;
+  date_deleted?: string | null;
+}
+
+// 物业费收款记录 (实收)
+export interface BillingPayment {
+  /** @primaryKey */
+  id: string;
+  user_created?: DirectusUser | string | null;
+  date_created?: string | null;
+  user_updated?: DirectusUser | string | null;
+  date_updated?: string | null;
+  /** @required */
+  billing_id: Billing | string;
+  /** @required */
+  community_id: Community | string;
+  /** @required */
+  owner_id: DirectusUser | string;
+  /** @required */
+  amount: number;
+  /** @required */
+  paid_at: string;
+  period?: string | null;  // 所属账期（YYYY-MM），用于权责发生制统计
+  /** @required */
+  payment_method: "wechat" | "alipay" | "bank" | "cash" | "pos" | "other";
+  payer_name?: string | null;
+  payer_phone?: string | null;
+  transaction_no?: string | null;
+  proof_files?: string[] | null;
+  notes?: string | null;
+  date_deleted?: string | null;
+}
+
+// 其他收入 (公共收益)
+export interface Income {
+  /** @primaryKey */
+  id: string;
+  user_created?: DirectusUser | string | null;
+  date_created?: string | null;
+  user_updated?: DirectusUser | string | null;
+  date_updated?: string | null;
+  /** @required */
+  community_id: Community | string;
+  /** @required */
+  income_type:
+    | "advertising"
+    | "parking"
+    | "venue_rental"
+    | "vending"
+    | "express_locker"
+    | "recycling"
+    | "other";
+  /** @required */
+  title: string;
+  description?: string | null;
+  /** @required */
+  amount: number;
+  /** @required */
+  income_date: string;
+  period?: string | null;
+  /** @required */
+  payment_method: "wechat" | "alipay" | "bank" | "cash" | "pos" | "other";
+  transaction_no?: string | null;
+  related_info?: Record<string, any> | null;
+  proof_files?: string[] | null;
+  notes?: string | null;
+  date_deleted?: string | null;
+}
+
+// 维修基金账户
+export interface MaintenanceFundAccount {
+  /** @primaryKey */
+  id: string;
+  user_created?: DirectusUser | string | null;
+  date_created?: string | null;
+  user_updated?: DirectusUser | string | null;
+  date_updated?: string | null;
+  /** @required */
+  community_id: Community | string;
+  /** @required */
+  building_id: Building | string;
+  /** @required */
+  owner_id: DirectusUser | string;
+  house_area?: number | null;
+  unit_number?: string | null;
+  /** @required */
+  total_paid: number;
+  /** @required */
+  total_used: number;
+  /** @required */
+  balance: number;
+  last_payment_date?: string | null;
+  date_deleted?: string | null;
+}
+
+// 维修基金缴纳记录
+export interface MaintenanceFundPayment {
+  /** @primaryKey */
+  id: string;
+  user_created?: DirectusUser | string | null;
+  date_created?: string | null;
+  user_updated?: DirectusUser | string | null;
+  date_updated?: string | null;
+  /** @required */
+  account_id: MaintenanceFundAccount | string;
+  /** @required */
+  community_id: Community | string;
+  /** @required */
+  owner_id: DirectusUser | string;
+  /** @required */
+  amount: number;
+  /** @required */
+  paid_at: string;
+  /** @required */
+  payment_method: "wechat" | "alipay" | "bank" | "cash" | "pos" | "other";
+  payment_type?: "initial" | "replenishment" | "supplement" | null;
+  transaction_no?: string | null;
+  proof_files?: string[] | null;
+  notes?: string | null;
+  date_deleted?: string | null;
+}
+
+// 维修基金使用记录
+export interface MaintenanceFundUsage {
+  /** @primaryKey */
+  id: string;
+  user_created?: DirectusUser | string | null;
+  date_created?: string | null;
+  user_updated?: DirectusUser | string | null;
+  date_updated?: string | null;
+  /** @required */
+  work_order_id: WorkOrder | string;
+  /** @required */
+  community_id: Community | string;
+  /** @required */
+  project_name: string;
+  /** @required */
+  project_type:
+    | "elevator"
+    | "exterior_wall"
+    | "roof"
+    | "pipeline"
+    | "fire_system"
+    | "security_system"
+    | "road"
+    | "other";
+  /** @required */
+  description: string;
+  contractor?: string | null;
+  contract_no?: string | null;
+  estimated_amount?: number | null;
+  actual_amount?: number | null;
+  /** @required */
+  approval_status: "pending" | "approved" | "rejected" | "completed";
+  approved_by?: DirectusUser | string | null;
+  approved_at?: string | null;
+  rejection_reason?: string | null;
+  usage_date?: string | null;
+  expense_id?: Expense | string | null;
+  proof_files?: string[] | null;
+  date_deleted?: string | null;
+}
+
+// 支出记录
+export interface Expense {
+  /** @primaryKey */
+  id: string;
+  user_created?: DirectusUser | string | null;
+  date_created?: string | null;
+  user_updated?: DirectusUser | string | null;
+  date_updated?: string | null;
+  /** @required */
+  community_id: Community | string;
+  /** @required */
+  expense_type:
+    | "salary"
+    | "maintenance"
+    | "utilities"
+    | "materials"
+    | "activity"
+    | "committee_fund"
+    | "maintenance_fund"
+    | "other";
+  /** @required */
+  title: string;
+  description?: string | null;
+  /** @required */
+  amount: number;
+  /** @required */
+  paid_at: string;
+  period?: string | null;
+  /** @required */
+  payment_method: "wechat" | "alipay" | "bank" | "cash" | "pos" | "other";
+  category?: string | null;
+  related_info?: Record<string, any> | null;
+  /** @required */
+  status: "pending" | "approved" | "rejected";
+  approved_by?: DirectusUser | string | null;
+  approved_at?: string | null;
+  proof_files?: string[] | null;
+  /** @required */
+  created_by: DirectusUser | string;
+  date_deleted?: string | null;
+}
+
+// 员工信息
+export interface Employee {
+  /** @primaryKey */
+  id: string;
+  user_created?: DirectusUser | string | null;
+  date_created?: string | null;
+  user_updated?: DirectusUser | string | null;
+  date_updated?: string | null;
+  /** @required */
+  community_id: Community | string;
+  /** @required */
+  name: string;
+  phone?: string | null;
+  id_card_last4?: string | null;
+  /** @required */
+  position_type:
+    | "security"
+    | "cleaning"
+    | "management"
+    | "electrician"
+    | "plumber"
+    | "gardener"
+    | "temp_worker"
+    | "other";
+  position_title?: string | null;
+  /** @required */
+  employment_status: "active" | "resigned" | "on_leave" | "suspended";
+  /** @required */
+  hire_date: string;
+  resignation_date?: string | null;
+  base_salary?: number | null;
+  notes?: string | null;
+}
+
+// 工资发放记录
+export interface SalaryRecord {
+  /** @primaryKey */
+  id: string;
+  user_created?: DirectusUser | string | null;
+  date_created?: string | null;
+  user_updated?: DirectusUser | string | null;
+  date_updated?: string | null;
+  /** @required */
+  employee_id: Employee | string;
+  /** @required */
+  community_id: Community | string;
+  /** @required */
+  period: string;
+  /** @required */
+  base_salary: number;
+  bonus?: number | null;
+  subsidy?: number | null;
+  deduction?: number | null;
+  social_security?: number | null;
+  housing_fund?: number | null;
+  /** @required */
+  actual_amount: number;
+  /** @required */
+  payment_date: string;
+  /** @required */
+  payment_method: "wechat" | "alipay" | "bank" | "cash" | "pos" | "other";
+  expense_id?: Expense | string | null;
+  proof_files?: string[] | null;
 }
 
 export interface DirectusAccess {
@@ -695,6 +1000,16 @@ export interface Schema {
   work_order_nodes_directus_files: WorkOrderNodesDirectusFile[];
   work_orders: WorkOrder[];
   work_orders_directus_files: WorkOrdersDirectusFile[];
+  // Finance v2.0 tables
+  billings: Billing[];
+  billing_payments: BillingPayment[];
+  incomes: Income[];
+  expenses: Expense[];
+  employees: Employee[];
+  salary_records: SalaryRecord[];
+  maintenance_fund_accounts: MaintenanceFundAccount[];
+  maintenance_fund_payments: MaintenanceFundPayment[];
+  maintenance_fund_usage: MaintenanceFundUsage[];
   directus_access: DirectusAccess[];
   directus_activity: DirectusActivity[];
   directus_collections: DirectusCollection[];
@@ -738,6 +1053,8 @@ export enum CollectionNames {
   work_order_nodes_directus_files = "work_order_nodes_directus_files",
   work_orders = "work_orders",
   work_orders_directus_files = "work_orders_directus_files",
+  billings = "billings",
+  expenses = "expenses",
   directus_access = "directus_access",
   directus_activity = "directus_activity",
   directus_collections = "directus_collections",

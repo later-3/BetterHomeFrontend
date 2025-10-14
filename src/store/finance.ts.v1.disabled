@@ -1,0 +1,387 @@
+import { defineStore } from "pinia";
+import { computed, ref } from "vue";
+import type { Query } from "@directus/sdk";
+import type { Schema, Billing, Expense } from "@/@types/directus-schema";
+import { billingsApi, expensesApi } from "@/utils/directus";
+import { useUserStore } from "@/store/user";
+
+const DEFAULT_PAGE_SIZE = 20;
+
+type BillingQuery = Query<Schema, Billing>;
+type ExpenseQuery = Query<Schema, Expense>;
+
+interface FinanceState {
+  billings: Billing[];
+  expenses: Expense[];
+  loading: boolean;
+  error: string | null;
+  billingsPage: number;
+  expensesPage: number;
+  billingsHasMore: boolean;
+  expensesHasMore: boolean;
+  initialized: boolean;
+}
+
+// 字段配置
+const BILLING_FIELDS = [
+  "id",
+  "amount",
+  "period",
+  "payment_method",
+  "status",
+  "paid_at",
+  "late_fee",
+  "notes",
+  "date_created",
+  "owner_id.id",
+  "owner_id.first_name",
+  "owner_id.last_name",
+  "community_id.id",
+  "community_id.name",
+  "building_id.id",
+  "building_id.name",
+] as unknown as NonNullable<BillingQuery["fields"]>;
+
+const EXPENSE_FIELDS = [
+  "id",
+  "title",
+  "description",
+  "amount",
+  "category",
+  "payment_method",
+  "paid_at",
+  "status",
+  "proof_files",
+  "date_created",
+  "created_by.id",
+  "created_by.first_name",
+  "created_by.last_name",
+  "approved_by.id",
+  "approved_by.first_name",
+  "approved_by.last_name",
+  "approved_at",
+  "community_id.id",
+  "community_id.name",
+] as unknown as NonNullable<ExpenseQuery["fields"]>;
+
+export const useFinanceStore = defineStore("finance", () => {
+  const state = ref<FinanceState>({
+    billings: [],
+    expenses: [],
+    loading: false,
+    error: null,
+    billingsPage: 1,
+    expensesPage: 1,
+    billingsHasMore: true,
+    expensesHasMore: true,
+    initialized: false,
+  });
+
+  const userStore = useUserStore();
+
+  // Getters
+  const totalIncome = computed(() =>
+    state.value.billings
+      .filter((b) => b.status === "paid")
+      .reduce((sum, b) => sum + b.amount, 0)
+  );
+
+  const totalExpense = computed(() =>
+    state.value.expenses
+      .filter((e) => e.status === "approved")
+      .reduce((sum, e) => sum + e.amount, 0)
+  );
+
+  const balance = computed(() => totalIncome.value - totalExpense.value);
+
+  const myBillings = computed(() => {
+    const userId = userStore.profile?.id;
+    if (!userId) return [];
+    return state.value.billings.filter((b) => {
+      const ownerId = typeof b.owner_id === "string" ? b.owner_id : b.owner_id?.id;
+      return ownerId === userId;
+    });
+  });
+
+  const myTotalPaid = computed(() =>
+    myBillings.value
+      .filter((b) => b.status === "paid")
+      .reduce((sum, b) => sum + b.amount, 0)
+  );
+
+  const myTotalUnpaid = computed(() =>
+    myBillings.value
+      .filter((b) => b.status === "unpaid")
+      .reduce((sum, b) => sum + b.amount, 0)
+  );
+
+  const unpaidBillingsCount = computed(() =>
+    state.value.billings.filter((b) => b.status === "unpaid").length
+  );
+
+  const paidBillingsCount = computed(() =>
+    state.value.billings.filter((b) => b.status === "paid").length
+  );
+
+  // Actions
+  const fetchMyBillings = async (refresh = false) => {
+    if (state.value.loading) return;
+
+    try {
+      await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
+    } catch (error) {
+      throw error;
+    }
+
+    const userId = userStore.profile?.id;
+    if (!userId) {
+      throw new Error("用户未登录");
+    }
+
+    state.value.loading = true;
+    state.value.error = null;
+
+    if (refresh) {
+      state.value.billings = [];
+      state.value.billingsPage = 1;
+      state.value.billingsHasMore = true;
+    }
+
+    try {
+      const query: BillingQuery = {
+        limit: DEFAULT_PAGE_SIZE,
+        page: state.value.billingsPage,
+        fields: BILLING_FIELDS,
+        sort: ["-period", "-date_created"],
+        filter: {
+          owner_id: { _eq: userId },
+        },
+      };
+
+      const response = await billingsApi.readMany(query);
+      const items = (Array.isArray(response) ? response : []) as Billing[];
+
+      if (refresh) {
+        state.value.billings = items;
+      } else {
+        state.value.billings = [...state.value.billings, ...items];
+      }
+
+      state.value.billingsPage += 1;
+      state.value.billingsHasMore = items.length >= DEFAULT_PAGE_SIZE;
+      state.value.initialized = true;
+
+      return items;
+    } catch (error) {
+      state.value.error = (error as Error)?.message ?? "加载账单数据失败";
+      throw error;
+    } finally {
+      state.value.loading = false;
+    }
+  };
+
+  const fetchCommunityBillings = async (refresh = false) => {
+    if (state.value.loading) return;
+
+    try {
+      await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
+    } catch (error) {
+      throw error;
+    }
+
+    const communityId = userStore.community?.id;
+    if (!communityId) {
+      throw new Error("无法获取社区信息");
+    }
+
+    state.value.loading = true;
+    state.value.error = null;
+
+    if (refresh) {
+      state.value.billings = [];
+      state.value.billingsPage = 1;
+      state.value.billingsHasMore = true;
+    }
+
+    try {
+      const query: BillingQuery = {
+        limit: DEFAULT_PAGE_SIZE,
+        page: state.value.billingsPage,
+        fields: BILLING_FIELDS,
+        sort: ["-period", "-date_created"],
+        filter: {
+          community_id: { _eq: communityId },
+        },
+      };
+
+      const response = await billingsApi.readMany(query);
+      const items = (Array.isArray(response) ? response : []) as Billing[];
+
+      if (refresh) {
+        state.value.billings = items;
+      } else {
+        state.value.billings = [...state.value.billings, ...items];
+      }
+
+      state.value.billingsPage += 1;
+      state.value.billingsHasMore = items.length >= DEFAULT_PAGE_SIZE;
+      state.value.initialized = true;
+
+      return items;
+    } catch (error) {
+      state.value.error = (error as Error)?.message ?? "加载社区账单数据失败";
+      throw error;
+    } finally {
+      state.value.loading = false;
+    }
+  };
+
+  const fetchCommunityExpenses = async (refresh = false) => {
+    if (state.value.loading) return;
+
+    try {
+      await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
+    } catch (error) {
+      throw error;
+    }
+
+    const communityId = userStore.community?.id;
+    if (!communityId) {
+      throw new Error("无法获取社区信息");
+    }
+
+    state.value.loading = true;
+    state.value.error = null;
+
+    if (refresh) {
+      state.value.expenses = [];
+      state.value.expensesPage = 1;
+      state.value.expensesHasMore = true;
+    }
+
+    try {
+      const query: ExpenseQuery = {
+        limit: DEFAULT_PAGE_SIZE,
+        page: state.value.expensesPage,
+        fields: EXPENSE_FIELDS,
+        sort: ["-paid_at"],
+        filter: {
+          community_id: { _eq: communityId },
+          status: { _eq: "approved" }, // MVP只显示已审核的支出
+        },
+      };
+
+      const response = await expensesApi.readMany(query);
+      const items = (Array.isArray(response) ? response : []) as Expense[];
+
+      if (refresh) {
+        state.value.expenses = items;
+      } else {
+        state.value.expenses = [...state.value.expenses, ...items];
+      }
+
+      state.value.expensesPage += 1;
+      state.value.expensesHasMore = items.length >= DEFAULT_PAGE_SIZE;
+
+      return items;
+    } catch (error) {
+      state.value.error = (error as Error)?.message ?? "加载支出数据失败";
+      throw error;
+    } finally {
+      state.value.loading = false;
+    }
+  };
+
+  const createBilling = async (data: Partial<Billing>) => {
+    try {
+      await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
+      const result = await billingsApi.createOne(data);
+      // 刷新数据
+      await fetchMyBillings(true);
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updateBilling = async (id: string, data: Partial<Billing>) => {
+    try {
+      await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
+      const result = await billingsApi.updateOne(id, data);
+      // 刷新数据
+      await fetchMyBillings(true);
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const createExpense = async (data: Partial<Expense>) => {
+    try {
+      await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
+      const result = await expensesApi.createOne(data);
+      // 刷新数据
+      await fetchCommunityExpenses(true);
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updateExpense = async (id: string, data: Partial<Expense>) => {
+    try {
+      await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
+      const result = await expensesApi.updateOne(id, data);
+      // 刷新数据
+      await fetchCommunityExpenses(true);
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const reset = () => {
+    state.value.billings = [];
+    state.value.expenses = [];
+    state.value.billingsPage = 1;
+    state.value.expensesPage = 1;
+    state.value.billingsHasMore = true;
+    state.value.expensesHasMore = true;
+    state.value.initialized = false;
+    state.value.loading = false;
+    state.value.error = null;
+  };
+
+  return {
+    // State
+    billings: computed(() => state.value.billings),
+    expenses: computed(() => state.value.expenses),
+    loading: computed(() => state.value.loading),
+    error: computed(() => state.value.error),
+    billingsHasMore: computed(() => state.value.billingsHasMore),
+    expensesHasMore: computed(() => state.value.expensesHasMore),
+    initialized: computed(() => state.value.initialized),
+
+    // Getters
+    totalIncome,
+    totalExpense,
+    balance,
+    myBillings,
+    myTotalPaid,
+    myTotalUnpaid,
+    unpaidBillingsCount,
+    paidBillingsCount,
+
+    // Actions
+    fetchMyBillings,
+    fetchCommunityBillings,
+    fetchCommunityExpenses,
+    createBilling,
+    updateBilling,
+    createExpense,
+    updateExpense,
+    reset,
+  };
+});
+
+export default useFinanceStore;

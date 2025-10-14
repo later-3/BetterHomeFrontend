@@ -122,6 +122,63 @@ async function handleLogout() {
   uni.showToast({ title: "已退出登录", icon: "success" });
   await uni.switchTab({ url: "/pages/profile/profile" });
 }
+
+async function goToFinance() {
+  if (!isLoggedIn.value) {
+    uni.showToast({
+      title: "请先登录",
+      icon: "none",
+    });
+    return;
+  }
+
+  try {
+    await uni.navigateTo({ url: "/pages/finance/index" });
+  } catch (error: any) {
+    uni.showToast({
+      title: error?.message || "无法跳转到财务页面",
+      icon: "none",
+    });
+  }
+}
+
+async function goToMyBillings() {
+  if (!isLoggedIn.value) {
+    uni.showToast({
+      title: "请先登录",
+      icon: "none",
+    });
+    return;
+  }
+
+  try {
+    await uni.navigateTo({ url: "/pages/finance/my-billings" });
+  } catch (error: any) {
+    uni.showToast({
+      title: error?.message || "无法跳转到物业费页面",
+      icon: "none",
+    });
+  }
+}
+
+async function goToFinanceV2() {
+  if (!isLoggedIn.value) {
+    uni.showToast({
+      title: "请先登录",
+      icon: "none",
+    });
+    return;
+  }
+
+  try {
+    await uni.navigateTo({ url: "/pages/finance/finance-v2" });
+  } catch (error: any) {
+    uni.showToast({
+      title: error?.message || "无法跳转到财务页面",
+      icon: "none",
+    });
+  }
+}
 </script>
 
 <template>
@@ -147,6 +204,33 @@ async function handleLogout() {
           <up-cell title="所属小区" :value="communityName" icon="home" />
           <up-cell title="所属楼栋" :value="buildingName" icon="building" />
           <up-cell title="用户类型" :value="userTypeLabel" icon="account" />
+        </up-cell-group>
+
+        <up-divider margin="24rpx 0" />
+
+        <!-- 功能入口 -->
+        <up-cell-group title="功能服务">
+          <up-cell
+            title="财务透明（新版）"
+            value="查看小区收支明细"
+            icon="chart-pie"
+            isLink
+            @click="goToFinanceV2"
+          />
+          <up-cell
+            title="财务总览"
+            value="查看小区收支情况"
+            icon="money-circle"
+            isLink
+            @click="goToFinance"
+          />
+          <up-cell
+            title="我的物业费"
+            value="查看缴费记录"
+            icon="list"
+            isLink
+            @click="goToMyBillings"
+          />
         </up-cell-group>
 
         <up-button
