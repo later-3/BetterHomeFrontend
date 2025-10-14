@@ -135,6 +135,7 @@ const BILLING_PAYMENT_FIELDS = [
   "owner_id.last_name",
   "amount",
   "paid_at",
+  "period", // 所属账期（权责发生制）
   "payment_method",
   "payer_name",
   "payer_phone",
@@ -367,12 +368,12 @@ export const useFinanceStore = defineStore("finance", () => {
 
   // 物业费总收入（基于billing_payments实收）
   const totalPropertyFeeIncome = computed(() =>
-    state.value.billingPayments.reduce((sum, payment) => sum + payment.amount, 0)
+    state.value.billingPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
   );
 
   // 公共收益总收入
   const totalPublicIncome = computed(() =>
-    state.value.incomes.reduce((sum, income) => sum + income.amount, 0)
+    state.value.incomes.reduce((sum, income) => sum + Number(income.amount || 0), 0)
   );
 
   // 总收入
@@ -390,7 +391,7 @@ export const useFinanceStore = defineStore("finance", () => {
         grouped.set(type, { type, total: 0, items: [] });
       }
       const group = grouped.get(type)!;
-      group.total += income.amount;
+      group.total += Number(income.amount || 0);
       group.items.push(income);
     });
 
@@ -409,12 +410,12 @@ export const useFinanceStore = defineStore("finance", () => {
 
   // 我的总应缴
   const myTotalBilling = computed(() =>
-    myBillings.value.reduce((sum, b) => sum + b.billing_amount, 0)
+    myBillings.value.reduce((sum, b) => sum + Number(b.billing_amount || 0), 0)
   );
 
   // 我的总已缴
   const myTotalPaid = computed(() =>
-    myBillings.value.reduce((sum, b) => sum + (b.paid_amount || 0), 0)
+    myBillings.value.reduce((sum, b) => sum + Number(b.paid_amount || 0), 0)
   );
 
   // 我的总欠费
@@ -430,7 +431,7 @@ export const useFinanceStore = defineStore("finance", () => {
   const totalExpense = computed(() =>
     state.value.expenses
       .filter((e) => e.status === "approved")
-      .reduce((sum, expense) => sum + expense.amount, 0)
+      .reduce((sum, expense) => sum + Number(expense.amount || 0), 0)
   );
 
   // 按类型分组的支出
@@ -445,7 +446,7 @@ export const useFinanceStore = defineStore("finance", () => {
           grouped.set(type, { type, total: 0, items: [] });
         }
         const group = grouped.get(type)!;
-        group.total += expense.amount;
+        group.total += Number(expense.amount || 0);
         group.items.push(expense);
       });
 
@@ -489,11 +490,11 @@ export const useFinanceStore = defineStore("finance", () => {
   });
 
   // 我的维修基金余额
-  const myMFBalance = computed(() => myMFAccount.value?.balance || 0);
+  const myMFBalance = computed(() => Number(myMFAccount.value?.balance || 0));
 
   // 社区维修基金总余额
   const totalMFBalance = computed(() =>
-    state.value.maintenanceFundAccounts.reduce((sum, account) => sum + account.balance, 0)
+    state.value.maintenanceFundAccounts.reduce((sum, account) => sum + Number(account.balance || 0), 0)
   );
 
   // ============================================================
@@ -537,8 +538,8 @@ export const useFinanceStore = defineStore("finance", () => {
         },
       };
 
-      const response = await billingsApi.readMany(query);
-      const items = (Array.isArray(response) ? response : []) as Billing[];
+      const response = await billingsApi.readMany(query) as any;
+      const items = (Array.isArray(response?.data) ? response.data : []) as Billing[];
 
       if (refresh) {
         state.value.billings = items;
@@ -591,8 +592,8 @@ export const useFinanceStore = defineStore("finance", () => {
         },
       };
 
-      const response = await billingPaymentsApi.readMany(query);
-      const items = (Array.isArray(response) ? response : []) as BillingPayment[];
+      const response = await billingPaymentsApi.readMany(query) as any;
+      const items = (Array.isArray(response?.data) ? response.data : []) as BillingPayment[];
 
       if (refresh) {
         state.value.billingPayments = items;
@@ -649,8 +650,8 @@ export const useFinanceStore = defineStore("finance", () => {
         },
       };
 
-      const response = await incomesApi.readMany(query);
-      const items = (Array.isArray(response) ? response : []) as Income[];
+      const response = await incomesApi.readMany(query) as any;
+      const items = (Array.isArray(response?.data) ? response.data : []) as Income[];
 
       if (refresh) {
         state.value.incomes = items;
@@ -704,6 +705,74 @@ export const useFinanceStore = defineStore("finance", () => {
     }
   };
 
+  /**
+   * 根据账期获取物业费实收（权责发生制）
+   * @param periods 账期数组，如 ['2025-01', '2025-02']
+   */
+  const fetchBillingPaymentsByPeriods = async (periods: string[]) => {
+    try {
+      await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
+    } catch (error) {
+      throw error;
+    }
+
+    const communityId = userStore.community?.id;
+    if (!communityId) {
+      throw new Error("无法获取社区信息");
+    }
+
+    try {
+      const query: BillingPaymentQuery = {
+        fields: BILLING_PAYMENT_FIELDS,
+        filter: {
+          community_id: { _eq: communityId },
+          period: { _in: periods },
+        },
+        limit: -1, // 获取所有数据
+      };
+
+      const response = await billingPaymentsApi.readMany(query) as any;
+      // API 直接返回数组，不是 { data: [...] } 格式
+      return (Array.isArray(response) ? response : []) as BillingPayment[];
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  /**
+   * 根据账期获取公共收益
+   * @param periods 账期数组，如 ['2025-01', '2025-02']
+   */
+  const fetchIncomesByPeriods = async (periods: string[]) => {
+    try {
+      await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
+    } catch (error) {
+      throw error;
+    }
+
+    const communityId = userStore.community?.id;
+    if (!communityId) {
+      throw new Error("无法获取社区信息");
+    }
+
+    try {
+      const query: IncomeQuery = {
+        fields: INCOME_FIELDS,
+        filter: {
+          community_id: { _eq: communityId },
+          period: { _in: periods },
+        },
+        limit: -1, // 获取所有数据
+      };
+
+      const response = await incomesApi.readMany(query) as any;
+      // API 直接返回数组，不是 { data: [...] } 格式
+      return (Array.isArray(response) ? response : []) as Income[];
+    } catch (error) {
+      throw error;
+    }
+  };
+
   // ============================================================
   // Actions - Expense Related
   // ============================================================
@@ -745,8 +814,8 @@ export const useFinanceStore = defineStore("finance", () => {
         },
       };
 
-      const response = await expensesApi.readMany(query);
-      const items = (Array.isArray(response) ? response : []) as Expense[];
+      const response = await expensesApi.readMany(query) as any;
+      const items = (Array.isArray(response?.data) ? response.data : []) as Expense[];
 
       if (refresh) {
         state.value.expenses = items;
@@ -803,8 +872,8 @@ export const useFinanceStore = defineStore("finance", () => {
         },
       };
 
-      const response = await employeesApi.readMany(query);
-      const items = (Array.isArray(response) ? response : []) as Employee[];
+      const response = await employeesApi.readMany(query) as any;
+      const items = (Array.isArray(response?.data) ? response.data : []) as Employee[];
 
       if (refresh) {
         state.value.employees = items;
@@ -862,8 +931,8 @@ export const useFinanceStore = defineStore("finance", () => {
         },
       };
 
-      const response = await salaryRecordsApi.readMany(query);
-      const items = (Array.isArray(response) ? response : []) as SalaryRecord[];
+      const response = await salaryRecordsApi.readMany(query) as any;
+      const items = (Array.isArray(response?.data) ? response.data : []) as SalaryRecord[];
 
       if (refresh) {
         state.value.salaryRecords = items;
@@ -940,6 +1009,125 @@ export const useFinanceStore = defineStore("finance", () => {
     }
   };
 
+  /**
+   * 根据账期获取支出记录
+   * @param periods 账期数组，如 ['2025-01', '2025-02']
+   */
+  const fetchExpensesByPeriods = async (periods: string[]) => {
+    try {
+      await userStore.ensureActiveSession({ refreshIfNearExpiry: true });
+    } catch (error) {
+      throw error;
+    }
+
+    const communityId = userStore.community?.id;
+    if (!communityId) {
+      throw new Error("无法获取社区信息");
+    }
+
+    try {
+      const query: ExpenseQuery = {
+        fields: EXPENSE_FIELDS,
+        filter: {
+          community_id: { _eq: communityId },
+          period: { _in: periods },
+          status: { _eq: "approved" }, // 只统计已审核的支出
+        },
+        limit: -1, // 获取所有数据
+      };
+
+      const response = await expensesApi.readMany(query) as any;
+      // API 直接返回数组，不是 { data: [...] } 格式
+      return (Array.isArray(response) ? response : []) as Expense[];
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  /**
+   * 计算指定账期的财务汇总（权责发生制）
+   * @param periods 账期数组，如 ['2025-01', '2025-02']
+   * @returns 财务汇总数据
+   */
+  const calculateFinancialSummary = async (periods: string[]) => {
+    try {
+      // 并行获取三类数据
+      const [billingPayments, incomes, expenses] = await Promise.all([
+        fetchBillingPaymentsByPeriods(periods),
+        fetchIncomesByPeriods(periods),
+        fetchExpensesByPeriods(periods),
+      ]);
+
+      // 计算物业费实收
+      const propertyFeeIncome = billingPayments.reduce(
+        (sum, payment) => sum + Number(payment.amount || 0),
+        0
+      );
+
+      // 计算公共收益
+      const publicIncome = incomes.reduce(
+        (sum, income) => sum + Number(income.amount || 0),
+        0
+      );
+
+      // 计算总收入
+      const totalIncome = propertyFeeIncome + publicIncome;
+
+      // 计算总支出
+      const totalExpense = expenses.reduce(
+        (sum, expense) => sum + Number(expense.amount || 0),
+        0
+      );
+
+      // 计算结余
+      const balance = totalIncome - totalExpense;
+
+      // 按类型分组公共收益
+      const incomesByType = new Map<string, { type: string; total: number; count: number }>();
+      incomes.forEach((income) => {
+        const type = income.income_type;
+        if (!incomesByType.has(type)) {
+          incomesByType.set(type, { type, total: 0, count: 0 });
+        }
+        const group = incomesByType.get(type)!;
+        group.total += Number(income.amount || 0);
+        group.count += 1;
+      });
+
+      // 按类型分组支出
+      const expensesByType = new Map<string, { type: string; total: number; count: number }>();
+      expenses.forEach((expense) => {
+        const type = expense.expense_type;
+        if (!expensesByType.has(type)) {
+          expensesByType.set(type, { type, total: 0, count: 0 });
+        }
+        const group = expensesByType.get(type)!;
+        group.total += Number(expense.amount || 0);
+        group.count += 1;
+      });
+
+      return {
+        // 汇总数据
+        propertyFeeIncome,
+        publicIncome,
+        totalIncome,
+        totalExpense,
+        balance,
+
+        // 分组数据
+        incomesByType: Array.from(incomesByType.values()),
+        expensesByType: Array.from(expensesByType.values()),
+
+        // 原始数据
+        billingPayments,
+        incomes,
+        expenses,
+      };
+    } catch (error) {
+      throw error;
+    }
+  };
+
   // ============================================================
   // Actions - Maintenance Fund Related
   // ============================================================
@@ -971,8 +1159,8 @@ export const useFinanceStore = defineStore("finance", () => {
         limit: 1,
       };
 
-      const response = await maintenanceFundAccountsApi.readMany(query);
-      const items = (Array.isArray(response) ? response : []) as MaintenanceFundAccount[];
+      const response = await maintenanceFundAccountsApi.readMany(query) as any;
+      const items = (Array.isArray(response?.data) ? response.data : []) as MaintenanceFundAccount[];
 
       // 只有一个账户，直接设置
       if (items.length > 0) {
@@ -1025,8 +1213,8 @@ export const useFinanceStore = defineStore("finance", () => {
         },
       };
 
-      const response = await maintenanceFundPaymentsApi.readMany(query);
-      const items = (Array.isArray(response) ? response : []) as MaintenanceFundPayment[];
+      const response = await maintenanceFundPaymentsApi.readMany(query) as any;
+      const items = (Array.isArray(response?.data) ? response.data : []) as MaintenanceFundPayment[];
 
       if (refresh) {
         state.value.maintenanceFundPayments = items;
@@ -1081,8 +1269,8 @@ export const useFinanceStore = defineStore("finance", () => {
         },
       };
 
-      const response = await maintenanceFundUsageApi.readMany(query);
-      const items = (Array.isArray(response) ? response : []) as MaintenanceFundUsage[];
+      const response = await maintenanceFundUsageApi.readMany(query) as any;
+      const items = (Array.isArray(response?.data) ? response.data : []) as MaintenanceFundUsage[];
 
       if (refresh) {
         state.value.maintenanceFundUsage = items;
@@ -1277,6 +1465,8 @@ export const useFinanceStore = defineStore("finance", () => {
     fetchCommunityIncomes,
     createBillingPayment,
     createIncome,
+    fetchBillingPaymentsByPeriods,
+    fetchIncomesByPeriods,
 
     // Expense-related actions
     fetchCommunityExpenses,
@@ -1285,6 +1475,10 @@ export const useFinanceStore = defineStore("finance", () => {
     createExpense,
     createEmployee,
     createSalaryRecords,
+    fetchExpensesByPeriods,
+
+    // Financial summary
+    calculateFinancialSummary,
 
     // Maintenance fund actions
     fetchMyMFAccount,

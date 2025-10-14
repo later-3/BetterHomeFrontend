@@ -255,6 +255,7 @@ export interface BillingPayment {
   amount: number;
   /** @required */
   paid_at: string;
+  period?: string | null;  // 所属账期（YYYY-MM），用于权责发生制统计
   /** @required */
   payment_method: "wechat" | "alipay" | "bank" | "cash" | "pos" | "other";
   payer_name?: string | null;
