@@ -4,6 +4,7 @@ import { storeToRefs } from "pinia";
 import SocialFeedContent from "../../components/SocialFeedContent.vue";
 import UserStatusCard from "../../components/UserStatusCard.vue";
 import { useUserStore } from "@/store/user";
+import env from "@/config/env";
 
 /**
  * 业主圈页面 - 获取业主圈帖子
@@ -16,7 +17,7 @@ const userStore = useUserStore();
 const { loggedIn, token, userInfo } = storeToRefs(userStore);
 
 // 基础配置
-const apiBaseUrl = ref("/api");
+const apiBaseUrl = ref(env.apiBaseUrl);
 const email = ref("molly@mail.com"); // 预设账户
 const password = ref("123"); // 预设密码
 const loading = ref(false);

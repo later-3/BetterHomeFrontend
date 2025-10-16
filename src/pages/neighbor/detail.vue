@@ -182,6 +182,7 @@ import {
 } from "@/services/comments/api";
 import BasicCommentItem from "@ui/comment/components/BasicCommentItem.vue";
 import ReplyInput from "@ui/comment/components/ReplyInput.vue";
+import env from "@/config/env";
 
 const BASE_COMMENT_FIELDS = [
   "id",
@@ -216,7 +217,7 @@ const selectedPost = ref<any>(null);
 const allPosts = ref<any[]>([]);
 
 // 评论调试相关状态
-const apiBaseUrl = ref("/api");
+const apiBaseUrl = ref(env.apiBaseUrl);
 const commentLoading = ref(false);
 const requestPreview = ref("");
 const responseText = ref("");

@@ -49,6 +49,15 @@
       }
     },
     {
+      "name": "debug-image",
+      "path": "pages/debug/image-fetch",
+      "style": {
+        "navigationBarTitleText": "图片调试",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
       "name": "neighbor-detail",
       "path": "pages/neighbor/detail",
       "style": {
