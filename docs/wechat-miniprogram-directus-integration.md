@@ -199,6 +199,28 @@ export function createUniFetch() {
 
 创建 `src/utils/MiniResponse.ts` 实现 Response 接口。
 
+## 混合使用 Directus SDK 与 REST API
+
+### 现场排查记录
+
+1. 微信小程序工单页最初在 `Console` 中打印的 `firstFiles` 仅为 `[146, 147]` 等整型 ID，而 H5 端 / REST 调用会返回带 `directus_files_id` 对象的完整结构。
+2. 新增调试页 `src/pages/debug/image-fetch.vue`，分别用 `uni.request` 和 `workOrdersApi.readMany` 对比：REST 能拿到完整对象，SDK 仍退化为数字。由此锁定问题出在小程序环境的 polyfill 与 SDK 组合。
+3. 为了验证渲染链路，调试页还加入了文件 ID 解析与预览功能，确认 REST 返回的文件可直接预览，说明接口数据没有问题。
+4. 工单 store 最终改为统一走 REST（先前按 `isMpWeixin` 判断），微信端随即恢复图片 / 视频展示，Console 也打印出解析后的文件对象。
+
+### 最终方案
+
+- **工单相关接口全部使用 REST**：`src/store/workOrders.ts` 中的获取列表 / 详情 / 日期聚合等方法改为直接构造 REST 请求（通过 `serializeRestQuery` + `uni.request`），保证微信端能获得完整的 `directus_files_id`。目前暂时在所有平台强制走 REST，后续可视情况再切换回 SDK。
+- **其他模块继续沿用 Directus SDK**：登陆、用户资料等仍保持原有实现，避免一次性重写大量调用。
+- **调试页面保留排查工具**：`/pages/debug/image-fetch` 提供 REST / SDK 对比、文件预览等功能，方便后续回归或再定位类似问题。
+
+使用提示：
+
+1. REST 分支需携带 `Authorization` Header，并处理非 2xx 状态码，与 SDK 语义保持一致。
+2. 如果未来 polyfill 达到浏览器级别兼容，可在 store 中重新切换回 SDK（保留的封装函数 `readWorkOrdersRaw` 支持这一点）。
+3. 提交 PR 时请注明“工单 REST 混用方案”，提醒其他开发者不要误以为 SDK 在小程序环境已经完全可靠。
+
+
 ### 方案 2: 图片资源显示问题（临时方案）
 
 #### 开发阶段解决方案
