@@ -4,6 +4,9 @@ import type { Query, QueryItem } from "@directus/sdk";
 
 import type { Schema, WorkOrder } from "@/@types/directus-schema";
 import { workOrdersApi } from "@/utils/directus";
+import env from "@/config/env";
+import { isMpWeixin } from "@/utils/platform";
+import env from "@/config/env";
 import dayjs from "dayjs";
 import { useUserStore } from "@/store/user";
 
@@ -88,6 +91,143 @@ const DETAIL_FIELDS = [
   "feedback",
   "community_id.address",
 ] as unknown as NonNullable<WorkOrderQuery["fields"]>;
+
+const REST_LIST_FIELDS: string[] = [...(SAFE_FIELDS as unknown as string[])];
+
+const REST_DETAIL_FIELDS: string[] = [...(DETAIL_FIELDS as unknown as string[])];
+
+const REST_LATEST_FIELDS: string[] = [
+  "id",
+  "date_created",
+  "submitter_id.id",
+  "submitter_id.first_name",
+  "submitter_id.last_name",
+  "submitter_id.avatar",
+  "files.id",
+  "files.directus_files_id.*",
+];
+
+type RestQueryOptions = {
+  limit?: number;
+  page?: number;
+  sort?: string[];
+  filter?: WorkOrderQuery["filter"];
+};
+
+// 在微信小程序环境下直接使用 REST API，以避免 Directus SDK + polyfill 丢失嵌套字段。
+const useRestForWorkOrders = true;
+
+function encodeParam(key: string, value: string): string {
+  return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+}
+
+function serializeRestQuery(
+  fields: string[],
+  options: RestQueryOptions = {}
+): string {
+  const segments: string[] = [];
+  const { limit, page, sort, filter } = options;
+
+  if (typeof limit === "number") {
+    segments.push(encodeParam("limit", String(limit)));
+  }
+  if (typeof page === "number") {
+    segments.push(encodeParam("page", String(page)));
+  }
+  if (Array.isArray(sort)) {
+    sort.forEach((value) => {
+      segments.push(encodeParam("sort[]", value));
+    });
+  }
+
+  fields.forEach((field) => {
+    segments.push(encodeParam("fields[]", field));
+  });
+
+  if (filter && Object.keys(filter).length > 0) {
+    segments.push(encodeParam("filter", JSON.stringify(filter)));
+  }
+
+  return segments.join("&");
+}
+
+async function performRestRequest<T>(
+  path: string,
+  queryString: string | null,
+  token: string | undefined
+): Promise<T> {
+  const url = `${env.directusUrl}${path}${queryString ? `?${queryString}` : ""}`;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await new Promise<UniApp.RequestSuccessCallbackResult>((resolve, reject) => {
+    uni.request({
+      url,
+      method: "GET",
+      header: headers,
+      success: resolve,
+      fail: (error) => {
+        reject(new Error(error?.errMsg ?? "Network request failed"));
+      },
+    });
+  });
+
+  if (response.statusCode >= 200 && response.statusCode < 300) {
+    const payload = (response.data as any)?.data ?? response.data;
+    return payload as T;
+  }
+
+  throw new Error(
+    `Directus request failed: ${response.statusCode} ${JSON.stringify(response.data)}`
+  );
+}
+
+async function readWorkOrdersRaw(
+  query: WorkOrderQuery,
+  token: string | undefined,
+  fieldsOverride?: string[]
+): Promise<any[]> {
+  if (!useRestForWorkOrders) {
+    const response = await workOrdersApi.readMany(query);
+    return Array.isArray(response) ? response : [];
+  }
+
+  console.log("[work-order-store] REST mode: work orders list");
+  const queryString = serializeRestQuery(fieldsOverride ?? REST_LIST_FIELDS, {
+    limit: query.limit,
+    page: query.page,
+    sort: query.sort as string[] | undefined,
+    filter: query.filter,
+  });
+
+  return performRestRequest<any[]>("/items/work_orders", queryString, token);
+}
+
+async function readWorkOrderDetailRaw(
+  id: string,
+  query: WorkOrderItemQuery | undefined,
+  token: string | undefined
+): Promise<any> {
+  if (!useRestForWorkOrders) {
+    return workOrdersApi.readOne(id, query);
+  }
+
+  console.log("[work-order-store] REST mode: work order detail", id);
+  const queryString = serializeRestQuery(REST_DETAIL_FIELDS, {
+    filter: query?.filter,
+  });
+
+  return performRestRequest<any>(
+    `/items/work_orders/${id}`,
+    queryString,
+    token
+  );
+}
 
 // 规范化工单数据，确保类型安全
 const normalizeWorkOrder = (item: any): WorkOrder => ({
@@ -242,9 +382,35 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
         }
       }
 
-      const response = await workOrdersApi.readMany(query);
-      const workOrderItems: WorkOrder[] = Array.isArray(response)
-        ? response.map(normalizeWorkOrder)
+      if (useRestForWorkOrders && userStore.token) {
+        console.log(
+          "[work-order-store] request token prefix",
+          userStore.token.slice(0, 12)
+        );
+      }
+
+      if (useRestForWorkOrders) {
+        const serialized = serializeRestQuery(REST_LIST_FIELDS, {
+          limit: query.limit,
+          page: query.page,
+          sort: query.sort as string[] | undefined,
+          filter: query.filter,
+        });
+        console.log(
+          "[work-order-store] effective request",
+          `${env.directusUrl}/items/work_orders?${serialized}`
+        );
+      }
+
+      const rawItems = await readWorkOrdersRaw(query, userStore.token);
+      console.log("[work-order-store] raw response sample", {
+        query,
+        first: Array.isArray(rawItems) ? rawItems[0] : null,
+        firstFiles:
+          Array.isArray(rawItems) && rawItems[0]?.files ? rawItems[0].files : null,
+      });
+      const workOrderItems: WorkOrder[] = Array.isArray(rawItems)
+        ? rawItems.map(normalizeWorkOrder)
         : [];
 
       const filteredItems = filterBySubmitter(
@@ -256,6 +422,16 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
         state.value.items = filteredItems;
       } else {
         state.value.items = [...state.value.items, ...filteredItems];
+      }
+
+      if (filteredItems.length) {
+        console.log("[work-order-store] received items", filteredItems.map((item) => ({
+          id: item.id,
+          fileCount: Array.isArray(item.files) ? item.files.length : null,
+          firstFile: Array.isArray(item.files) && item.files.length > 0 ? item.files[0] : null,
+        })));
+      } else {
+        console.log("[work-order-store] received items but no attachments");
       }
 
       const received = filteredItems.length;
@@ -365,9 +541,9 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
         },
       };
 
-      const response = await workOrdersApi.readMany(query);
-      const workOrderItems: WorkOrder[] = Array.isArray(response)
-        ? response.map(normalizeWorkOrder)
+      const rawItems = await readWorkOrdersRaw(query, userStore.token);
+      const workOrderItems: WorkOrder[] = Array.isArray(rawItems)
+        ? rawItems.map(normalizeWorkOrder)
         : [];
 
       const filteredItems = filterBySubmitter(workOrderItems, submitterId);
@@ -436,9 +612,9 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
         query.filter = { _and: filters } as any;
       }
 
-      const response = await workOrdersApi.readMany(query);
-      const workOrderItems: WorkOrder[] = Array.isArray(response)
-        ? response.map(normalizeWorkOrder)
+      const rawItems = await readWorkOrdersRaw(query, userStore.token);
+      const workOrderItems: WorkOrder[] = Array.isArray(rawItems)
+        ? rawItems.map(normalizeWorkOrder)
         : [];
 
       const filteredItems = filterBySubmitter(workOrderItems, submitterId);
@@ -524,9 +700,13 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
         };
       }
 
-      const response = await workOrdersApi.readMany(query);
-      const workOrderItems: WorkOrder[] = Array.isArray(response)
-        ? response.map(normalizeWorkOrder)
+      const rawItems = await readWorkOrdersRaw(
+        query,
+        userStore.token,
+        useRestForWorkOrders ? REST_LATEST_FIELDS : undefined
+      );
+      const workOrderItems: WorkOrder[] = Array.isArray(rawItems)
+        ? rawItems.map(normalizeWorkOrder)
         : [];
 
       const filteredItems = filterBySubmitter(workOrderItems, submitterId);
@@ -584,9 +764,13 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
       sort: ["date_created"],
     };
 
-    const response = await workOrdersApi.readMany(query as any);
-    const records = Array.isArray(response)
-      ? (response as Array<{ date_created?: string | null }>)
+    const rawRecords = await readWorkOrdersRaw(
+      query as WorkOrderQuery,
+      userStore.token,
+      useRestForWorkOrders ? ["date_created"] : undefined
+    );
+    const records = Array.isArray(rawRecords)
+      ? (rawRecords as Array<{ date_created?: string | null }>)
       : [];
     const dateSet = new Set<string>();
 
@@ -611,7 +795,7 @@ export const useWorkOrderStore = defineStore("work-orders", () => {
         fields: DETAIL_FIELDS,
       };
 
-      const response = await workOrdersApi.readOne(id, query);
+      const response = await readWorkOrderDetailRaw(id, query, userStore.token);
       return normalizeWorkOrder(response);
     } catch (error) {
       console.error("获取工单详情失败", error);

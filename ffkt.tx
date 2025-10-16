@@ -1,0 +1,31 @@
+🔧 修复外键字段类型...
+================================================
+
+📋 修复 billing_payments.billing_id...
+失败
+✅ billing_payments.billing_id 已修复
+
+📋 修复 salary_records.employee_id...
+失败
+✅ salary_records.employee_id 已修复
+
+📋 修复 salary_records.expense_id...
+失败
+✅ salary_records.expense_id 已修复
+
+📋 修复 maintenance_fund_payments.account_id...
+失败
+✅ maintenance_fund_payments.account_id 已修复
+
+================================================
+✅ 所有外键字段类型已修复！
+
+📋 已修复的字段:
+   - billing_payments.billing_id: UUID → integer
+   - salary_records.employee_id: UUID → integer
+   - salary_records.expense_id: UUID → integer
+   - maintenance_fund_payments.account_id: UUID → integer
+
+📋 下一步:
+   1. 重新运行数据生成脚本: node scripts/fix-missing-data.js
+   2. 验证数据是否正确创建

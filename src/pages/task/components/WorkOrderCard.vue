@@ -123,10 +123,26 @@ const mediaItems = computed(() => {
           // 图片：使用缩略图（100x100）提升列表页加载速度
           const thumbnailUrl = getThumbnailUrl(directusFile, 100, 100);
           if (thumbnailUrl) {
+            const originalUrl = getFileUrl(directusFile);
+            console.log("[work-order-card] image media", {
+              workOrderId: workOrder.value.id,
+              fileId: directusFile.id,
+              type: directusFile.type,
+              thumbnailUrl,
+              originalUrl,
+            });
             items.push({ type: 'image', url: thumbnailUrl });
           }
         } else if (isVideoFile(directusFile)) {
           // 视频：显示播放图标
+          const originalUrl = getFileUrl(directusFile);
+          console.log("[work-order-card] video media", {
+            workOrderId: workOrder.value.id,
+            fileId: directusFile.id,
+            type: directusFile.type,
+            thumbnailUrl: null,
+            originalUrl,
+          });
           items.push({ type: 'video', label: '视频' });
         }
       }

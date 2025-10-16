@@ -179,6 +179,17 @@ async function goToFinanceV2() {
     });
   }
 }
+
+async function goToImageDebug() {
+  try {
+    await uni.navigateTo({ url: "/pages/debug/image-fetch" });
+  } catch (error: any) {
+    uni.showToast({
+      title: error?.message || "无法打开调试页面",
+      icon: "none",
+    });
+  }
+}
 </script>
 
 <template>
@@ -230,6 +241,13 @@ async function goToFinanceV2() {
             icon="list"
             isLink
             @click="goToMyBillings"
+          />
+          <up-cell
+            title="图片调试"
+            value="查看附件响应"
+            icon="photo"
+            isLink
+            @click="goToImageDebug"
           />
         </up-cell-group>
 

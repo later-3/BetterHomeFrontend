@@ -187,6 +187,13 @@ const imageUrls = computed(() => {
 
     const url = getThumbnailUrl(file, 500, 500) ?? getFileUrl(file);
     if (url) {
+      console.log("[work-order-detail] image media", {
+        workOrderId: detail.value?.id,
+        fileId: file.id,
+        type: file.type,
+        thumbnailUrl: getThumbnailUrl(file, 500, 500),
+        originalUrl: getFileUrl(file),
+      });
       urls.push(url);
     }
   }
@@ -209,6 +216,14 @@ const videoResources = computed<VideoResource[]>(() => {
 
     const url = getFileUrl(file);
     if (!url) continue;
+
+    console.log("[work-order-detail] video media", {
+      workOrderId: detail.value?.id,
+      fileId: file.id,
+      type: file.type,
+      thumbnailUrl: null,
+      originalUrl: url,
+    });
 
     videos.push({
       id: file.id,

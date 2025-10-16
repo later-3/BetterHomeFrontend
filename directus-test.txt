@@ -1,0 +1,34 @@
+🔍 测试 Directus 连接...
+
+1️⃣ 测试服务器连接:
+HTTP Status: 200
+
+2️⃣ 测试 Token 有效性:
+{"data":{"id":"4241c424-0bd4-4f85-90b6-31cb57d31b8e","first_name":"Admin","last_name":null,"email":"dbml@test.com","password":"**********","location":null,"title":null,"description":null,"tags":null,"
+
+3️⃣ 查询所有社区:
+{"data":[{"id":"2a5c769e-9909-4331-99b3-983c8b1175c6","name":"兰亭雅苑"},{"id":"b00af342-66c7-4e33-a2b4-a90e1a14be71","name":"国奥村"}]}
+
+4️⃣ 查询兰亭雅苑社区信息:
+{"data":{"id":"2a5c769e-9909-4331-99b3-983c8b1175c6","name":"兰亭雅苑"}}
+
+5️⃣ 查询所有用户（前5个）:
+{"data":[{"id":"1030a8c2-888e-4ff9-a9e8-d1b6a7c3d8ea","first_name":"徐若楠","last_name":null,"email":"user09@test.com","community_id":"2a5c769e-9909-4331-99b3-983c8b1175c6"},{"id":"1825ab24-03e2-4bab-891a-53913f43df40","first_name":"bob","last_name":null,"email":"bob@test.com","community_id":"2a5c769e-9909-4331-99b3-983c8b1175c6"},{"id":"26411dae-64fe-40e8-8aa6-35cf1126888d","first_name":"林浩然","last_name":null,"email":"user08@test.com","community_id":"2a5c769e-9909-4331-99b3-983c8b1175c6"},{"id":"4241c424-0bd4-4f85-90b6-31cb57d31b8e","first_name":"Admin","last_name":null,"email":"dbml@test.com","community_id":"2a5c769e-9909-4331-99b3-983c8b1175c6"},{"id":"4d14cc70-441a-4237-844f-cd29bab97fbe","first_name":"陈雅宁","last_name":null,"email":"user01@test.com","community_id":"2a5c769e-9909-4331-99b3-983c8b1175c6"}]}
+
+6️⃣ 查询兰亭雅苑的用户（使用 users 端点）:
+
+
+7️⃣ 查询所有楼栋（前5个）:
+{"data":[{"id":"22e6f18d-0c77-43fb-ae30-e2e37ebee00e","name":"1栋","community_id":"b00af342-66c7-4e33-a2b4-a90e1a14be71"},{"id":"50be3933-f799-4cbd-82b0-df80a93cd03b","name":"观松楼","community_id":"2a5c769e-9909-4331-99b3-983c8b1175c6"},{"id":"69d4df83-b590-4cd9-8af9-db2e10d00ae8","name":"咏兰阁","community_id":"2a5c769e-9909-4331-99b3-983c8b1175c6"},{"id":"ceddcef1-0b04-4d63-9d27-8fa631a682d1","name":"邀月庭","community_id":"2a5c769e-9909-4331-99b3-983c8b1175c6"},{"id":"e086bc8d-c777-4ba0-a6ff-714690a06cb8","name":"听竹轩","community_id":"2a5c769e-9909-4331-99b3-983c8b1175c6"}]}
+
+8️⃣ 查询兰亭雅苑的楼栋:
+
+
+================================================
+✅ 测试完成！
+
+📋 请检查上面的输出：
+   - 如果看到 HTTP Status: 200，说明服务器正常
+   - 如果看到用户信息，说明 token 有效
+   - 如果看到社区列表，说明可以访问数据
+   - 如果某些查询返回空数组 []，说明该社区确实没有数据
