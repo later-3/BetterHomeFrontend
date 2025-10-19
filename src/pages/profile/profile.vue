@@ -123,25 +123,6 @@ async function handleLogout() {
   await uni.switchTab({ url: "/pages/profile/profile" });
 }
 
-async function goToFinance() {
-  if (!isLoggedIn.value) {
-    uni.showToast({
-      title: "请先登录",
-      icon: "none",
-    });
-    return;
-  }
-
-  try {
-    await uni.navigateTo({ url: "/pages/finance/index" });
-  } catch (error: any) {
-    uni.showToast({
-      title: error?.message || "无法跳转到财务页面",
-      icon: "none",
-    });
-  }
-}
-
 async function goToMyBillings() {
   if (!isLoggedIn.value) {
     uni.showToast({
@@ -171,7 +152,7 @@ async function goToFinanceV2() {
   }
 
   try {
-    await uni.navigateTo({ url: "/pages/finance/finance-v2" });
+    await uni.switchTab({ url: "/pages/finance/finance-v2" });
   } catch (error: any) {
     uni.showToast({
       title: error?.message || "无法跳转到财务页面",
@@ -180,16 +161,25 @@ async function goToFinanceV2() {
   }
 }
 
-async function goToImageDebug() {
+async function goToCommunityBillings() {
+  if (!isLoggedIn.value) {
+    uni.showToast({
+      title: "请先登录",
+      icon: "none",
+    });
+    return;
+  }
+
   try {
-    await uni.navigateTo({ url: "/pages/debug/image-fetch" });
+    await uni.navigateTo({ url: "/pages/finance/community-billings" });
   } catch (error: any) {
     uni.showToast({
-      title: error?.message || "无法打开调试页面",
+      title: error?.message || "无法跳转到物业费管理页面",
       icon: "none",
     });
   }
 }
+
 </script>
 
 <template>
@@ -229,13 +219,6 @@ async function goToImageDebug() {
             @click="goToFinanceV2"
           />
           <up-cell
-            title="财务总览"
-            value="查看小区收支情况"
-            icon="money-circle"
-            isLink
-            @click="goToFinance"
-          />
-          <up-cell
             title="我的物业费"
             value="查看缴费记录"
             icon="list"
@@ -243,11 +226,11 @@ async function goToImageDebug() {
             @click="goToMyBillings"
           />
           <up-cell
-            title="图片调试"
-            value="查看附件响应"
-            icon="photo"
+            title="小区物业费管理"
+            value="查看所有用户缴费情况"
+            icon="account-circle"
             isLink
-            @click="goToImageDebug"
+            @click="goToCommunityBillings"
           />
         </up-cell-group>
 
