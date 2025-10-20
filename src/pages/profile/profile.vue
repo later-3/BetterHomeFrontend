@@ -180,6 +180,25 @@ async function goToCommunityBillings() {
   }
 }
 
+async function goToParkingRevenue() {
+  if (!isLoggedIn.value) {
+    uni.showToast({
+      title: "请先登录",
+      icon: "none",
+    });
+    return;
+  }
+
+  try {
+    await uni.navigateTo({ url: "/pages/parking/parking-revenue-overview" });
+  } catch (error: any) {
+    uni.showToast({
+      title: error?.message || "无法跳转到停车费收益页面",
+      icon: "none",
+    });
+  }
+}
+
 </script>
 
 <template>
@@ -231,6 +250,13 @@ async function goToCommunityBillings() {
             icon="account-circle"
             isLink
             @click="goToCommunityBillings"
+          />
+          <up-cell
+            title="停车费收益"
+            value="查看停车费收益明细"
+            icon="car"
+            isLink
+            @click="goToParkingRevenue"
           />
         </up-cell-group>
 

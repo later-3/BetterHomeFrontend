@@ -135,6 +135,24 @@
       }
     },
     {
+      "name": "parking-revenue-overview",
+      "path": "pages/parking/parking-revenue-overview",
+      "style": {
+        "navigationBarTitleText": "停车费收益",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "name": "parking-management-detail",
+      "path": "pages/parking/parking-management-detail",
+      "style": {
+        "navigationBarTitleText": "停车管理费详情",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
       "name": "debug-comment",
       "path": "pages/debug/comment",
       "style": {
