@@ -1,6 +1,20 @@
 {
   "pages": [
     {
+      "name": "finance-v2",
+      "path": "pages/finance/finance-v2",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "name": "notice",
+      "path": "pages/notice/notice",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "name": "create",
       "path": "pages/create/create",
       "style": {
@@ -67,15 +81,6 @@
       }
     },
     {
-      "name": "finance-overview",
-      "path": "pages/finance/index",
-      "style": {
-        "navigationBarTitleText": "财务总览",
-        "navigationBarBackgroundColor": "#ffffff",
-        "navigationBarTextStyle": "black"
-      }
-    },
-    {
       "name": "finance-detail",
       "path": "pages/finance/detail",
       "style": {
@@ -103,10 +108,39 @@
       }
     },
     {
-      "name": "finance-v2",
-      "path": "pages/finance/finance-v2",
+      "name": "community-billings",
+      "path": "pages/finance/community-billings",
       "style": {
-        "navigationStyle": "custom"
+        "navigationBarTitleText": "小区物业费管理",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "name": "user-billing-detail",
+      "path": "pages/finance/user-billing-detail",
+      "style": {
+        "navigationBarTitleText": "物业费详情",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "name": "payment-detail",
+      "path": "pages/finance/payment-detail",
+      "style": {
+        "navigationBarTitleText": "缴费详情",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "name": "debug-comment",
+      "path": "pages/debug/comment",
+      "style": {
+        "navigationBarTitleText": "评论调试",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
       }
     }
   ],
@@ -135,6 +169,18 @@
     "iconWidth": "22px",
     "spacing": "3px",
     "list": [
+      {
+        "pagePath": "pages/finance/finance-v2",
+        "iconPath": "static/icons/finance.png",
+        "selectedIconPath": "static/icons/finance-active.png",
+        "text": "财务"
+      },
+      {
+        "pagePath": "pages/notice/notice",
+        "iconPath": "static/icons/notice.png",
+        "selectedIconPath": "static/icons/notice-active.png",
+        "text": "公告"
+      },
       {
         "pagePath": "pages/create/create",
         "iconPath": "static/icons/create.png",

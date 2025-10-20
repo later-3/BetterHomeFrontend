@@ -7,13 +7,22 @@
 
 | 项目 | 内容 |
 |------|------|
-| **文档版本** | v2.3 |
+| **文档版本** | v2.5 |
 | **创建日期** | 2025-10-13 |
-| **最后更新** | 2025-10-13 |
+| **最后更新** | 2025-10-19 |
 | **技术负责人** | 待定 |
 | **目标读者** | 开发人员、测试人员 |
 
-**重要说明（v2.3 更新）**：
+**重要说明（v2.5 更新 - 2025-10-19）**：
+- ⚠️ **数据模型简化**：物业费账单和缴费记录的数据模型已简化
+  - `billings`表：移除`paid_amount`和`status`字段，改用`is_paid`布尔字段
+  - `billing_payments`表：移除`billing_id`外键，新增`paid_periods`数组字段
+  - **不使用触发器/Hooks**：所有业务逻辑在应用层实现
+  - **FIFO原则**：缴费必须从最早未缴月份开始
+- ⚠️ **文档中的部分示例代码尚未更新**：涉及`billing_amount`、`paid_amount`、`status`、`billing_id`的代码示例需要根据新数据模型调整
+- 详见 [DATA_MODEL.md](./DATA_MODEL.md) 获取最新的数据模型定义
+
+**MVP 阶段说明（v2.3）**：
 - MVP 阶段只开发**业主端小程序**（5个页面）
 - **业主端仅提供查看功能，不包含在线支付**（在线支付为 v2.0+ 功能）
 - 物业管理员功能通过 **Directus 后台** 或简单网页实现（不在小程序中开发）
@@ -1210,6 +1219,199 @@ export const getLabel = (
 };
 ```
 
+### 2.5 物业费管理前端实现（小区物业费管理）
+
+**实现日期**：2025-10-20
+
+#### 2.5.1 功能概述
+
+为物业管理员提供查看所有业主缴费情况的功能，包括：
+- **小区物业费管理页**：展示所有业主列表和欠费状态
+- **业主物业费详情页**：展示单个业主的缴费进度和缴费记录
+- **缴费详情页**：展示单笔缴费的详细信息
+
+#### 2.5.2 页面结构
+
+```
+src/pages/finance/
+├── community-billings.vue      # 小区物业费管理（业主列表）
+├── user-billing-detail.vue     # 业主物业费详情
+└── payment-detail.vue           # 缴费详情
+```
+
+#### 2.5.3 核心实现
+
+**1. 小区物业费管理页（community-billings.vue）**
+
+显示逻辑：
+- 只显示头像、名字和欠费状态（简洁设计）
+- 欠费判断：基于上个月是否缴费（FIFO原则）
+- 排序：欠费用户在前，未欠费用户在后
+
+```typescript
+// 获取上个月的 period
+function getLastMonthPeriod(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0-11
+
+  if (month === 0) {
+    return `${year - 1}-12`;
+  } else {
+    return `${year}-${String(month).padStart(2, "0")}`;
+  }
+}
+
+// 判断用户是否欠费
+const lastMonthBilling = billings.find(
+  b => b.owner_id === user.id && b.period === lastMonthPeriod
+);
+
+if (lastMonthBilling?.is_paid) {
+  statusText = "未欠费";
+} else {
+  statusText = "欠费";
+}
+```
+
+**2. 业主物业费详情页（user-billing-detail.vue）**
+
+展示内容：
+- **缴费进度**：进度条显示已缴月数（如 8/12 月）
+- **统计信息**：月物业费、总应缴、已缴金额、欠费金额
+- **月份标签**：显示每月的缴费状态
+- **缴费记录列表**：每笔缴费记录卡片（可点击查看详情）
+
+**3. 缴费详情页（payment-detail.vue）**
+
+展示缴费信息：
+- 缴费金额、时间、月份
+- 支付方式、缴费人信息
+- 交易单号（可复制）
+- 缴费凭证图片（可预览）
+
+#### 2.5.4 Directus SDK 使用要点
+
+**重要发现**：
+
+1. **`readMany()` 返回数组而非对象**
+   ```typescript
+   // ❌ 错误：期望 { data: [...] } 结构
+   const billings = Array.isArray(result?.data) ? result.data : []
+
+   // ✅ 正确：直接返回数组
+   const billings = Array.isArray(result) ? result : []
+   ```
+
+2. **limit 参数**
+   - SDK 不支持 `limit: -1` 获取所有数据
+   - 使用合理的数值（如 1000）替代
+
+   ```typescript
+   // ❌ 错误
+   limit: -1
+
+   // ✅ 正确
+   limit: 1000
+   ```
+
+3. **filter 操作符限制**
+   - `period` 是 string 类型，不支持 `_gte`/`_lte` 比较操作符
+   - 使用 `_in` 数组匹配
+
+   ```typescript
+   // ❌ 错误：string 字段不支持比较操作符
+   filter: {
+     period: { _gte: "2025-01", _lte: "2025-10" }
+   }
+
+   // ✅ 正确：使用 _in 操作符
+   filter: {
+     period: {
+       _in: ["2025-01", "2025-02", ..., "2025-12"]
+     }
+   }
+   ```
+
+4. **核心集合查询**
+   - 不能使用 `readItems` 查询核心集合（如 directus_roles）
+   - 使用专用函数 `readRoles`, `readUsers` 等
+
+   ```typescript
+   // ❌ 错误
+   await directusClient.request(
+     readItems("directus_roles", {...})
+   );
+
+   // ✅ 正确
+   await directusClient.request(
+     readRoles({...})
+   );
+   ```
+
+5. **头像 URL 构建**
+   - 使用 `env.directusUrl` 构建资源 URL
+   - 参考 profile 页面的 `buildAssetUrl` 函数
+
+   ```typescript
+   function buildAssetUrl(file: DirectusFile | string): string {
+     const fileId = typeof file === "string" ? file : file.id;
+     return `${env.directusUrl}/assets/${fileId}`;
+   }
+   ```
+
+6. **权限问题**
+   - 查询其他用户信息可能遇到 403 错误
+   - 解决方案：通过 URL 参数传递用户信息，避免重复查询
+
+   ```typescript
+   // 列表页传递用户信息
+   goToUserDetail(user: UserBillingInfo) {
+     uni.navigateTo({
+       url: `/pages/finance/user-billing-detail?userId=${user.id}&userName=${encodeURIComponent(user.name)}&userAvatar=${encodeURIComponent(user.avatar)}`,
+     });
+   }
+
+   // 详情页接收参数
+   onLoad((options: any) => {
+     userId.value = options.userId;
+     userName.value = decodeURIComponent(options.userName);
+     userAvatar.value = decodeURIComponent(options.userAvatar);
+   });
+   ```
+
+7. **uni-app 生命周期钩子**
+   - `onLoad` 是 uni-app 的钩子，从 `@dcloudio/uni-app` 导入
+
+   ```typescript
+   // ❌ 错误
+   import { onLoad } from "vue";
+
+   // ✅ 正确
+   import { onLoad } from "@dcloudio/uni-app";
+   ```
+
+#### 2.5.5 测试数据脚本
+
+测试数据生成脚本位于 `scripts/test-data/`：
+
+```bash
+# 生成测试数据
+node scripts/test-data/generate-billing-data.js local
+
+# 导入测试数据
+node scripts/test-data/import-billing-data.js local
+
+# 一键导入（推荐）
+./scripts/test-data/quick-import.sh local
+```
+
+配置文件 `scripts/test-data/billing-config.json` 可调整：
+- 测试数据年份和月份
+- 物业费单价
+- 缴费场景比例（全部缴清/部分缴费/完全欠费）
+- 支付方式权重
+
 ---
 
 ## 3. 代码规范
@@ -2030,6 +2232,7 @@ npx directus database migrate:down
 | v2.0 | 2025-10-13 | Claude | 完善开发文档，增加详细实现方案和测试指南 |
 | v2.2 | 2025-10-13 | Claude | **架构调整**：物业端功能使用 Directus 后台，MVP 只开发业主端小程序；更新测试用例为 Directus 后台操作 |
 | v2.3 | 2025-10-13 | Claude | **业主缴费调整**：明确 MVP 不包含在线支付功能，业主端仅展示账单和缴费记录 |
+| v2.6 | 2025-10-20 | Claude | **新增物业费管理前端**：实现小区物业费管理页面、业主详情页、缴费详情页；记录 Directus SDK 使用要点和常见问题 |
 
 **维护责任**：开发团队
 

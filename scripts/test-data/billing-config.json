@@ -1,0 +1,41 @@
+{
+  "description": "财务测试数据配置文件",
+  "version": "2.5",
+  "config": {
+    "year": 2025,
+    "months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "unit_price": 8,
+    "due_day": 25,
+    "payment_scenarios": {
+      "fully_paid": {
+        "description": "全部缴清（缴纳了1-10月所有费用）",
+        "ratio": 0.6,
+        "payment_pattern": "all"
+      },
+      "partially_paid": {
+        "description": "部分缴费（缴纳了部分月份）",
+        "ratio": 0.3,
+        "payment_pattern": "random",
+        "months_paid_range": [4, 8]
+      },
+      "unpaid": {
+        "description": "完全欠费（一个月都没缴）",
+        "ratio": 0.1,
+        "payment_pattern": "none"
+      }
+    },
+    "payment_methods": [
+      {"method": "wechat", "weight": 0.5},
+      {"method": "alipay", "weight": 0.3},
+      {"method": "bank", "weight": 0.15},
+      {"method": "cash", "weight": 0.05}
+    ]
+  },
+  "notes": {
+    "1": "ratio（比例）总和应为1.0",
+    "2": "months_paid_range是[最少缴纳月数, 最多缴纳月数]",
+    "3": "payment_pattern: all=全部缴清, random=随机缴几个月, none=不缴费",
+    "4": "缴费遵循FIFO原则：必须从1月开始往后缴",
+    "5": "每户的area（面积）会从用户profile中获取，如果没有则随机生成80-150m²"
+  }
+}

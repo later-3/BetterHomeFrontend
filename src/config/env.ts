@@ -7,9 +7,9 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 // 开发环境配置（本地开发用）
 const developmentConfig = {
-  baseUrl: "https://www.betterhome.ink",
-  apiBaseUrl: "https://www.betterhome.ink",
-  directusUrl: "https://www.betterhome.ink",
+  baseUrl: "http://localhost:8055",
+  apiBaseUrl: "http://localhost:8055",
+  directusUrl: "http://localhost:8055",
   residentRoleId: "e30e1f74-dd04-46c6-90ed-4162852b5da4",
 };
 
