@@ -37,17 +37,17 @@
         </view>
 
         <!-- 租金 -->
-        <view class="revenue-card">
+        <view class="revenue-card clickable" @click="goToRentList">
           <text class="card-label">租金</text>
           <text class="card-value">¥{{ rentRevenue.toFixed(2) }}</text>
-          <text class="card-hint">公共车位租金</text>
+          <text class="card-hint">点击查看详情 ></text>
         </view>
 
         <!-- 临停费 -->
-        <view class="revenue-card">
+        <view class="revenue-card clickable" @click="goToTempList">
           <text class="card-label">临停费</text>
           <text class="card-value">¥{{ tempRevenue.toFixed(2) }}</text>
-          <text class="card-hint">临时停车收入</text>
+          <text class="card-hint">点击查看详情 ></text>
         </view>
       </view>
     </view>
@@ -130,6 +130,20 @@ async function loadData() {
 function goToManagementDetail() {
   uni.navigateTo({
     url: "/pages/parking/parking-management-detail",
+  });
+}
+
+// 跳转到临停列表
+function goToTempList() {
+  uni.navigateTo({
+    url: "/pages/parking/parking-temp-list",
+  });
+}
+
+// 跳转到租金列表
+function goToRentList() {
+  uni.navigateTo({
+    url: "/pages/parking/parking-rent-list",
   });
 }
 

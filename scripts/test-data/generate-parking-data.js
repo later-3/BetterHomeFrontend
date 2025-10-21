@@ -46,15 +46,27 @@ console.log('');
 // 配置参数
 const CONFIG = {
   // 车位配置
-  total_spots: 100,
-  fixed_spots: 60,      // 固定车位（可售）
-  public_spots: 40,     // 公共车位
+  total_spots: 60,      // 总车位数：60个
 
-  // 固定车位分配
-  sold_ratio: 0.67,     // 40/60 = 66.7% 已售
+  // 业主车位分配方案（有产权已售出）
+  // 格式：{ spots: 车位数量, owners: 业主数量 }
+  owner_parking_allocation: [
+    { spots: 10, owners: 1 },  // 1个业主有10个车位 = 10个车位
+    { spots: 8, owners: 2 },   // 2个业主各有8个车位 = 16个车位
+    { spots: 6, owners: 2 },   // 2个业主各有6个车位 = 12个车位
+    { spots: 4, owners: 2 },   // 2个业主各有4个车位 = 8个车位
+    { spots: 2, owners: 2 },   // 2个业主各有2个车位 = 4个车位
+    { spots: 0, owners: 2 }    // 2个业主没有车位 = 0个车位
+  ],  // 总计：10+16+12+8+4=50个车位，11个业主
 
-  // 公共车位分配
-  rented_ratio: 0.5,    // 20/40 = 50% 已租
+  // 有产权未售出的车位
+  unsold_fixed_spots: 5,  // 5个有产权但未售出的固定车位
+
+  // 无产权的公共车位（后期添加）
+  public_spots: 5,       // 5个无产权的公共车位
+
+  // 租赁比例（针对公共车位）
+  rented_ratio: 0.5,     // 50% 已租出
 
   // 费用标准
   management_fee: 200,  // 月管理费 200元
@@ -170,82 +182,146 @@ function generateParkingSpots(owners, communityId) {
   console.log('🅿️  生成停车位数据...');
 
   const spots = [];
-  const { total_spots, fixed_spots, sold_ratio, rented_ratio, management_fee, monthly_rent } = CONFIG;
+  const { total_spots, owner_parking_allocation, unsold_fixed_spots, public_spots, management_fee, monthly_rent, rented_ratio } = CONFIG;
 
-  // 计算数量
-  const soldCount = Math.floor(fixed_spots * sold_ratio);
-  const rentedCount = Math.floor((total_spots - fixed_spots) * rented_ratio);
-
-  console.log(`   - 固定车位: ${fixed_spots} 个（${soldCount}个已售）`);
-  console.log(`   - 公共车位: ${total_spots - fixed_spots} 个（${rentedCount}个已租）`);
-
-  let ownerIndex = 0;
-
-  // 生成固定车位（A区）
-  for (let i = 1; i <= fixed_spots; i++) {
-    const spotNumber = `A-${String(i).padStart(3, '0')}`;
-    const floor = Math.floor((i - 1) / 20) + 1; // 每层20个
-    const isSold = i <= soldCount;
-
-    const spot = {
-      id: crypto.randomUUID(),
-      community_id: communityId,
-      spot_number: spotNumber,
-      location: `地下${floor}层A区`,
-      type: 'fixed',
-      ownership: isSold ? 'owned' : 'public',
-      is_sold: isSold,
-      is_rented: false,
-      status: 'active'
-    };
-
-    if (isSold && ownerIndex < owners.length) {
-      const owner = owners[ownerIndex % owners.length];
-      spot.owner_id = owner.id;
-      spot.license_plate = generateLicensePlate();
-      spot.monthly_management_fee = management_fee;
-      ownerIndex++;
-    }
-
-    spots.push(spot);
+  // 验证业主数量是否匹配
+  const totalOwnersInAllocation = owner_parking_allocation.reduce((sum, a) => sum + a.owners, 0);
+  if (totalOwnersInAllocation !== owners.length) {
+    console.warn(`⚠️  警告: allocation配置的业主数(${totalOwnersInAllocation})与实际业主数(${owners.length})不匹配`);
   }
 
-  // 生成公共车位（B区）
-  for (let i = 1; i <= total_spots - fixed_spots; i++) {
+  // 验证车位总数
+  const ownedSpots = owner_parking_allocation.reduce((sum, a) => sum + (a.spots * a.owners), 0);
+  const expectedTotal = ownedSpots + unsold_fixed_spots + public_spots;
+  console.log(`   - 业主车位: ${ownedSpots}个`);
+  console.log(`   - 有产权未售: ${unsold_fixed_spots}个`);
+  console.log(`   - 无产权公共: ${public_spots}个`);
+  console.log(`   - 总计: ${expectedTotal}个 (配置目标: ${total_spots})`);
+
+  let ownerIndex = 0;
+  let spotCounter = 1;
+
+  // 1️⃣ 按照 owner_parking_allocation 分配业主车位（A区）
+  console.log('\n   === 生成业主车位（A区）===');
+  for (const allocation of owner_parking_allocation) {
+    const { spots: spotsPerOwner, owners: ownersCount } = allocation;
+
+    console.log(`   - 分配: ${ownersCount}个业主 × ${spotsPerOwner}个车位 = ${ownersCount * spotsPerOwner}个车位`);
+
+    // 为每个业主分配指定数量的车位
+    for (let ownerNum = 0; ownerNum < ownersCount; ownerNum++) {
+      if (ownerIndex >= owners.length) {
+        console.warn(`⚠️  业主数量不足，已分配完${ownerIndex}个业主`);
+        break;
+      }
+
+      const owner = owners[ownerIndex];
+
+      // 为该业主创建指定数量的车位
+      for (let spotNum = 0; spotNum < spotsPerOwner; spotNum++) {
+        const spotNumber = `A-${String(spotCounter).padStart(3, '0')}`;
+        const floor = Math.floor((spotCounter - 1) / 20) + 1; // 每层20个
+
+        const spot = {
+          id: crypto.randomUUID(),
+          community_id: communityId,
+          spot_number: spotNumber,
+          location: `地下${floor}层A区`,
+          type: 'fixed',          // 固定车位（相对于临停）
+          ownership: 'owned',     // 业主所有
+          is_sold: true,
+          is_rented: false,
+          status: 'active',
+          owner_id: owner.id,
+          license_plate: generateLicensePlate(),
+          monthly_management_fee: management_fee
+        };
+
+        spots.push(spot);
+        spotCounter++;
+      }
+
+      ownerIndex++;
+    }
+  }
+
+  // 2️⃣ 生成有产权未售出的车位（B区）
+  console.log(`\n   === 生成有产权未售车位（B区）===`);
+  const rentedUnsoldCount = Math.floor(unsold_fixed_spots * rented_ratio);
+  console.log(`   - 总数: ${unsold_fixed_spots}个，其中${rentedUnsoldCount}个已租出`);
+
+  let renterIndex = 0;
+  for (let i = 1; i <= unsold_fixed_spots; i++) {
     const spotNumber = `B-${String(i).padStart(3, '0')}`;
     const floor = Math.floor((i - 1) / 20) + 1;
-    const isRented = i <= rentedCount;
+    const isRented = i <= rentedUnsoldCount;
 
     const spot = {
       id: crypto.randomUUID(),
       community_id: communityId,
       spot_number: spotNumber,
       location: `地下${floor}层B区`,
-      type: 'fixed',
-      ownership: 'public',
+      type: 'fixed',          // 有产权的固定车位（可售）
+      ownership: 'public',    // 公共车位（小区所有，未售出）
       is_sold: false,
       is_rented: isRented,
-      status: 'active'
+      status: 'active',
+      monthly_rent: isRented ? monthly_rent : null
     };
 
-    if (isRented && ownerIndex < owners.length) {
-      const renter = owners[ownerIndex % owners.length];
+    if (isRented && renterIndex < owners.length) {
+      const renter = owners[renterIndex % owners.length];
       spot.renter_id = renter.id;
       spot.license_plate = generateLicensePlate();
-      spot.monthly_rent = monthly_rent;
-
-      // 租赁合同日期（2025年1月开始，租期半年或一年）
-      const contractMonths = Math.random() < 0.5 ? 6 : 12;
       spot.rent_contract_start = '2025-01-01';
-      spot.rent_contract_end = contractMonths === 6 ? '2025-06-30' : '2025-12-31';
-
-      ownerIndex++;
+      spot.rent_contract_end = Math.random() < 0.5 ? '2025-06-30' : '2025-12-31';
+      renterIndex++;
     }
 
     spots.push(spot);
   }
 
-  console.log(`✅ 生成了 ${spots.length} 个停车位`);
+  // 3️⃣ 生成无产权公共车位（C区）
+  console.log(`\n   === 生成无产权公共车位（C区）===`);
+  const rentedPublicCount = Math.floor(public_spots * rented_ratio);
+  console.log(`   - 总数: ${public_spots}个，其中${rentedPublicCount}个已租出`);
+
+  for (let i = 1; i <= public_spots; i++) {
+    const spotNumber = `C-${String(i).padStart(3, '0')}`;
+    const floor = Math.floor((i - 1) / 20) + 1;
+    const isRented = i <= rentedPublicCount;
+
+    const spot = {
+      id: crypto.randomUUID(),
+      community_id: communityId,
+      spot_number: spotNumber,
+      location: `地下${floor}层C区`,
+      type: 'public',         // 无产权的公共车位（只能租）
+      ownership: 'public',    // 公共车位（小区所有）
+      is_sold: false,
+      is_rented: isRented,
+      status: 'active',
+      monthly_rent: isRented ? monthly_rent : null
+    };
+
+    if (isRented && renterIndex < owners.length) {
+      const renter = owners[renterIndex % owners.length];
+      spot.renter_id = renter.id;
+      spot.license_plate = generateLicensePlate();
+      spot.rent_contract_start = '2025-01-01';
+      spot.rent_contract_end = Math.random() < 0.5 ? '2025-06-30' : '2025-12-31';
+      renterIndex++;
+    }
+
+    spots.push(spot);
+  }
+
+  console.log(`\n✅ 生成了 ${spots.length} 个停车位`);
+  console.log(`   - 业主购买 (type=fixed, owned): ${spots.filter(s => s.ownership === 'owned').length}个`);
+  console.log(`   - 有产权未售 (type=fixed, public): ${spots.filter(s => s.type === 'fixed' && s.ownership === 'public').length}个`);
+  console.log(`   - 无产权公共 (type=public): ${spots.filter(s => s.type === 'public').length}个`);
+  console.log(`   - 已租出: ${spots.filter(s => s.is_rented).length}个`);
+
   return spots;
 }
 
@@ -260,24 +336,25 @@ function generateReceivablesAndDetails(spots, communityId) {
   for (const spot of spots) {
     // 已售车位 - 生成管理费账单
     if (spot.is_sold && spot.owner_id) {
+      // ✅ 每个车位只创建1条 parking_details 记录
+      const detailId = crypto.randomUUID();
+      parkingDetails.push({
+        id: detailId,
+        parking_spot_id: spot.id,
+        fee_type: 'management'
+      });
+
+      // 为每个月生成应收账单
       for (const month of months) {
         const period = `${year}-${String(month).padStart(2, '0')}`;
         const dueDate = `${period}-05T23:59:59.000Z`; // 每月5号
-
-        const detailId = crypto.randomUUID();
         const receivableId = crypto.randomUUID();
-
-        parkingDetails.push({
-          id: detailId,
-          parking_spot_id: spot.id,
-          fee_type: 'management'
-        });
 
         receivables.push({
           id: receivableId,
           community_id: communityId,
           type_code: 'parking_management',
-          type_detail_id: detailId,
+          type_detail_id: detailId, // 所有月份都关联同一个 detail
           owner_id: spot.owner_id,
           period,
           amount: management_fee,
@@ -290,29 +367,30 @@ function generateReceivablesAndDetails(spots, communityId) {
 
     // 已租车位 - 生成租金账单
     if (spot.is_rented && spot.renter_id) {
+      // ✅ 每个车位只创建1条 parking_details 记录
+      const detailId = crypto.randomUUID();
+      parkingDetails.push({
+        id: detailId,
+        parking_spot_id: spot.id,
+        fee_type: 'rent',
+        contract_no: `RENT-2025-${String(spots.indexOf(spot)).padStart(3, '0')}`
+      });
+
       const contractEnd = new Date(spot.rent_contract_end);
       const endMonth = contractEnd.getMonth() + 1;
       const actualMonths = months.filter(m => m <= endMonth);
 
+      // 为每个月生成应收账单
       for (const month of actualMonths) {
         const period = `${year}-${String(month).padStart(2, '0')}`;
         const dueDate = `${period}-05T23:59:59.000Z`;
-
-        const detailId = crypto.randomUUID();
         const receivableId = crypto.randomUUID();
-
-        parkingDetails.push({
-          id: detailId,
-          parking_spot_id: spot.id,
-          fee_type: 'rent',
-          contract_no: `RENT-2025-${String(spots.indexOf(spot)).padStart(3, '0')}`
-        });
 
         receivables.push({
           id: receivableId,
           community_id: communityId,
           type_code: 'parking_rent',
-          type_detail_id: detailId,
+          type_detail_id: detailId, // 所有月份都关联同一个 detail
           owner_id: spot.renter_id,
           period,
           amount: monthly_rent,
@@ -337,17 +415,18 @@ function generatePayments(receivables, parkingDetails, communityId) {
   const payments = [];
   const { payment_ratio } = CONFIG;
 
-  // 按owner_id分组
-  const receivablesByOwner = {};
+  // 按owner_id + type_code组合分组（避免管理费和租金混在一起）
+  const receivablesByOwnerAndType = {};
   for (const recv of receivables) {
-    if (!receivablesByOwner[recv.owner_id]) {
-      receivablesByOwner[recv.owner_id] = [];
+    const key = `${recv.owner_id}__${recv.type_code}`;
+    if (!receivablesByOwnerAndType[key]) {
+      receivablesByOwnerAndType[key] = [];
     }
-    receivablesByOwner[recv.owner_id].push(recv);
+    receivablesByOwnerAndType[key].push(recv);
   }
 
-  for (const ownerId in receivablesByOwner) {
-    const ownerReceivables = receivablesByOwner[ownerId].sort((a, b) => a.period.localeCompare(b.period));
+  for (const key in receivablesByOwnerAndType) {
+    const ownerReceivables = receivablesByOwnerAndType[key].sort((a, b) => a.period.localeCompare(b.period));
     const totalMonths = ownerReceivables.length;
     const paidMonths = Math.floor(totalMonths * payment_ratio);
 
@@ -368,10 +447,10 @@ function generatePayments(receivables, parkingDetails, communityId) {
         id: paymentId,
         community_id: communityId,
         type_code: paidReceivables[0].type_code,
-        owner_id: ownerId,
+        owner_id: paidReceivables[0].owner_id,
         amount: totalAmount,
         paid_at: paidAt,
-        paid_periods: paidReceivables.map(r => r.period),
+        paid_periods: [...new Set(paidReceivables.map(r => r.period))], // 去重
         payment_method: ['wechat', 'alipay', 'bank_transfer'][Math.floor(Math.random() * 3)],
         transaction_no: `TX${Date.now()}${Math.random().toString(36).substr(2, 6).toUpperCase()}`
       });
@@ -410,10 +489,10 @@ function generatePayments(receivables, parkingDetails, communityId) {
           id: paymentId,
           community_id: communityId,
           type_code: batchReceivables[0].type_code,
-          owner_id: ownerId,
+          owner_id: batchReceivables[0].owner_id,
           amount: totalAmount,
           paid_at: paidAt,
-          paid_periods: batchReceivables.map(r => r.period),
+          paid_periods: [...new Set(batchReceivables.map(r => r.period))], // 去重
           payment_method: ['wechat', 'alipay', 'bank_transfer'][Math.floor(Math.random() * 3)],
           transaction_no: `TX${Date.now()}${Math.random().toString(36).substr(2, 6).toUpperCase()}`
         });
