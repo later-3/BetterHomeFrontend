@@ -153,6 +153,51 @@
       }
     },
     {
+      "name": "parking-spot-billing-detail",
+      "path": "pages/parking/parking-spot-billing-detail",
+      "style": {
+        "navigationBarTitleText": "车位缴费详情",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "name": "parking-temp-list",
+      "path": "pages/parking/parking-temp-list",
+      "style": {
+        "navigationBarTitleText": "临停收益",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "name": "parking-temp-detail",
+      "path": "pages/parking/parking-temp-detail",
+      "style": {
+        "navigationBarTitleText": "临停详情",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "name": "parking-rent-list",
+      "path": "pages/parking/parking-rent-list",
+      "style": {
+        "navigationBarTitleText": "停车租金详情",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "name": "parking-rent-spot-detail",
+      "path": "pages/parking/parking-rent-spot-detail",
+      "style": {
+        "navigationBarTitleText": "租金车位详情",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
       "name": "debug-comment",
       "path": "pages/debug/comment",
       "style": {
