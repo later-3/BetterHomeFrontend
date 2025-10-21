@@ -107,28 +107,31 @@ graph TB
 
 ### 1.3 核心设计原则
 
-#### 应收与实收分离
-**问题**：传统设计中，账单表既记录应缴金额又记录实缴金额，导致：
-- 无法支持部分缴费（分多次缴清）
-- 无法记录代缴人信息
-- 无法保存多次缴费的凭证
+#### 应收与实收分离（简化设计v2.5）
+**设计目标**：
+- 物业费按月收取，业主一次可缴纳多个月（整数倍）
+- 遵循FIFO原则：必须从最早未缴月份开始缴费
+- 避免使用触发器/Hooks，逻辑在应用层实现
+- 通过paid_periods字段支持价格变动追溯
 
 **解决方案**：
 ```
-billings (应收账单)       billing_payments (实收记录)
-┌─────────────────┐       ┌──────────────────┐
-│ id              │◄──────│ billing_id       │
-│ billing_amount  │       │ amount           │
-│ paid_amount     │       │ paid_at          │
-│ status          │       │ proof_files      │
-└─────────────────┘       └──────────────────┘
+billings (应收账单)          billing_payments (实收记录)
+┌─────────────────┐          ┌──────────────────────┐
+│ id              │          │ owner_id             │
+│ period          │          │ amount               │
+│ amount          │          │ paid_periods         │ ← JSON数组
+│ is_paid         │ ← 布尔   │ paid_at              │
+│ paid_at         │          │ proof_files          │ ← Directus文件UUID数组
+└─────────────────┘          └──────────────────────┘
 ```
 
 **优势**：
-- ✅ 支持部分缴费（多次缴费直到缴清）
-- ✅ 记录每次缴费的详细信息（时间、方式、凭证）
-- ✅ 支持代缴（记录缴费人姓名和电话）
-- ✅ 账单状态自动计算（unpaid/partial/paid/overdue）
+- ✅ 简化设计：billings表只用is_paid布尔字段
+- ✅ FIFO原则：从最早月份开始缴费
+- ✅ 一次缴费多个月：paid_periods = ["2025-01","2025-02","2025-03"]
+- ✅ 价格变动可追溯：通过paid_periods知道每笔缴费对应哪几个月
+- ✅ 无需触发器：业务逻辑在前端/后端代码中实现
 
 #### 收入与支出分类管理
 ```
@@ -209,30 +212,36 @@ erDiagram
 | building_id | uuid | FK | 所属楼栋 |
 | owner_id | uuid | NOT NULL, FK | 业主ID |
 | period | varchar(7) | NOT NULL | 账期（YYYY-MM） |
-| billing_amount | decimal(10,2) | NOT NULL | 应缴金额 |
+| amount | decimal(10,2) | NOT NULL | 应缴金额 |
 | area | decimal(10,2) | - | 计费面积（m²） |
 | unit_price | decimal(10,2) | - | 单价（元/m²） |
-| status | billing_status | NOT NULL | 状态：unpaid/partial/paid/overdue |
-| paid_amount | decimal(10,2) | DEFAULT 0 | 已缴金额 |
+| is_paid | boolean | NOT NULL, DEFAULT false | 是否已缴费 |
+| paid_at | timestamp | - | 缴费时间 |
 | due_date | timestamp | - | 到期日期 |
 | late_fee | decimal(10,2) | DEFAULT 0 | 滞纳金 |
 | notes | text | - | 备注 |
 | date_created | timestamp | DEFAULT now() | 创建时间 |
 | date_deleted | timestamp | - | 软删除时间 |
 
+**设计说明**：
+- ✅ 简化设计：移除`paid_amount`和`status`，改用`is_paid`布尔字段
+- ✅ `is_paid = true`时，`paid_at`记录缴费时间
+- ✅ 一个billing记录对应一个账期（月份）
+- ✅ 逻辑在应用层实现，不依赖数据库触发器
+
 **索引设计**：
 ```sql
 -- 小区+账期查询（物业查看某月所有账单）
 CREATE INDEX idx_billings_community_period
-ON billings(community_id, period, status, date_created, id);
+ON billings(community_id, period, is_paid, date_created, id);
 
 -- 业主查询自己的账单
 CREATE INDEX idx_billings_owner_period
 ON billings(owner_id, period, date_created, id);
 
--- 逾期账单查询
-CREATE INDEX idx_billings_status_due
-ON billings(status, due_date);
+-- 未缴费账单查询（用于FIFO）
+CREATE INDEX idx_billings_owner_unpaid
+ON billings(owner_id, is_paid, period) WHERE is_paid = false;
 ```
 
 ##### billing_payments（缴费记录 - 实收）
@@ -240,25 +249,31 @@ ON billings(status, due_date);
 | 字段名 | 类型 | 约束 | 说明 |
 |--------|------|------|------|
 | id | uuid | PK | 主键 |
-| billing_id | uuid | NOT NULL, FK | 关联账单 |
-| community_id | uuid | NOT NULL, FK | 所属小区 |
 | owner_id | uuid | NOT NULL, FK | 业主ID |
 | amount | decimal(10,2) | NOT NULL | 实收金额 |
 | paid_at | timestamp | NOT NULL | 缴费时间 |
+| paid_periods | json | NOT NULL | 缴费账期数组（JSON） |
 | payment_method | payment_method | NOT NULL | 支付方式 |
 | payer_name | varchar(100) | - | 缴费人姓名（代缴） |
 | payer_phone | varchar(20) | - | 缴费人电话 |
 | transaction_no | varchar(100) | - | 交易流水号 |
-| proof_files | json | - | 凭证文件ID数组 |
+| proof_files | json | - | 凭证文件UUID数组（Directus Files） |
 | notes | text | - | 备注 |
+| date_created | timestamp | DEFAULT now() | 创建时间 |
+| date_deleted | timestamp | - | 软删除时间 |
 
-**业务规则**：
-- 每次录入缴费后，自动更新 `billings.paid_amount`
-- 自动计算账单状态：
-  - `paid_amount = 0` → unpaid
-  - `0 < paid_amount < billing_amount` → partial
-  - `paid_amount >= billing_amount` → paid
-  - `paid_amount = 0 && now() > due_date` → overdue
+**设计说明**：
+- ✅ 移除`billing_id`外键，通过`paid_periods`间接关联
+- ✅ `paid_periods`示例：`["2025-01","2025-02","2025-03","2025-04"]`
+- ✅ 支持一次缴费多个月，符合FIFO原则
+- ✅ `proof_files`存储Directus文件UUID数组：`["file-uuid-1","file-uuid-2"]`
+
+**业务规则（FIFO原则）**：
+1. 查询业主未缴费的账单（`is_paid = false`），按`period`升序排序
+2. 取前N个月的账单（用户选择缴纳几个月）
+3. 批量更新这N个billing记录：`is_paid = true`, `paid_at = now()`
+4. 创建一条payment记录，`paid_periods`记录这N个月的period
+5. 物业费价格变动时，可通过`paid_periods`追溯每笔缴费对应的月份
 
 ##### incomes（公共收益）
 
@@ -551,38 +566,43 @@ enum mf_approval_status {
 
 ### 2.3 数据完整性约束
 
-#### 触发器（Trigger）需求
+#### ~~触发器（Trigger）需求~~ 【v2.5已废弃】
 
-##### 1. 自动更新账单状态
+> **重要更新（v2.5）**：为了简化设计并提高跨环境可移植性，我们决定**不使用数据库触发器和Directus Flows/Hooks**。所有业务逻辑在应用层实现。
+
+##### ~~1. 自动更新账单状态~~ 【已废弃】
 ```sql
--- 当 billing_payments 插入时，自动更新 billings.paid_amount 和 status
-CREATE OR REPLACE FUNCTION update_billing_status()
-RETURNS TRIGGER AS $$
-BEGIN
-  UPDATE billings
-  SET
-    paid_amount = (
-      SELECT COALESCE(SUM(amount), 0)
-      FROM billing_payments
-      WHERE billing_id = NEW.billing_id
-      AND date_deleted IS NULL
-    ),
-    status = CASE
-      WHEN paid_amount >= billing_amount THEN 'paid'
-      WHEN paid_amount > 0 THEN 'partial'
-      WHEN NOW() > due_date THEN 'overdue'
-      ELSE 'unpaid'
-    END
-  WHERE id = NEW.billing_id;
+-- ❌ v2.5已废弃：不再使用触发器自动更新 billings.paid_amount 和 status
+-- ❌ 新设计中 billing_payments 没有 billing_id 外键
+-- ❌ 新设计中 billings 只有 is_paid 布尔字段，没有 paid_amount 和 status
+```
 
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+**新设计（v2.5）- 应用层实现**：
+```typescript
+// FIFO缴费流程（应用层代码）
+async function createPayment(ownerId: string, monthCount: number) {
+  // 1. 获取未缴费账单（FIFO顺序）
+  const unpaidBillings = await billingsApi.readMany({
+    filter: { owner_id: { _eq: ownerId }, is_paid: { _eq: false } },
+    sort: ['period'],
+    limit: monthCount
+  });
 
-CREATE TRIGGER trigger_update_billing_status
-AFTER INSERT OR UPDATE ON billing_payments
-FOR EACH ROW
-EXECUTE FUNCTION update_billing_status();
+  // 2. 批量更新billing为已缴费
+  await Promise.all(
+    unpaidBillings.map(b =>
+      billingsApi.updateOne(b.id, { is_paid: true, paid_at: new Date() })
+    )
+  );
+
+  // 3. 创建payment记录
+  await billingPaymentsApi.createOne({
+    owner_id: ownerId,
+    amount: unpaidBillings.reduce((sum, b) => sum + b.amount, 0),
+    paid_periods: unpaidBillings.map(b => b.period),
+    paid_at: new Date()
+  });
+}
 ```
 
 ##### 2. 自动更新维修基金账户余额
