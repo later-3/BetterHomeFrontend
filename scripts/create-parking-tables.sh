@@ -161,11 +161,11 @@ curl -s -X POST "$DIRECTUS_URL/fields/parking_spots" \
     },
     "meta": {
       "interface": "select-dropdown",
-      "note": "车位类型",
+      "note": "车位类型：fixed=有产权的固定车位，public=无产权的公共车位。临停不在此表，在parking_temp_records表",
       "options": {
         "choices": [
-          {"text": "固定车位", "value": "fixed"},
-          {"text": "临时车位", "value": "temp"}
+          {"text": "固定车位（有产权）", "value": "fixed"},
+          {"text": "公共车位（无产权）", "value": "public"}
         ]
       },
       "width": "half"
