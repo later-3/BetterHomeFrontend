@@ -1,14 +1,25 @@
 #!/bin/bash
 
 # 快速导入停车数据脚本
-# 使用方法: ./quick-import-parking.sh [local|remote]
-# 例如: ./quick-import-parking.sh local  # 导入到本地
-#      ./quick-import-parking.sh remote # 导入到远程
+# 使用方法: ./quick-import-parking.sh [local|remote] [--yes]
+# 例如: ./quick-import-parking.sh local         # 导入到本地（需要确认）
+#      ./quick-import-parking.sh local --yes   # 导入到本地（跳过确认）
+#      ./quick-import-parking.sh remote        # 导入到远程（需要确认）
 
 set -e  # 遇到错误立即退出
 
 # 获取环境参数
 ENV=${1:-local}
+AUTO_CONFIRM=false
+
+# 检查是否有 --yes 参数
+if [ "$2" = "--yes" ] || [ "$1" = "--yes" ]; then
+    AUTO_CONFIRM=true
+    # 如果第一个参数是 --yes，则环境默认为 local
+    if [ "$1" = "--yes" ]; then
+        ENV="local"
+    fi
+fi
 
 # 根据环境设置配置
 if [ "$ENV" = "remote" ]; then
@@ -38,10 +49,14 @@ echo "📍 Directus URL: $DIRECTUS_URL"
 echo ""
 
 # 确认操作
-read -p "是否继续导入到 $ENV 环境？(yes/no): " confirm
-if [ "$confirm" != "yes" ]; then
-  echo "❌ 操作已取消"
-  exit 1
+if [ "$AUTO_CONFIRM" = false ]; then
+  read -p "是否继续导入到 $ENV 环境？(yes/no): " confirm
+  if [ "$confirm" != "yes" ]; then
+    echo "❌ 操作已取消"
+    exit 1
+  fi
+else
+  echo "⏩ 自动确认模式，跳过确认提示"
 fi
 
 echo ""
