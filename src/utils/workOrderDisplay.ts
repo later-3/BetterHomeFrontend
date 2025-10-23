@@ -42,10 +42,24 @@ const WORK_ORDER_STATUS_DISPLAY: Record<WorkOrderStatus, DisplayToken> = {
 
 // Role 英文到中文的映射
 const ROLE_DISPLAY_MAP: Record<string, string> = {
-  'resident': '业主',
-  'admin': '管理员',
-  'property_manager': '物业人员',
-  'Administrator': '管理员', // Directus 默认管理员角色
+  resident: "业主",
+  admin: "管理员",
+  property_manager: "物业经理",
+  property_worker: "物业人员",
+  property_woker: "物业人员",
+  committee_member: "业委会成员",
+  committee_normal: "业委会工作人员",
+  Administrator: "管理员", // Directus 默认管理员角色
+};
+
+const USER_TYPE_DISPLAY_MAP: Record<string, string> = {
+  resident: "业主",
+  property_manager: "物业经理",
+  property_worker: "物业人员",
+  property_woker: "物业人员",
+  committee_member: "业委会成员",
+  committee_normal: "业委会工作人员",
+  admin: "平台管理员",
 };
 
 export interface WorkOrderAssigneeDisplay {
@@ -123,6 +137,14 @@ export function getAssigneeDisplay(
     const roleNameRaw = String((user.role as { name?: string }).name ?? "");
     // 使用映射表转换，如果映射表中没有则保持原值
     roleName = ROLE_DISPLAY_MAP[roleNameRaw] || roleNameRaw;
+  } else if (typeof (user as any).role === "string") {
+    const roleNameRaw = String((user as any).role);
+    roleName = ROLE_DISPLAY_MAP[roleNameRaw] || roleNameRaw;
+  }
+
+  if (!roleName && (user as any).user_type) {
+    const userTypeRaw = String((user as any).user_type);
+    roleName = USER_TYPE_DISPLAY_MAP[userTypeRaw] || userTypeRaw;
   }
 
   return {
