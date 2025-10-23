@@ -199,6 +199,25 @@ async function goToParkingRevenue() {
   }
 }
 
+async function goToAdRevenue() {
+  if (!isLoggedIn.value) {
+    uni.showToast({
+      title: "请先登录",
+      icon: "none",
+    });
+    return;
+  }
+
+  try {
+    await uni.navigateTo({ url: "/pages/ad/ad-revenue-list" });
+  } catch (error: any) {
+    uni.showToast({
+      title: error?.message || "无法跳转到广告收益页面",
+      icon: "none",
+    });
+  }
+}
+
 </script>
 
 <template>
@@ -257,6 +276,13 @@ async function goToParkingRevenue() {
             icon="car"
             isLink
             @click="goToParkingRevenue"
+          />
+          <up-cell
+            title="广告收益"
+            value="查看广告位收益明细"
+            icon="grid"
+            isLink
+            @click="goToAdRevenue"
           />
         </up-cell-group>
 
