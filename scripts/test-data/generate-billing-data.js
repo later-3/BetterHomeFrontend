@@ -299,6 +299,7 @@ function generateBillingPayments(billings, assignments, config) {
       // 创建缴费记录
       payments.push({
         id: crypto.randomUUID(),
+        community_id: communityId,
         owner_id,
         amount: totalAmount,
         paid_at: paidAt,

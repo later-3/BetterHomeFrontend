@@ -28,17 +28,6 @@
         <up-card title="缴费进度" :border="false">
           <template #body>
             <view class="progress-content">
-              <!-- 进度条 -->
-              <view class="progress-bar-container">
-                <up-line-progress
-                  :percentage="progressPercentage"
-                  activeColor="#52c41a"
-                  inactiveColor="#f0f0f0"
-                  :showPercent="false"
-                />
-                <text class="progress-text">{{ monthsPaid }}/12 月已缴</text>
-              </view>
-
               <!-- 统计信息 -->
               <view class="stats-grid">
                 <view class="stat-item">
@@ -59,15 +48,15 @@
                 </view>
               </view>
 
-              <!-- 已缴月份标签 -->
+              <!-- 缴费月份标签 -->
               <view class="months-container">
-                <text class="months-label">已缴月份：</text>
+                <text class="months-label">缴费情况：</text>
                 <view class="months-tags">
                   <view
                     v-for="month in allMonths"
                     :key="month"
                     class="month-tag"
-                    :class="{ paid: isPaid(month) }"
+                    :class="getMonthStatus(month)"
                   >
                     <text>{{ month }}月</text>
                   </view>
@@ -161,38 +150,50 @@ const payments = ref<BillingPayment[]>([]);
 const allMonths = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 // 计算属性
-const monthsPaid = computed(() => {
-  return billings.value.filter(b => b.is_paid).length;
-});
-
-const progressPercentage = computed(() => {
-  return (monthsPaid.value / 12) * 100;
-});
-
 const monthlyFee = computed(() => {
   // 从第一个账单获取月物业费
   if (billings.value.length > 0) {
-    return billings.value[0].amount || 0;
+    return Number(billings.value[0].amount) || 0;
   }
   return 0;
 });
 
 const totalAmount = computed(() => {
-  return billings.value.reduce((sum, b) => sum + (b.amount || 0), 0);
+  return billings.value.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
 });
 
 const paidAmount = computed(() => {
-  return billings.value.filter(b => b.is_paid).reduce((sum, b) => sum + (b.amount || 0), 0);
+  return billings.value.filter(b => b.is_paid).reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
 });
 
 const unpaidAmount = computed(() => {
   return totalAmount.value - paidAmount.value;
 });
 
+// 获取当前月份（1-12）
+function getCurrentMonth(): number {
+  const now = new Date();
+  return now.getMonth() + 1; // getMonth() 返回 0-11，需要 +1
+}
+
 // 判断某月是否已缴费
 function isPaid(month: number): boolean {
   const period = `2025-${String(month).padStart(2, "0")}`;
   return billings.value.some(b => b.period === period && b.is_paid);
+}
+
+// 获取月份状态：paid(已缴)、overdue(应缴未缴)、future(未到期)
+function getMonthStatus(month: number): string {
+  const currentMonth = getCurrentMonth();
+  const paid = isPaid(month);
+
+  if (paid) {
+    return "paid"; // 已缴费：绿色
+  } else if (month <= currentMonth) {
+    return "overdue"; // 应缴未缴：黄色
+  } else {
+    return "future"; // 未到期：灰色
+  }
 }
 
 // 获取用户默认头像
@@ -211,7 +212,9 @@ function formatDateTime(dateStr: string | null | undefined): string {
 function formatPaidPeriods(periods: string[] | null | undefined): string {
   if (!periods || periods.length === 0) return "无";
   // periods like ["2025-01", "2025-02"]
-  const months = periods.map(p => {
+  // 先去重，避免同一个月份重复显示
+  const uniquePeriods = [...new Set(periods)];
+  const months = uniquePeriods.map(p => {
     const month = parseInt(p.split("-")[1]);
     return `${month}月`;
   });
@@ -358,18 +361,6 @@ onLoad((options: any) => {
   gap: 25rpx;
 }
 
-.progress-bar-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10rpx;
-}
-
-.progress-text {
-  font-size: 26rpx;
-  color: #666;
-  text-align: center;
-}
-
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -434,6 +425,16 @@ onLoad((options: any) => {
   border-color: #b7eb8f;
 }
 
+.month-tag.overdue {
+  background: #fffbe6;
+  border-color: #ffe58f;
+}
+
+.month-tag.future {
+  background: #f0f0f0;
+  border-color: transparent;
+}
+
 .month-tag text {
   font-size: 24rpx;
   color: #666;
@@ -442,6 +443,15 @@ onLoad((options: any) => {
 .month-tag.paid text {
   color: #52c41a;
   font-weight: 500;
+}
+
+.month-tag.overdue text {
+  color: #faad14;
+  font-weight: 500;
+}
+
+.month-tag.future text {
+  color: #999;
 }
 
 .payments-section {

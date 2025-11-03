@@ -8,8 +8,8 @@
       :placeholder="true"
       :fixed="true"
       bg-color="#ffffff"
-      left-icon="arrow-left"
-      :auto-back="true"
+      left-icon=""
+      :auto-back="false"
     />
 
     <!-- 加载中遮罩 -->

@@ -82,10 +82,15 @@
           <up-cell
             v-for="spot in spotsList"
             :key="spot.id"
-            :title="spot.spotNumber"
             isLink
             @click="goToSpotDetail(spot)"
           >
+            <template #title>
+              <view class="spot-title">
+                <text class="spot-number">{{ spot.spotNumber }}</text>
+                <text class="spot-owner">{{ spot.ownerName }}</text>
+              </view>
+            </template>
             <template #value>
               <view class="spot-status-badge" :class="spot.statusClass">
                 <text class="status-text">{{ spot.statusText }}</text>
@@ -134,6 +139,7 @@ import type { ParkingSpot, Receivable, ParkingDetail } from "@/@types/directus-s
 interface SpotInfo {
   id: string;
   spotNumber: string;
+  ownerName: string;
   statusText: string;
   statusClass: string;
   hasUnpaid: boolean;
@@ -287,7 +293,7 @@ async function loadData() {
         filter: {
           id: { _in: spotIds as string[] },
         },
-        fields: ["id", "spot_number"],
+        fields: ["id", "spot_number", "owner_id.id", "owner_id.first_name", "owner_id.email"],
         limit: -1,
       })
     ) as ParkingSpot[];
@@ -310,9 +316,16 @@ async function loadData() {
       // 判断是否有欠费
       const hasUnpaid = spotReceivables.some((r: any) => r.status !== "paid");
 
+      // 提取业主名字
+      const owner = (spot as any).owner_id;
+      const ownerName = owner
+        ? (owner.first_name || owner.email || "未知业主")
+        : "未知业主";
+
       spotsInfo.push({
         id: spot.id,
         spotNumber: spot.spot_number || "未知车位",
+        ownerName,
         statusText: hasUnpaid ? "欠费" : "未欠费",
         statusClass: hasUnpaid ? "status-unpaid" : "status-paid",
         hasUnpaid,
@@ -340,11 +353,10 @@ async function loadData() {
   }
 }
 
-// 跳转到车位详情（暂不实现）
+// 跳转到车位详情
 function goToSpotDetail(spot: SpotInfo) {
-  uni.showToast({
-    title: "车位详情功能开发中",
-    icon: "none",
+  uni.navigateTo({
+    url: `/pages/parking/parking-spot-billing-detail?spotId=${spot.id}`,
   });
 }
 
@@ -527,6 +539,23 @@ onMounted(() => {
   background: white;
   border-radius: 8rpx;
   overflow: hidden;
+}
+
+.spot-title {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.spot-number {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.spot-owner {
+  font-size: 24rpx;
+  color: #999;
 }
 
 .spot-status-badge {
