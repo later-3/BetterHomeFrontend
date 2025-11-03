@@ -1,5 +1,16 @@
 # 财务透明功能 v2.0 - 开发文档
 
+> ⚠️ **文档状态说明（2025-10-19）**
+>
+> 本文档描述的是财务透明功能的**早期v2.0版本**。数据模型已在**v2.5版本（2025-10-19）**进行了重要简化：
+> - `billings`表：移除`paid_amount`和`status`，改用`is_paid`布尔字段
+> - `billing_payments`表：移除`billing_id`外键和`period`字段，新增`paid_periods`数组字段
+> - 不使用触发器/Hooks，采用FIFO缴费原则
+>
+> **最新数据模型请参考：** [docs/finance-transparency/DATA_MODEL.md](../finance-transparency/DATA_MODEL.md)
+>
+> 本文档保留用于了解功能演进历史，但部分技术细节已过时。
+
 ## 📋 目录
 
 - [功能概述](#功能概述)

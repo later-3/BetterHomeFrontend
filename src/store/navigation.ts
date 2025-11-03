@@ -19,25 +19,24 @@ export interface TabBarState {
 const useNavigationStore = defineStore(
   "navigation",
   () => {
-    // 定义导航标签页数据 - 隐藏前两个页面（邻里和公告）
+    // 定义导航标签页数据
     const tabs = ref<TabItem[]>([
-      // 注释掉前两个页面，但保留页面代码文件
-      // {
-      //   id: 'neighbor',
-      //   name: 'neighbor',
-      //   path: '/pages/neighbor/neighbor',
-      //   text: '邻里',
-      //   icon: 'static/icons/neighbor.png',
-      //   activeIcon: 'static/icons/neighbor-active.png'
-      // },
-      // {
-      //   id: 'notice',
-      //   name: 'notice',
-      //   path: '/pages/notice/notice',
-      //   text: '公告',
-      //   icon: 'static/icons/notice.png',
-      //   activeIcon: 'static/icons/notice-active.png'
-      // },
+      {
+        id: "finance",
+        name: "finance",
+        path: "/pages/finance/finance-v2",
+        text: "财务",
+        icon: "static/icons/finance.png",
+        activeIcon: "static/icons/finance-active.png",
+      },
+      {
+        id: "notice",
+        name: "notice",
+        path: "/pages/notice/notice",
+        text: "公告",
+        icon: "static/icons/notice.png",
+        activeIcon: "static/icons/notice-active.png",
+      },
       {
         id: "create",
         name: "create",

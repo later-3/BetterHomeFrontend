@@ -1,5 +1,5 @@
 <template>
-  <view class="user-billing-detail-page">
+  <view class="spot-billing-detail-page">
     <!-- 加载状态 -->
     <view v-if="loading" class="loading-container">
       <up-loading-icon mode="circle" size="40" />
@@ -14,12 +14,15 @@
 
     <!-- 内容区域 -->
     <view v-else class="content">
-      <!-- 用户信息 -->
-      <view class="user-header">
-        <up-avatar :src="userAvatar" size="60" shape="circle" />
-        <view class="user-info">
-          <text class="user-name">{{ userName }}</text>
-          <text class="user-subtitle">物业费详情</text>
+      <!-- 车位信息 -->
+      <view class="spot-header">
+        <view class="spot-icon">
+          <text class="icon-text">🅿️</text>
+        </view>
+        <view class="spot-info">
+          <text class="spot-number">{{ spotNumber }}</text>
+          <text class="spot-owner">业主：{{ ownerName }}</text>
+          <text class="spot-location">位置：{{ spotLocation }}</text>
         </view>
       </view>
 
@@ -31,7 +34,7 @@
               <!-- 统计信息 -->
               <view class="stats-grid">
                 <view class="stat-item">
-                  <text class="stat-label">月物业费</text>
+                  <text class="stat-label">月管理费</text>
                   <text class="stat-value">{{ formatAmount(monthlyFee) }}</text>
                 </view>
                 <view class="stat-item">
@@ -131,39 +134,36 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
-import { billingsApi, billingPaymentsApi } from "@/utils/directus";
-import type { Billing, BillingPayment } from "@/@types/directus-schema";
+import { directusClient } from "@/utils/directus";
+import { readItems } from "@directus/sdk";
+import type { ParkingSpot, Receivable } from "@/@types/directus-schema";
 import { formatAmount } from "@/utils/finance-labels";
 
 // 页面参数
-const userId = ref("");
+const spotId = ref("");
 
 // 数据状态
 const loading = ref(false);
 const error = ref<string | null>(null);
-const userName = ref("");
-const userAvatar = ref("");
-const billings = ref<Billing[]>([]);
-const payments = ref<BillingPayment[]>([]);
+const spotNumber = ref("");
+const ownerName = ref("");
+const spotLocation = ref("");
+const monthlyFee = ref(0);
+const receivables = ref<Receivable[]>([]);
+const payments = ref<any[]>([]);
 
-// 所有月份 (1-12月)
-const allMonths = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+// 所有月份 (1-10月，根据实际数据)
+const allMonths = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 // 计算属性
-const monthlyFee = computed(() => {
-  // 从第一个账单获取月物业费
-  if (billings.value.length > 0) {
-    return Number(billings.value[0].amount) || 0;
-  }
-  return 0;
-});
-
 const totalAmount = computed(() => {
-  return billings.value.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
+  return receivables.value.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 });
 
 const paidAmount = computed(() => {
-  return billings.value.filter(b => b.is_paid).reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
+  return receivables.value
+    .filter((r) => r.status === "paid")
+    .reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 });
 
 const unpaidAmount = computed(() => {
@@ -173,13 +173,13 @@ const unpaidAmount = computed(() => {
 // 获取当前月份（1-12）
 function getCurrentMonth(): number {
   const now = new Date();
-  return now.getMonth() + 1; // getMonth() 返回 0-11，需要 +1
+  return now.getMonth() + 1;
 }
 
 // 判断某月是否已缴费
 function isPaid(month: number): boolean {
   const period = `2025-${String(month).padStart(2, "0")}`;
-  return billings.value.some(b => b.period === period && b.is_paid);
+  return receivables.value.some((r) => r.period === period && r.status === "paid");
 }
 
 // 获取月份状态：paid(已缴)、overdue(应缴未缴)、future(未到期)
@@ -196,11 +196,6 @@ function getMonthStatus(month: number): string {
   }
 }
 
-// 获取用户默认头像
-function getDefaultAvatar(): string {
-  return "/static/avatar-default.png";
-}
-
 // 格式化日期时间
 function formatDateTime(dateStr: string | null | undefined): string {
   if (!dateStr) return "未知";
@@ -214,7 +209,7 @@ function formatPaidPeriods(periods: string[] | null | undefined): string {
   // periods like ["2025-01", "2025-02"]
   // 先去重，避免同一个月份重复显示
   const uniquePeriods = [...new Set(periods)];
-  const months = uniquePeriods.map(p => {
+  const months = uniquePeriods.map((p) => {
     const month = parseInt(p.split("-")[1]);
     return `${month}月`;
   });
@@ -226,16 +221,17 @@ function getPaymentMethodLabel(method: string | null | undefined): string {
   const methodMap: Record<string, string> = {
     wechat: "微信",
     alipay: "支付宝",
-    bank: "银行转账",
+    bank_transfer: "银行转账",
     cash: "现金",
+    pos: "POS机",
   };
   return methodMap[method || ""] || method || "其他";
 }
 
 // 加载数据
 async function loadData() {
-  if (!userId.value) {
-    error.value = "缺少用户ID参数";
+  if (!spotId.value) {
+    error.value = "缺少车位ID参数";
     return;
   }
 
@@ -243,36 +239,107 @@ async function loadData() {
   error.value = null;
 
   try {
-
-    // 2. 获取用户的账单数据
-    const billingsResult = await billingsApi.readMany({
-      filter: {
-        owner_id: { _eq: userId.value },
-        period: {
-          _in: ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05",
-                "2025-06", "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2025-12"]
+    // 1. 获取车位信息
+    const spot = (await directusClient.request(
+      readItems("parking_spots", {
+        filter: {
+          id: { _eq: spotId.value },
         },
-      },
-      fields: ["id", "period", "amount", "is_paid", "paid_at"],
-      sort: ["period"],
-      limit: 20,
-    } as any) as any;
+        fields: [
+          "id",
+          "spot_number",
+          "location",
+          "monthly_management_fee",
+          "owner_id.id",
+          "owner_id.first_name",
+          "owner_id.email",
+        ],
+        limit: 1,
+      })
+    )) as any;
 
-    billings.value = (Array.isArray(billingsResult) ? billingsResult : []) as Billing[];
+    if (!spot || spot.length === 0) {
+      error.value = "未找到车位信息";
+      return;
+    }
 
-    // 3. 获取用户的缴费记录
-    const paymentsResult = await billingPaymentsApi.readMany({
-      filter: {
-        owner_id: { _eq: userId.value },
-      },
-      fields: ["id", "amount", "paid_at", "paid_periods", "payment_method", "payer_name", "transaction_no"],
-      sort: ["-paid_at"],
-      limit: 20,
-    } as any) as any;
+    const spotData = spot[0];
+    spotNumber.value = spotData.spot_number || "未知车位";
+    spotLocation.value = spotData.location || "未知位置";
+    monthlyFee.value = Number(spotData.monthly_management_fee) || 0;
 
-    payments.value = (Array.isArray(paymentsResult) ? paymentsResult : []) as BillingPayment[];
+    const owner = spotData.owner_id;
+    ownerName.value = owner
+      ? owner.first_name || owner.email || "未知业主"
+      : "未知业主";
+
+    // 2. 获取该车位的 parking_details
+    const parkingDetails = (await directusClient.request(
+      readItems("parking_details", {
+        filter: {
+          parking_spot_id: { _eq: spotId.value },
+          fee_type: { _eq: "management" },
+        },
+        fields: ["id"],
+        limit: 1,
+      })
+    )) as any;
+
+    if (!parkingDetails || parkingDetails.length === 0) {
+      console.warn("[parking-spot-billing-detail] 该车位没有管理费配置");
+      receivables.value = [];
+      payments.value = [];
+      return;
+    }
+
+    const detailId = parkingDetails[0].id;
+
+    // 3. 获取应收账单
+    const receivablesResult = (await directusClient.request(
+      readItems("receivables", {
+        filter: {
+          type_code: { _eq: "parking_management" },
+          type_detail_id: { _eq: detailId },
+        },
+        fields: ["id", "period", "amount", "status", "payment_id"],
+        sort: ["period"],
+        limit: -1,
+      })
+    )) as Receivable[];
+
+    receivables.value = receivablesResult;
+
+    // 4. 获取缴费记录（通过 payment_id）
+    const paymentIds = receivablesResult
+      .map((r: any) => r.payment_id)
+      .filter((id): id is string => !!id);
+
+    if (paymentIds.length > 0) {
+      const paymentsResult = (await directusClient.request(
+        readItems("payments", {
+          filter: {
+            id: { _in: paymentIds },
+          },
+          fields: [
+            "id",
+            "amount",
+            "paid_at",
+            "paid_periods",
+            "payment_method",
+            "payer_name",
+            "transaction_no",
+          ],
+          sort: ["-paid_at"],
+          limit: -1,
+        })
+      )) as any;
+
+      payments.value = paymentsResult;
+    } else {
+      payments.value = [];
+    }
   } catch (e: any) {
-    console.error("[user-billing-detail] 加载失败:", e);
+    console.error("[parking-spot-billing-detail] 加载失败:", e);
     error.value = e.message || "加载失败";
   } finally {
     loading.value = false;
@@ -287,15 +354,13 @@ function goToPaymentDetail(paymentId: string) {
 }
 
 onLoad((options: any) => {
-  userId.value = options.userId || "";
-  userName.value = decodeURIComponent(options.userName || "未命名用户");
-  userAvatar.value = decodeURIComponent(options.userAvatar || getDefaultAvatar());
+  spotId.value = options.spotId || "";
   loadData();
 });
 </script>
 
 <style scoped>
-.user-billing-detail-page {
+.spot-billing-detail-page {
   background: #f5f5f5;
   min-height: 100vh;
 }
@@ -325,7 +390,7 @@ onLoad((options: any) => {
   padding: 20rpx;
 }
 
-.user-header {
+.spot-header {
   display: flex;
   align-items: center;
   gap: 20rpx;
@@ -335,20 +400,37 @@ onLoad((options: any) => {
   margin-bottom: 20rpx;
 }
 
-.user-info {
+.spot-icon {
+  width: 100rpx;
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+}
+
+.icon-text {
+  font-size: 50rpx;
+}
+
+.spot-info {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 8rpx;
 }
 
-.user-name {
+.spot-number {
   font-size: 32rpx;
   font-weight: bold;
+  color: #333;
 }
 
-.user-subtitle {
+.spot-owner,
+.spot-location {
   font-size: 24rpx;
-  color: #999;
+  color: #666;
 }
 
 .progress-section {
